@@ -1,3 +1,6 @@
 !lib/
 !bin/
 !x64/
+!*.dylib
+!*.dll
+!*.lib
