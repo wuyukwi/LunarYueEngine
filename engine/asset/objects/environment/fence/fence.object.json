@@ -1,0 +1,189 @@
+{
+    "components": [
+        {
+            "$context": {
+                "transform": {
+                    "position": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "rotation": {
+                        "w": 1,
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "scale": {
+                        "x": 1,
+                        "y": 1,
+                        "z": 1
+                    }
+                }
+            },
+            "$typeName": "TransformComponent"
+        },
+        {
+            "$context": {
+                "mesh_res": {
+                    "sub_meshes": [
+                        {
+                            "material": "asset/objects/environment/_material/silver.material.json",
+                            "obj_file_ref": "asset/objects/environment/fence/components/mesh/fence.obj",
+                            "transform": {
+                                "position": {
+                                    "x": 0,
+                                    "y": 0,
+                                    "z": 0
+                                },
+                                "rotation": {
+                                    "w": 1,
+                                    "x": 0,
+                                    "y": 0,
+                                    "z": 0
+                                },
+                                "scale": {
+                                    "x": 1,
+                                    "y": 1,
+                                    "z": 1
+                                }
+                            }
+                        }
+                    ]
+                }
+            },
+            "$typeName": "MeshComponent"
+        },
+        {
+            "$context": {
+                "rigidbody_res": {
+                    "actor_type": 1,
+                    "inverse_mass": 0,
+                    "shapes": [
+                        {
+                            "geometry": {
+                                "$context": {
+                                    "half_extents": {
+                                        "x": 43.574,
+                                        "y": 0.5175,
+                                        "z": 6.2375
+                                    }
+                                },
+                                "$typeName": "Box"
+                            },
+                            "local_transform": {
+                                "position": {
+                                    "x": -0.248,
+                                    "y": 24.4135,
+                                    "z": 5.2395
+                                },
+                                "rotation": {
+                                    "w": 1,
+                                    "x": 0,
+                                    "y": 0,
+                                    "z": 0
+                                },
+                                "scale": {
+                                    "x": 1,
+                                    "y": 1,
+                                    "z": 1
+                                }
+                            }
+                        },
+                        {
+                            "geometry": {
+                                "$context": {
+                                    "half_extents": {
+                                        "x": 43.574,
+                                        "y": 0.5175,
+                                        "z": 6.2375
+                                    }
+                                },
+                                "$typeName": "Box"
+                            },
+                            "local_transform": {
+                                "position": {
+                                    "x": -0.248,
+                                    "y": -24.5185,
+                                    "z": 5.2395
+                                },
+                                "rotation": {
+                                    "w": 1,
+                                    "x": 0,
+                                    "y": 0,
+                                    "z": 0
+                                },
+                                "scale": {
+                                    "x": 1,
+                                    "y": 1,
+                                    "z": 1
+                                }
+                            }
+                        },
+                        {
+                            "geometry": {
+                                "$context": {
+                                    "half_extents": {
+                                        "x": 0.5175,
+                                        "y": 24.867,
+                                        "z": 6.2375
+                                    }
+                                },
+                                "$typeName": "Box"
+                            },
+                            "local_transform": {
+                                "position": {
+                                    "x": 42.8585,
+                                    "y": 0.004,
+                                    "z": 5.2395
+                                },
+                                "rotation": {
+                                    "w": 1,
+                                    "x": 0,
+                                    "y": 0,
+                                    "z": 0
+                                },
+                                "scale": {
+                                    "x": 1,
+                                    "y": 1,
+                                    "z": 1
+                                }
+                            }
+                        },
+                        {
+                            "geometry": {
+                                "$context": {
+                                    "half_extents": {
+                                        "x": 0.5175,
+                                        "y": 24.867,
+                                        "z": 6.2375
+                                    }
+                                },
+                                "$typeName": "Box"
+                            },
+                            "local_transform": {
+                                "position": {
+                                    "x": -43.438,
+                                    "y": 0.004,
+                                    "z": 5.2395
+                                },
+                                "rotation": {
+                                    "w": 1,
+                                    "x": 0,
+                                    "y": 0,
+                                    "z": 0
+                                },
+                                "scale": {
+                                    "x": 1,
+                                    "y": 1,
+                                    "z": 1
+                                }
+                            }
+                        }
+                    ]
+                }
+            },
+            "$typeName": "RigidBodyComponent"
+        }
+    ]
+}
