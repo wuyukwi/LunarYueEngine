@@ -28,41 +28,6 @@ LunarYueEngineは、C++とVulkanをベースにしたクロスプラットフォ
 
 LunarYueをビルドするには、まず以下のツールをインストールする必要があります。
 
-### Windows 10/11
-- Visual Studio 2019（またはそれ以降のバージョン）
-- CMake 3.19（またはそれ以降のバージョン）
-- Git 2.1（またはそれ以降のバージョン）
-
-### macOS >= 10.15 (x86_64)
-- Xcode 12.3（またはそれ以降のバージョン）
-- CMake 3.19（またはそれ以降のバージョン）
-- Git 2.1（またはそれ以降のバージョン）
-
-### Ubuntu 20.04
-<details>
-  <summary><b>以下のパッケージをインストールします</b></summary>
-  <br>
-
-```
-sudo apt install libxrandr-dev
-sudo apt install libxrender-dev
-sudo apt install libxinerama-dev
-sudo apt install libxcursor-dev
-sudo apt install libxi-dev
-sudo apt install libglvnd-dev
-sudo apt install libvulkan-dev
-sudo apt install cmake
-sudo apt install clang
-sudo apt install libc++-dev
-sudo apt install libglew-dev
-sudo apt install libglfw3-dev
-sudo apt install vulkan-validationlayers
-sudo apt install mesa-vulkan-drivers
-```
-
-  <br>
-</details>
-
 <details>
   <summary><b>CMakeインストール手順</b></summary>
   <br>
@@ -98,6 +63,41 @@ sudo apt-get install cmake
 brew install cmake
 ```
 3. インストールが完了したら、'cmake --version'コマンドを実行して、CMakeが正しくインストールされていることを確認します。このコマンドが実行されると、CMakeのバージョン情報が表示されます。
+
+  <br>
+</details>
+
+### Windows 10/11
+- Visual Studio 2019（またはそれ以降のバージョン）
+- CMake 3.19（またはそれ以降のバージョン）
+- Git 2.1（またはそれ以降のバージョン）
+
+### macOS >= 10.15 (x86_64)
+- Xcode 12.3（またはそれ以降のバージョン）
+- CMake 3.19（またはそれ以降のバージョン）
+- Git 2.1（またはそれ以降のバージョン）
+
+### Ubuntu 20.04
+<details>
+  <summary><b>以下のパッケージをインストールします</b></summary>
+  <br>
+
+```
+sudo apt install libxrandr-dev
+sudo apt install libxrender-dev
+sudo apt install libxinerama-dev
+sudo apt install libxcursor-dev
+sudo apt install libxi-dev
+sudo apt install libglvnd-dev
+sudo apt install libvulkan-dev
+sudo apt install cmake
+sudo apt install clang
+sudo apt install libc++-dev
+sudo apt install libglew-dev
+sudo apt install libglfw3-dev
+sudo apt install vulkan-validationlayers
+sudo apt install mesa-vulkan-drivers
+```
 
   <br>
 </details>
