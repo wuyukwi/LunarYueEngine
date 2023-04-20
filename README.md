@@ -31,18 +31,6 @@ LunarYueをビルドするには、まず以下のツールをインストール
 ### Windows 10/11
 - Visual Studio 2019（またはそれ以降のバージョン）
 - CMake 3.19（またはそれ以降のバージョン）
-<details>
-  <summary>CMakeインストール手順</summary>
-  
-
-  1. CMakeの公式サイト (https://cmake.org/download/) にアクセスして、Windows向けのインストーラーをダウンロードします。
-
-  2. ダウンロードしたインストーラーを実行し、CMakeをインストールします。インストール時に、「Add CMake to the system PATH for all users」オプションを選択して、CMakeがシステムのPATHに追加されるようにしてください。
-
-  3. インストールが完了したら、コマンドプロンプトを開いて、'cmake --version'コマンドを実行して、CMakeが正しくインストールされていることを確認します。このコマンドが実行されると、CMakeのバージョン情報が表示されます。
-
-</details>
-
 - Git 2.1（またはそれ以降のバージョン）
 
 ### macOS >= 10.15 (x86_64)
@@ -51,7 +39,10 @@ LunarYueをビルドするには、まず以下のツールをインストール
 - Git 2.1（またはそれ以降のバージョン）
 
 ### Ubuntu 20.04
-- 以下のパッケージをインストールします
+<details>
+  <summary><b>以下のパッケージをインストールします</b></summary>
+  <br>
+
 ```
 sudo apt install libxrandr-dev
 sudo apt install libxrender-dev
@@ -68,6 +59,9 @@ sudo apt install libglfw3-dev
 sudo apt install vulkan-validationlayers
 sudo apt install mesa-vulkan-drivers
 ```
+
+  <br>
+</details>
 
 <details>
   <summary><b>CMakeインストール手順</b></summary>
@@ -115,7 +109,13 @@ brew install cmake
 
 また、次のコマンドを使用して最初に **Visual Studio** プロジェクトを生成し、ビルドディレクトリ内のソリューションを開いて手動でビルドすることができます。
 
-### macOSでのビルド
+```
+cmake -S . -B build
+```
+
+<details>
+  <summary><b>macOSでのビルド</b></summary>
+  <br>
 
 > 以下のビルド手順は、x86_64の特定のハードウェアでのみテストされており、M1チップには対応していません。M1対応については後日リリース予定です。
 
@@ -131,6 +131,9 @@ cmake --build build --config Release
 ```
 
 また、build_macos.sh を実行してバイナリをビルドすることもできます。
+
+  <br>
+</details>
 
 ### Ubuntu 20.04でビルド
 **build_linux.sh**を実行してバイナリをビルドできます。

@@ -8,8 +8,8 @@
 #include <cmath>
 
 // https://gcc.gnu.org/onlinedocs/cpp/Stringizing.html
-#define LunarYue_XSTR(s) LunarYue_STR(s)
-#define LunarYue_STR(s) #s
+#define LUNAR_YUE_XSTR(s) LUNAR_YUE_STR(s)
+#define LUNAR_YUE_STR(s) #s
 
 #if defined(__GNUC__)
 // https://gcc.gnu.org/onlinedocs/cpp/Common-Predefined-Macros.html
@@ -120,7 +120,7 @@ namespace LunarYue
 #endif
 #elif defined(_MSC_VER)
         // https://docs.microsoft.com/en-us/cpp/preprocessor/predefined-macros
-        char const* vk_layer_path = LunarYue_XSTR(LunarYue_VK_LAYER_PATH);
+        char const* vk_layer_path = LUNAR_YUE_XSTR(LunarYue_VK_LAYER_PATH);
         SetEnvironmentVariableA("VK_LAYER_PATH", vk_layer_path);
         SetEnvironmentVariableA("DISABLE_LAYER_AMD_SWITCHABLE_GRAPHICS_1", "1");
 #else

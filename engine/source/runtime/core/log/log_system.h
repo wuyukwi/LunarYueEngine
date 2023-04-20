@@ -11,6 +11,7 @@ namespace LunarYue
     class LogSystem final
     {
     public:
+        // ログレベル
         enum class LogLevel : uint8_t
         {
             debug,
@@ -24,6 +25,7 @@ namespace LunarYue
         LogSystem();
         ~LogSystem();
 
+        // ログメッセージを出力する
         template<typename... TARGS>
         void log(LogLevel level, TARGS&&... args)
         {
@@ -50,6 +52,7 @@ namespace LunarYue
             }
         }
 
+        // 致命的なエラーが発生した場合のコールバック
         template<typename... TARGS>
         void fatalCallback(TARGS&&... args)
         {

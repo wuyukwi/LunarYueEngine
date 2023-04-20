@@ -6,34 +6,45 @@
 
 namespace LunarYue
 {
+    // エディタファイルノードクラスの定義
     class EditorFileNode;
+    // エディタファイルノードの配列を定義
     using EditorFileNodeArray = std::vector<std::shared_ptr<EditorFileNode>>;
 
+    // エディタファイルノード構造体
     struct EditorFileNode
     {
-        std::string         m_file_name;
-        std::string         m_file_type;
-        std::string         m_file_path;
-        int                 m_node_depth;
-        EditorFileNodeArray m_child_nodes;
+        std::string         m_file_name;   // ファイル名
+        std::string         m_file_type;   // ファイルタイプ
+        std::string         m_file_path;   // ファイルパス
+        int                 m_node_depth;  // ノードの深さ
+        EditorFileNodeArray m_child_nodes; // 子ノードの配列
+
+        // デフォルトコンストラクタ
         EditorFileNode() = default;
+        // パラメータ付きコンストラクタ
         EditorFileNode(const std::string& name, const std::string& type, const std::string& path, int depth) :
             m_file_name(name), m_file_type(type), m_file_path(path), m_node_depth(depth)
         {}
     };
 
+    // エディタファイルサービスクラス
     class EditorFileService
     {
-        EditorFileNodeArray m_file_node_array;
-        EditorFileNode      m_root_node{ "asset", "Folder", "asset", -1 };
+        EditorFileNodeArray m_file_node_array;                            // エディタファイルノードの配列
+        EditorFileNode      m_root_node {"asset", "Folder", "asset", -1}; // ルートノード
 
     private:
+        // 親ノードポインタを取得する関数
         EditorFileNode* getParentNodePtr(EditorFileNode* file_node);
-        bool            checkFileArray(EditorFileNode* file_node);
+        // ファイル配列をチェックする関数
+        bool checkFileArray(EditorFileNode* file_node);
 
     public:
+        // エディタのルートノードを取得する関数
         EditorFileNode* getEditorRootNode() { return m_file_node_array.empty() ? nullptr : m_file_node_array[0].get(); }
 
+        // エンジンファイルツリーを構築する関数
         void buildEngineFileTree();
     };
 } // namespace LunarYue

@@ -1,36 +1,36 @@
 #include <filesystem>
 #include <iostream>
-#include <string>
 #include <thread>
-#include <unordered_map>
 
 #include "runtime/engine.h"
 
 #include "editor/include/editor.h"
 
+// 文字列化マクロ定義
 // https://gcc.gnu.org/onlinedocs/cpp/Stringizing.html
-#define LunarYue_XSTR(s) LunarYue_STR(s)
-#define LunarYue_STR(s) #s
+#define LUNAR_YUE_XSTR(s) LUNAR_YUE_STR(s)
+#define LUNAR_YUE_STR(s) #s
 
 int main(int argc, char** argv)
 {
-    std::filesystem::path executable_path(argv[0]);
-    std::filesystem::path config_file_path = executable_path.parent_path() / "LunarYueEditor.ini";
+    const std::filesystem::path executable_path(argv[0]); // 実行ファイルのパスを取得
+    std::filesystem::path       config_file_path =
+        executable_path.parent_path() / "LunarYueEditor.ini"; // 設定ファイルのパスを設定
 
-    LunarYue::LunarYueEngine* engine = new LunarYue::LunarYueEngine();
+    LunarYue::LunarYueEngine* engine = new LunarYue::LunarYueEngine(); // エンジンのインスタンスを生成
 
-    engine->startEngine(config_file_path.generic_string());
-    engine->initialize();
+    engine->startEngine(config_file_path.generic_string()); // エンジンを開始
+    engine->initialize();                                   // エンジンを初期化
 
-    LunarYue::LunarYueEditor* editor = new LunarYue::LunarYueEditor();
-    editor->initialize(engine);
+    LunarYue::LunarYueEditor* editor = new LunarYue::LunarYueEditor(); // エディタのインスタンスを生成
+    editor->initialize(engine);                                        // エディタを初期化
 
-    editor->run();
+    editor->run(); // エディタを起動
 
-    editor->clear();
+    editor->clear(); // エディタのインスタンスをクリア
 
-    engine->clear();
-    engine->shutdownEngine();
+    engine->clear();          // エンジンのインスタンスをクリア
+    engine->shutdownEngine(); // エンジンをシャットダウン
 
     return 0;
 }
