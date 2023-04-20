@@ -57,6 +57,46 @@ sudo apt install libglfw3-dev
 sudo apt install vulkan-validationlayers
 sudo apt install mesa-vulkan-drivers
 ```
+
+<details>
+  <summary><b>CMake安装教程</b></summary>
+  <br>
+ <b>Windows：</b>
+
+1. 访问CMake官方网站 (https://cmake.org/download/) ，下载适用于Windows的安装程序。
+
+2. 运行下载的安装程序，安装CMake。在安装过程中，请选择“将CMake添加到所有用户的系统路径”选项，以便将CMake添加到系统的PATH中。
+
+3. 安装完成后，打开命令提示符，运行'cmake --version'命令，检查CMake是否已正确安装。运行此命令后，将显示CMake的版本信息。
+
+  <br>
+<b>Linux：</b>
+
+1. 打开终端，运行以下命令以安装CMake：
+
+   ```
+   sudo apt-get update
+   sudo apt-get install cmake
+   ```
+
+2. 安装完成后，运行'cmake --version'命令，检查CMake是否已正确安装。运行此命令后，将显示CMake的版本信息。
+
+  <br>
+<b>macOS：</b>
+
+1. 如果尚未安装Homebrew，请按照官方网站 (https://brew.sh/index_ja) 的说明进行安装。
+
+2. 打开终端，运行以下命令以安装CMake：
+
+   ```
+   brew install cmake
+   ```
+
+3. 安装完成后，运行'cmake --version'命令，检查CMake是否已正确安装。运行此命令后，将显示CMake的版本信息。
+
+  <br>
+</details>
+
 ## 构建LunarYue
 
 ### 在Windows上构建

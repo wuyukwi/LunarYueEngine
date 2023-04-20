@@ -20,9 +20,9 @@ LunarYueEngineは、C++とVulkanをベースにしたクロスプラットフォ
 
 このREADMEファイルは複数の言語で利用可能です。
 
-- [英語](README-en.md)
+- [English](README-en.md)
 - [日本語](README.md)
-- [中国語](README-zh.md)
+- [中文](README-zh.md)
 
 ## 前提条件
 
@@ -31,6 +31,18 @@ LunarYueをビルドするには、まず以下のツールをインストール
 ### Windows 10/11
 - Visual Studio 2019（またはそれ以降のバージョン）
 - CMake 3.19（またはそれ以降のバージョン）
+<details>
+  <summary>CMakeインストール手順</summary>
+  
+
+  1. CMakeの公式サイト (https://cmake.org/download/) にアクセスして、Windows向けのインストーラーをダウンロードします。
+
+  2. ダウンロードしたインストーラーを実行し、CMakeをインストールします。インストール時に、「Add CMake to the system PATH for all users」オプションを選択して、CMakeがシステムのPATHに追加されるようにしてください。
+
+  3. インストールが完了したら、コマンドプロンプトを開いて、'cmake --version'コマンドを実行して、CMakeが正しくインストールされていることを確認します。このコマンドが実行されると、CMakeのバージョン情報が表示されます。
+
+</details>
+
 - Git 2.1（またはそれ以降のバージョン）
 
 ### macOS >= 10.15 (x86_64)
@@ -56,6 +68,46 @@ sudo apt install libglfw3-dev
 sudo apt install vulkan-validationlayers
 sudo apt install mesa-vulkan-drivers
 ```
+
+<details>
+  <summary><b>CMakeインストール手順</b></summary>
+  <br>
+<b>Windows:</b>
+
+1. CMakeの公式サイト (https://cmake.org/download/) にアクセスして、Windows向けのインストーラーをダウンロードします。
+
+2. ダウンロードしたインストーラーを実行し、CMakeをインストールします。インストール時に、「Add CMake to the system PATH for all users」オプションを選択して、CMakeがシステムのPATHに追加されるようにしてください。
+
+3. インストールが完了したら、コマンドプロンプトを開いて、'cmake --version'コマンドを実行して、CMakeが正しくインストールされていることを確認します。このコマンドが実行されると、CMakeのバージョン情報が表示されます。
+
+  <br>
+<b>Linux:</b>
+
+1. ターミナルを開いて、以下のコマンドを実行してCMakeをインストールします。
+
+``` sql
+Copy code
+sudo apt-get update
+sudo apt-get install cmake
+```
+
+2. インストールが完了したら、'cmake --version'コマンドを実行して、CMakeが正しくインストールされていることを確認します。このコマンドが実行されると、CMakeのバージョン情報が表示されます。
+
+  <br>
+<b>macOS:</b>
+
+1. Homebrewがインストールされていない場合は、公式サイト (https://brew.sh/index_ja) の指示に従ってインストールします。
+
+2. ターミナルを開いて、以下のコマンドを実行してCMakeをインストールします。
+
+```
+brew install cmake
+```
+3. インストールが完了したら、'cmake --version'コマンドを実行して、CMakeが正しくインストールされていることを確認します。このコマンドが実行されると、CMakeのバージョン情報が表示されます。
+
+  <br>
+</details>
+
 ## LunarYueのビルド
 
 ### Windowsでのビルド

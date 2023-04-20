@@ -56,6 +56,46 @@ sudo apt install libglfw3-dev
 sudo apt install vulkan-validationlayers
 sudo apt install mesa-vulkan-drivers
 ```
+
+<details>
+  <summary><b>CMake Installation Guide</b></summary>
+  <br>
+ <b>Windows:</b>
+
+1. Visit the CMake official website (https://cmake.org/download/) and download the installer for Windows.
+
+2. Run the downloaded installer and install CMake. During the installation, select the "Add CMake to the system PATH for all users" option to add CMake to the system PATH.
+
+3. After the installation is complete, open the command prompt and run the 'cmake --version' command to check if CMake has been correctly installed. After running this command, the version information of CMake will be displayed.
+
+  <br>
+<b>Linux:</b>
+
+1. Open the terminal and run the following command to install CMake:
+
+   ```
+   sudo apt-get update
+   sudo apt-get install cmake
+   ```
+
+2. After the installation is complete, run the 'cmake --version' command to check if CMake has been correctly installed. After running this command, the version information of CMake will be displayed.
+
+  <br>
+<b>macOS:</b>
+
+1. If you haven't installed Homebrew yet, follow the instructions on the official website (https://brew.sh/index_en).
+
+2. Open the terminal and run the following command to install CMake:
+
+   ```
+   brew install cmake
+   ```
+
+3. After the installation is complete, run the 'cmake --version' command to check if CMake has been correctly installed. After running this command, the version information of CMake will be displayed.
+
+  <br>
+</details>
+
 ## Building LunarYue
 
 ### Building on Windows
