@@ -1,5 +1,6 @@
 #include "editor/include/editor_ui.h"
 
+#include "editor/include/IconsFontAwesome5.h"
 #include "editor/include/editor_global_context.h"
 #include "editor/include/editor_input_manager.h"
 #include "editor/include/editor_scene_manager.h"
@@ -14,16 +15,14 @@
 
 #include "runtime/engine.h"
 
-#include "runtime/function/framework/component/mesh/mesh_component.h"
-#include "runtime/function/framework/component/transform/transform_component.h"
 #include "runtime/function/framework/level/level.h"
 #include "runtime/function/framework/world/world_manager.h"
 #include "runtime/function/global/global_context.h"
 #include "runtime/function/input/input_system.h"
 #include "runtime/function/render/render_camera.h"
+#include "runtime/function/render/render_debug_config.h"
 #include "runtime/function/render/render_system.h"
 #include "runtime/function/render/window_system.h"
-#include "runtime/function/render/render_debug_config.h"
 
 #include <imgui.h>
 #include <imgui_internal.h>
@@ -31,96 +30,114 @@
 
 namespace LunarYue
 {
+    // エディタのノードの状態を保持するための配列
     std::vector<std::pair<std::string, bool>> g_editor_node_state_array;
-    int                                       g_node_depth = -1;
-    void                                      DrawVecControl(const std::string& label,
-                                                             LunarYue::Vector3&    values,
-                                                             float              resetValue  = 0.0f,
-                                                             float              columnWidth = 100.0f);
-    void                                      DrawVecControl(const std::string& label,
-                                                             LunarYue::Quaternion& values,
-                                                             float              resetValue  = 0.0f,
-                                                             float              columnWidth = 100.0f);
+    // 現在のノードの深さ
+    int g_node_depth = -1;
 
+    void DrawVecControl(const std::string& label, LunarYue::Vector3& values, float resetValue = 0.0f, float columnWidth = 100.0f);
+
+    void DrawVecControl(const std::string& label, LunarYue::Quaternion& values, float resetValue = 0.0f, float columnWidth = 100.0f);
+
+    // コンストラクタ
     EditorUI::EditorUI()
     {
-        const auto& asset_folder            = g_runtime_global_context.m_config_manager->getAssetFolder();
+        // アセットフォルダのパスを取得する
+        const auto& asset_folder = g_runtime_global_context.m_config_manager->getAssetFolder();
+
+        // 各種UIコントロールを作成するためのラムダ式を設定する
+
         m_editor_ui_creator["TreeNodePush"] = [this](const std::string& name, void* value_ptr) -> void {
-            static ImGuiTableFlags flags      = ImGuiTableFlags_Resizable | ImGuiTableFlags_NoSavedSettings;
-            bool                   node_state = false;
+            // テーブルフラグを設定する
+            static ImGuiTableFlags flags = ImGuiTableFlags_Resizable | ImGuiTableFlags_NoSavedSettings;
+            // ノードの状態を保持するフラグ
+            bool node_state = false;
+            // ノードの深さを増やす
             g_node_depth++;
             if (g_node_depth > 0)
             {
+                // 親ノードが開いている場合は、ノードを展開する
                 if (g_editor_node_state_array[g_node_depth - 1].second)
                 {
                     node_state = ImGui::TreeNodeEx(name.c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
                 }
+                // 親ノードが閉じている場合は、ノードの状態を保持する
                 else
                 {
                     g_editor_node_state_array.emplace_back(std::pair(name.c_str(), node_state));
                     return;
                 }
             }
+            // ノードの深さが0の場合は、ノードを展開する
             else
             {
                 node_state = ImGui::TreeNodeEx(name.c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
             }
+            // ノードの状態を保持する
             g_editor_node_state_array.emplace_back(std::pair(name.c_str(), node_state));
         };
+
         m_editor_ui_creator["TreeNodePop"] = [this](const std::string& name, void* value_ptr) -> void {
+            // ノードが展開されている場合は、ノードを閉じる
             if (g_editor_node_state_array[g_node_depth].second)
             {
                 ImGui::TreePop();
             }
+            // ノードの状態を保持する配列からノードを削除する
             g_editor_node_state_array.pop_back();
+            // ノードの深さを減らす
             g_node_depth--;
         };
+
+        // TransformのUIを描画する
         m_editor_ui_creator["Transform"] = [this](const std::string& name, void* value_ptr) -> void {
-            if (g_editor_node_state_array[g_node_depth].second)
+            if (g_editor_node_state_array[g_node_depth].second) // ノードが開かれている場合のみ描画
             {
-                Transform* trans_ptr = static_cast<Transform*>(value_ptr);
+                auto trans_ptr = static_cast<Transform*>(value_ptr);
 
                 Vector3 degrees_val;
 
+                // 角度を度数法で取得
                 degrees_val.x = trans_ptr->m_rotation.getPitch(false).valueDegrees();
                 degrees_val.y = trans_ptr->m_rotation.getRoll(false).valueDegrees();
                 degrees_val.z = trans_ptr->m_rotation.getYaw(false).valueDegrees();
 
+                // 位置、回転、スケールのUIを描画
                 DrawVecControl("Position", trans_ptr->m_position);
                 DrawVecControl("Rotation", degrees_val);
                 DrawVecControl("Scale", trans_ptr->m_scale);
 
-                trans_ptr->m_rotation.w = Math::cos(Math::degreesToRadians(degrees_val.x / 2)) *
-                                              Math::cos(Math::degreesToRadians(degrees_val.y / 2)) *
-                                              Math::cos(Math::degreesToRadians(degrees_val.z / 2)) +
-                                          Math::sin(Math::degreesToRadians(degrees_val.x / 2)) *
-                                              Math::sin(Math::degreesToRadians(degrees_val.y / 2)) *
-                                              Math::sin(Math::degreesToRadians(degrees_val.z / 2));
-                trans_ptr->m_rotation.x = Math::sin(Math::degreesToRadians(degrees_val.x / 2)) *
-                                              Math::cos(Math::degreesToRadians(degrees_val.y / 2)) *
-                                              Math::cos(Math::degreesToRadians(degrees_val.z / 2)) -
-                                          Math::cos(Math::degreesToRadians(degrees_val.x / 2)) *
-                                              Math::sin(Math::degreesToRadians(degrees_val.y / 2)) *
-                                              Math::sin(Math::degreesToRadians(degrees_val.z / 2));
-                trans_ptr->m_rotation.y = Math::cos(Math::degreesToRadians(degrees_val.x / 2)) *
-                                              Math::sin(Math::degreesToRadians(degrees_val.y / 2)) *
-                                              Math::cos(Math::degreesToRadians(degrees_val.z / 2)) +
-                                          Math::sin(Math::degreesToRadians(degrees_val.x / 2)) *
-                                              Math::cos(Math::degreesToRadians(degrees_val.y / 2)) *
-                                              Math::sin(Math::degreesToRadians(degrees_val.z / 2));
-                trans_ptr->m_rotation.z = Math::cos(Math::degreesToRadians(degrees_val.x / 2)) *
-                                              Math::cos(Math::degreesToRadians(degrees_val.y / 2)) *
-                                              Math::sin(Math::degreesToRadians(degrees_val.z / 2)) -
-                                          Math::sin(Math::degreesToRadians(degrees_val.x / 2)) *
-                                              Math::sin(Math::degreesToRadians(degrees_val.y / 2)) *
-                                              Math::cos(Math::degreesToRadians(degrees_val.z / 2));
+                // Quaternionに角度を反映
+                trans_ptr->m_rotation.w =
+                    Math::cos(Math::degreesToRadians(degrees_val.x / 2)) * Math::cos(Math::degreesToRadians(degrees_val.y / 2)) *
+                        Math::cos(Math::degreesToRadians(degrees_val.z / 2)) +
+                    Math::sin(Math::degreesToRadians(degrees_val.x / 2)) * Math::sin(Math::degreesToRadians(degrees_val.y / 2)) *
+                        Math::sin(Math::degreesToRadians(degrees_val.z / 2));
+                trans_ptr->m_rotation.x =
+                    Math::sin(Math::degreesToRadians(degrees_val.x / 2)) * Math::cos(Math::degreesToRadians(degrees_val.y / 2)) *
+                        Math::cos(Math::degreesToRadians(degrees_val.z / 2)) -
+                    Math::cos(Math::degreesToRadians(degrees_val.x / 2)) * Math::sin(Math::degreesToRadians(degrees_val.y / 2)) *
+                        Math::sin(Math::degreesToRadians(degrees_val.z / 2));
+                trans_ptr->m_rotation.y =
+                    Math::cos(Math::degreesToRadians(degrees_val.x / 2)) * Math::sin(Math::degreesToRadians(degrees_val.y / 2)) *
+                        Math::cos(Math::degreesToRadians(degrees_val.z / 2)) +
+                    Math::sin(Math::degreesToRadians(degrees_val.x / 2)) * Math::cos(Math::degreesToRadians(degrees_val.y / 2)) *
+                        Math::sin(Math::degreesToRadians(degrees_val.z / 2));
+                trans_ptr->m_rotation.z =
+                    Math::cos(Math::degreesToRadians(degrees_val.x / 2)) * Math::cos(Math::degreesToRadians(degrees_val.y / 2)) *
+                        Math::sin(Math::degreesToRadians(degrees_val.z / 2)) -
+                    Math::sin(Math::degreesToRadians(degrees_val.x / 2)) * Math::sin(Math::degreesToRadians(degrees_val.y / 2)) *
+                        Math::cos(Math::degreesToRadians(degrees_val.z / 2));
                 trans_ptr->m_rotation.normalise();
 
+                // 選択されたエンティティの軸を描画
                 g_editor_global_context.m_scene_manager->drawSelectedEntityAxis();
             }
         };
-        m_editor_ui_creator["bool"] = [this](const std::string& name, void* value_ptr)  -> void {
-            if(g_node_depth == -1)
+
+        m_editor_ui_creator["bool"] = [this](const std::string& name, void* value_ptr) -> void {
+            // ノードがルート階層の場合は、ラベルとチェックボックスを表示
+            if (g_node_depth == -1)
             {
                 std::string label = "##" + name;
                 ImGui::Text("%s", name.c_str());
@@ -129,7 +146,8 @@ namespace LunarYue
             }
             else
             {
-                if(g_editor_node_state_array[g_node_depth].second)
+                // ノードが展開されている場合は、ラベルとチェックボックスを表示
+                if (g_editor_node_state_array[g_node_depth].second)
                 {
                     std::string full_label = "##" + getLeafUINodeParentLabel() + name;
                     ImGui::Text("%s", name.c_str());
@@ -137,7 +155,9 @@ namespace LunarYue
                 }
             }
         };
+
         m_editor_ui_creator["int"] = [this](const std::string& name, void* value_ptr) -> void {
+            // ノードがルート階層の場合は、ラベルと数値入力欄を表示
             if (g_node_depth == -1)
             {
                 std::string label = "##" + name;
@@ -147,6 +167,7 @@ namespace LunarYue
             }
             else
             {
+                // ノードが展開されている場合は、ラベルと数値入力欄を表示
                 if (g_editor_node_state_array[g_node_depth].second)
                 {
                     std::string full_label = "##" + getLeafUINodeParentLabel() + name;
@@ -155,7 +176,9 @@ namespace LunarYue
                 }
             }
         };
+
         m_editor_ui_creator["float"] = [this](const std::string& name, void* value_ptr) -> void {
+            // ノードがルート階層の場合は、ラベルと数値入力欄を表示
             if (g_node_depth == -1)
             {
                 std::string label = "##" + name;
@@ -165,6 +188,7 @@ namespace LunarYue
             }
             else
             {
+                // ノードが展開されている場合は、ラベルと数値入力欄を表示
                 if (g_editor_node_state_array[g_node_depth].second)
                 {
                     std::string full_label = "##" + getLeafUINodeParentLabel() + name;
@@ -173,11 +197,14 @@ namespace LunarYue
                 }
             }
         };
+
+        // Vector3型のUIを作成するラムダ式
         m_editor_ui_creator["Vector3"] = [this](const std::string& name, void* value_ptr) -> void {
-            Vector3* vec_ptr = static_cast<Vector3*>(value_ptr);
-            float    val[3]  = {vec_ptr->x, vec_ptr->y, vec_ptr->z};
+            auto  vec_ptr = static_cast<Vector3*>(value_ptr);
+            float val[3]  = {vec_ptr->x, vec_ptr->y, vec_ptr->z};
             if (g_node_depth == -1)
             {
+                // ルートノードの場合はラベルを表示してDragFloat3を使用
                 std::string label = "##" + name;
                 ImGui::Text("%s", name.c_str());
                 ImGui::SameLine();
@@ -185,6 +212,7 @@ namespace LunarYue
             }
             else
             {
+                // リーフノードの場合は親要素とのラベルを合成した文字列を使用
                 if (g_editor_node_state_array[g_node_depth].second)
                 {
                     std::string full_label = "##" + getLeafUINodeParentLabel() + name;
@@ -196,11 +224,14 @@ namespace LunarYue
             vec_ptr->y = val[1];
             vec_ptr->z = val[2];
         };
+
+        // Quaternion型のUIを作成するラムダ式
         m_editor_ui_creator["Quaternion"] = [this](const std::string& name, void* value_ptr) -> void {
-            Quaternion* qua_ptr = static_cast<Quaternion*>(value_ptr);
-            float       val[4]  = {qua_ptr->x, qua_ptr->y, qua_ptr->z, qua_ptr->w};
+            auto  qua_ptr = static_cast<Quaternion*>(value_ptr);
+            float val[4]  = {qua_ptr->x, qua_ptr->y, qua_ptr->z, qua_ptr->w};
             if (g_node_depth == -1)
             {
+                // ルートノードの場合はラベルを表示してDragFloat4を使用
                 std::string label = "##" + name;
                 ImGui::Text("%s", name.c_str());
                 ImGui::SameLine();
@@ -208,6 +239,7 @@ namespace LunarYue
             }
             else
             {
+                // リーフノードの場合は親要素とのラベルを合成した文字列を使用
                 if (g_editor_node_state_array[g_node_depth].second)
                 {
                     std::string full_label = "##" + getLeafUINodeParentLabel() + name;
@@ -220,21 +252,30 @@ namespace LunarYue
             qua_ptr->z = val[2];
             qua_ptr->w = val[3];
         };
+
+        // std::string型のUIを作成するラムダ式を登録する
         m_editor_ui_creator["std::string"] = [this, &asset_folder](const std::string& name, void* value_ptr) -> void {
+            // ノードがルートノードの場合
             if (g_node_depth == -1)
             {
+                // ラベルを作成してUIに表示する
                 std::string label = "##" + name;
                 ImGui::Text("%s", name.c_str());
                 ImGui::SameLine();
                 ImGui::Text("%s", (*static_cast<std::string*>(value_ptr)).c_str());
             }
+            // ノードがルートノードではなく、かつ編集可能な状態の場合
             else
             {
                 if (g_editor_node_state_array[g_node_depth].second)
                 {
+                    // 親のラベルを取得してフルラベルを作成する
                     std::string full_label = "##" + getLeafUINodeParentLabel() + name;
+                    // ラベル名とコロンを表示する
                     ImGui::Text("%s", (name + ":").c_str());
+                    // std::string型の値を文字列に変換して表示する
                     std::string value_str = *static_cast<std::string*>(value_ptr);
+                    // 値がファイルパスの場合は相対パスに変換する
                     if (value_str.find_first_of('/') != std::string::npos)
                     {
                         std::filesystem::path value_path(value_str);
@@ -243,6 +284,7 @@ namespace LunarYue
                             value_path = Path::getRelativePath(asset_folder, value_path);
                         }
                         value_str = value_path.generic_string();
+                        // 相対パスが'..'で始まる場合は空文字列にする
                         if (value_str.size() >= 2 && value_str[0] == '.' && value_str[1] == '.')
                         {
                             value_str.clear();
@@ -256,13 +298,14 @@ namespace LunarYue
 
     std::string EditorUI::getLeafUINodeParentLabel()
     {
-        std::string parent_label;
-        int         array_size = g_editor_node_state_array.size();
-        for (int index = 0; index < array_size; index++)
+        std::string parent_label;                                  // 親ラベルを格納するための変数
+        int         array_size = g_editor_node_state_array.size(); // 配列のサイズを取得
+        for (int index = 0; index < array_size; index++)           // 配列のサイズ分繰り返し
         {
+            // 各インデックスのエディタノード状態を取得し、親ラベルに追加
             parent_label += g_editor_node_state_array[index].first + "::";
         }
-        return parent_label;
+        return parent_label; // 親ラベルを返す
     }
 
     void EditorUI::showEditorUI()
@@ -276,20 +319,20 @@ namespace LunarYue
 
     void EditorUI::showEditorMenu(bool* p_open)
     {
-        ImGuiDockNodeFlags dock_flags   = ImGuiDockNodeFlags_DockSpace;
-        ImGuiWindowFlags   window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoTitleBar |
-                                        ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
-                                        ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBackground |
+        ImGuiDockNodeFlags dock_flags = ImGuiDockNodeFlags_DockSpace;
+        // ウィンドウフラグの設定
+        ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse |
+                                        ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBackground |
                                         ImGuiConfigFlags_NoMouseCursorChange | ImGuiWindowFlags_NoBringToFrontOnFocus;
 
-        const ImGuiViewport* main_viewport = ImGui::GetMainViewport();
-        ImGui::SetNextWindowPos(main_viewport->WorkPos, ImGuiCond_Always);
-        std::array<int, 2> window_size = g_editor_global_context.m_window_system->getWindowSize();
-        ImGui::SetNextWindowSize(ImVec2((float)window_size[0], (float)window_size[1]), ImGuiCond_Always);
+        const ImGuiViewport* main_viewport = ImGui::GetMainViewport();                                    // メインビューポートの取得
+        ImGui::SetNextWindowPos(main_viewport->WorkPos, ImGuiCond_Always);                                // ウィンドウの位置を設定
+        std::array<int, 2> window_size = g_editor_global_context.m_window_system->getWindowSize();        // ウィンドウサイズの取得
+        ImGui::SetNextWindowSize(ImVec2((float)window_size[0], (float)window_size[1]), ImGuiCond_Always); // ウィンドウサイズを設定
 
-        ImGui::SetNextWindowViewport(main_viewport->ID);
+        ImGui::SetNextWindowViewport(main_viewport->ID); // メインビューポートを設定
 
-        ImGui::Begin("Editor menu", p_open, window_flags);
+        ImGui::Begin("Editor menu", p_open, window_flags); // エディタメニューウィンドウを開始
 
         ImGuiID main_docking_id = ImGui::GetID("Main Docking");
         if (ImGui::DockBuilderGetNode(main_docking_id) == nullptr)
@@ -297,21 +340,18 @@ namespace LunarYue
             ImGui::DockBuilderRemoveNode(main_docking_id);
 
             ImGui::DockBuilderAddNode(main_docking_id, dock_flags);
-            ImGui::DockBuilderSetNodePos(main_docking_id,
-                                         ImVec2(main_viewport->WorkPos.x, main_viewport->WorkPos.y + 18.0f));
-            ImGui::DockBuilderSetNodeSize(main_docking_id,
-                                          ImVec2((float)window_size[0], (float)window_size[1] - 18.0f));
+            ImGui::DockBuilderSetNodePos(main_docking_id, ImVec2(main_viewport->WorkPos.x, main_viewport->WorkPos.y + 18.0f));
+            ImGui::DockBuilderSetNodeSize(main_docking_id, ImVec2((float)window_size[0], (float)window_size[1] - 18.0f));
 
             ImGuiID center = main_docking_id;
             ImGuiID left;
-            ImGuiID right = ImGui::DockBuilderSplitNode(center, ImGuiDir_Right, 0.25f, nullptr, &left);
+            ImGuiID right = ImGui::DockBuilderSplitNode(center, ImGuiDir_Right, 0.30f, nullptr, &left);
 
             ImGuiID left_other;
             ImGuiID left_file_content = ImGui::DockBuilderSplitNode(left, ImGuiDir_Down, 0.30f, nullptr, &left_other);
 
             ImGuiID left_game_engine;
-            ImGuiID left_asset =
-                ImGui::DockBuilderSplitNode(left_other, ImGuiDir_Left, 0.30f, nullptr, &left_game_engine);
+            ImGuiID left_asset = ImGui::DockBuilderSplitNode(left_other, ImGuiDir_Left, 0.25f, nullptr, &left_game_engine);
 
             ImGui::DockBuilderDockWindow("World Objects", left_asset);
             ImGui::DockBuilderDockWindow("Components Details", right);
@@ -327,48 +367,40 @@ namespace LunarYue
         {
             if (ImGui::BeginMenu("Menu"))
             {
-                if (ImGui::MenuItem("Reload Current Level"))
-                {
-                    g_runtime_global_context.m_world_manager->reloadCurrentLevel();
-                    g_runtime_global_context.m_render_system->clearForLevelReloading();
-                    g_editor_global_context.m_scene_manager->onGObjectSelected(k_invalid_gobject_id);
-                }
+                // 現在のレベルを保存
                 if (ImGui::MenuItem("Save Current Level"))
                 {
                     g_runtime_global_context.m_world_manager->saveCurrentLevel();
                 }
+
+                // デバッグメニュー
                 if (ImGui::BeginMenu("Debug"))
                 {
-                    if (ImGui::BeginMenu("Animation"))
-                    {
-                        if (ImGui::MenuItem(g_runtime_global_context.m_render_debug_config->animation.show_skeleton ? "off skeleton" : "show skeleton"))
+                    // サブメニューを作成
+                    auto createSubMenu = [&](const std::string& title, std::initializer_list<std::pair<std::string, bool*>> options) {
+                        if (ImGui::BeginMenu(title.c_str()))
                         {
-                            g_runtime_global_context.m_render_debug_config->animation.show_skeleton = !g_runtime_global_context.m_render_debug_config->animation.show_skeleton;
+                            for (const auto& option : options)
+                            {
+                                ImGui::Checkbox(option.first.c_str(), option.second);
+                            }
+                            ImGui::EndMenu();
                         }
-                        if (ImGui::MenuItem(g_runtime_global_context.m_render_debug_config->animation.show_bone_name ? "off bone name" : "show bone name"))
-                        {
-                            g_runtime_global_context.m_render_debug_config->animation.show_bone_name = !g_runtime_global_context.m_render_debug_config->animation.show_bone_name;
-                        }
-                        ImGui::EndMenu();
-                    }
-                    if (ImGui::BeginMenu("Camera"))
-                    {
-                        if (ImGui::MenuItem(g_runtime_global_context.m_render_debug_config->camera.show_runtime_info ? "off runtime info" : "show runtime info"))
-                        {
-                            g_runtime_global_context.m_render_debug_config->camera.show_runtime_info = !g_runtime_global_context.m_render_debug_config->camera.show_runtime_info;
-                        }
-                        ImGui::EndMenu();
-                    }
-                    if (ImGui::BeginMenu("Game Object"))
-                    {
-                        if (ImGui::MenuItem(g_runtime_global_context.m_render_debug_config->gameObject.show_bounding_box ? "off bounding box" : "show bounding box"))
-                        {
-                            g_runtime_global_context.m_render_debug_config->gameObject.show_bounding_box = !g_runtime_global_context.m_render_debug_config->gameObject.show_bounding_box;
-                        }
-                        ImGui::EndMenu();
-                    }
+                    };
+
+                    createSubMenu("Animation",
+                                  {{"Show Skeleton", &g_runtime_global_context.m_render_debug_config->animation.show_skeleton},
+                                   {"Show Bone Name", &g_runtime_global_context.m_render_debug_config->animation.show_bone_name}});
+
+                    createSubMenu("Camera", {{"Show Runtime Info", &g_runtime_global_context.m_render_debug_config->camera.show_runtime_info}});
+
+                    createSubMenu("Game Object",
+                                  {{"Show Bounding Box", &g_runtime_global_context.m_render_debug_config->gameObject.show_bounding_box}});
+
                     ImGui::EndMenu();
                 }
+
+                // エンジンを終了
                 if (ImGui::MenuItem("Exit"))
                 {
                     g_editor_global_context.m_engine_runtime->shutdownEngine();
@@ -376,6 +408,7 @@ namespace LunarYue
                 }
                 ImGui::EndMenu();
             }
+
             if (ImGui::BeginMenu("Window"))
             {
                 ImGui::MenuItem("World Objects", nullptr, &m_asset_window_open);
@@ -384,6 +417,7 @@ namespace LunarYue
                 ImGui::MenuItem("Detail", nullptr, &m_detail_window_open);
                 ImGui::EndMenu();
             }
+
             ImGui::EndMenuBar();
         }
 
@@ -392,72 +426,82 @@ namespace LunarYue
 
     void EditorUI::showEditorWorldObjectsWindow(bool* p_open)
     {
-        ImGuiWindowFlags window_flags = ImGuiWindowFlags_None;
-
-        const ImGuiViewport* main_viewport = ImGui::GetMainViewport();
-
+        // ウィンドウが開いていない場合、処理をスキップ
         if (!*p_open)
             return;
 
+        ImGuiWindowFlags window_flags = ImGuiWindowFlags_None;
+
+        // "World Objects" ウィンドウの開始
         if (!ImGui::Begin("World Objects", p_open, window_flags))
         {
             ImGui::End();
             return;
         }
 
-        std::shared_ptr<Level> current_active_level =
-            g_runtime_global_context.m_world_manager->getCurrentActiveLevel().lock();
-        if (current_active_level == nullptr)
+        // 現在のアクティブなレベルを取得
+        const auto current_active_level = g_runtime_global_context.m_world_manager->getCurrentActiveLevel().lock();
+        if (!current_active_level)
             return;
 
+        // レベル内のすべてのゲームオブジェクトを取得
         const LevelObjectsMap& all_gobjects = current_active_level->getAllGObjects();
-        for (auto& id_object_pair : all_gobjects)
+
+        // ゲームオブジェクトをループ処理
+        for (const auto& id_object_pair : all_gobjects)
         {
             const GObjectID          object_id = id_object_pair.first;
             std::shared_ptr<GObject> object    = id_object_pair.second;
             const std::string        name      = object->getName();
-            if (name.size() > 0)
+
+            // オブジェクト名が空でない場合、選択可能なアイテムを表示
+            if (!name.empty())
             {
-                if (ImGui::Selectable(name.c_str(),
-                                      g_editor_global_context.m_scene_manager->getSelectedObjectID() == object_id))
+                bool is_selected = g_editor_global_context.m_scene_manager->getSelectedObjectID() == object_id;
+                if (ImGui::Selectable(name.c_str(), is_selected))
                 {
-                    if (g_editor_global_context.m_scene_manager->getSelectedObjectID() != object_id)
-                    {
-                        g_editor_global_context.m_scene_manager->onGObjectSelected(object_id);
-                    }
-                    else
-                    {
-                        g_editor_global_context.m_scene_manager->onGObjectSelected(k_invalid_gobject_id);
-                    }
+                    // 選択されたオブジェクトのIDを切り替え
+                    GObjectID new_selected_id = is_selected ? k_invalid_gobject_id : object_id;
+                    g_editor_global_context.m_scene_manager->onGObjectSelected(new_selected_id);
                     break;
                 }
             }
         }
-        ImGui::End();
+        ImGui::End(); // "World Objects" ウィンドウの終了
     }
 
     void EditorUI::createClassUI(Reflection::ReflectionInstance& instance)
     {
+        // 基本クラスのリフレクションインスタンスリストを取得
         Reflection::ReflectionInstance* reflection_instance;
-        int count = instance.m_meta.getBaseClassReflectionInstanceList(reflection_instance, instance.m_instance);
+        int                             count = instance.m_meta.getBaseClassReflectionInstanceList(reflection_instance, instance.m_instance);
+
+        // 基本クラスのリフレクションインスタンスを反復処理し、対応するUIを作成
         for (int index = 0; index < count; index++)
         {
             createClassUI(reflection_instance[index]);
         }
+
+        // リーフノードUIを作成
         createLeafNodeUI(instance);
 
+        // 反復処理中に割り当てたリフレクションインスタンスを削除（必要に応じて）
         if (count > 0)
             delete[] reflection_instance;
     }
 
     void EditorUI::createLeafNodeUI(Reflection::ReflectionInstance& instance)
     {
+        // 反射インスタンスのフィールド情報を取得
         Reflection::FieldAccessor* fields;
         int                        fields_count = instance.m_meta.getFieldsList(fields);
 
+        // 各フィールドを反復処理
         for (size_t index = 0; index < fields_count; index++)
         {
             auto field = fields[index];
+
+            // フィールドが配列タイプの場合
             if (field.isArrayType())
             {
                 Reflection::ArrayAccessor array_accessor;
@@ -465,72 +509,88 @@ namespace LunarYue
                 {
                     void* field_instance = field.get(instance.m_instance);
                     int   array_count    = array_accessor.getSize(field_instance);
-                    m_editor_ui_creator["TreeNodePush"](
-                        std::string(field.getFieldName()) + "[" + std::to_string(array_count) + "]", nullptr);
-                    auto item_type_meta_item =
-                        Reflection::TypeMeta::newMetaFromName(array_accessor.getElementTypeName());
+
+                    // 配列のUIノードを作成
+                    m_editor_ui_creator["TreeNodePush"](std::string(field.getFieldName()) + "[" + std::to_string(array_count) + "]", nullptr);
+
+                    // 配列要素の型情報を取得し、対応するUIクリエータを検索
+                    auto item_type_meta_item      = Reflection::TypeMeta::newMetaFromName(array_accessor.getElementTypeName());
                     auto item_ui_creator_iterator = m_editor_ui_creator.find(item_type_meta_item.getTypeName());
+
+                    // 配列の各要素についてUIを作成
                     for (int index = 0; index < array_count; index++)
                     {
                         if (item_ui_creator_iterator == m_editor_ui_creator.end())
                         {
                             m_editor_ui_creator["TreeNodePush"]("[" + std::to_string(index) + "]", nullptr);
+
+                            // 配列要素のインスタンスを作成し、対応するUIを生成
                             auto object_instance = Reflection::ReflectionInstance(
                                 LunarYue::Reflection::TypeMeta::newMetaFromName(item_type_meta_item.getTypeName().c_str()),
                                 array_accessor.get(index, field_instance));
                             createClassUI(object_instance);
+
                             m_editor_ui_creator["TreeNodePop"]("[" + std::to_string(index) + "]", nullptr);
                         }
                         else
                         {
-                            if (item_ui_creator_iterator == m_editor_ui_creator.end())
-                            {
-                                continue;
-                            }
-                            m_editor_ui_creator[item_type_meta_item.getTypeName()](
-                                "[" + std::to_string(index) + "]", array_accessor.get(index, field_instance));
+                            // 既存のUIクリエータがある場合、それを使用してUIを作成
+                            m_editor_ui_creator[item_type_meta_item.getTypeName()]("[" + std::to_string(index) + "]",
+                                                                                   array_accessor.get(index, field_instance));
                         }
                     }
+
+                    // 配列のUIノードを閉じる
                     m_editor_ui_creator["TreeNodePop"](field.getFieldName(), nullptr);
                 }
             }
+
+            // フィールドの型に対応するUIクリエータを検索
             auto ui_creator_iterator = m_editor_ui_creator.find(field.getFieldTypeName());
+
+            // 既存のUIクリエータがない場合、
             if (ui_creator_iterator == m_editor_ui_creator.end())
             {
-                Reflection::TypeMeta field_meta =
-                    Reflection::TypeMeta::newMetaFromName(field.getFieldTypeName());
+                // フィールドの型情報を取得し、型に対応するUIを作成
+                Reflection::TypeMeta field_meta = Reflection::TypeMeta::newMetaFromName(field.getFieldTypeName());
                 if (field.getTypeMeta(field_meta))
                 {
-                    auto child_instance =
-                        Reflection::ReflectionInstance(field_meta, field.get(instance.m_instance));
+                    // 子クラスのインスタンスを作成し、対応するUIを生成
+                    auto child_instance = Reflection::ReflectionInstance(field_meta, field.get(instance.m_instance));
+
+                    // 子クラスのUIノードを開く
                     m_editor_ui_creator["TreeNodePush"](field_meta.getTypeName(), nullptr);
+
                     createClassUI(child_instance);
+
+                    // 子クラスのUIノードを閉じる
                     m_editor_ui_creator["TreeNodePop"](field_meta.getTypeName(), nullptr);
                 }
                 else
                 {
+                    // 既存のUIクリエータがない場合、処理をスキップ
                     if (ui_creator_iterator == m_editor_ui_creator.end())
                     {
                         continue;
                     }
-                    m_editor_ui_creator[field.getFieldTypeName()](field.getFieldName(),
-                                                                         field.get(instance.m_instance));
+                    // 既存のUIクリエータがある場合、それを使用してUIを作成
+                    m_editor_ui_creator[field.getFieldTypeName()](field.getFieldName(), field.get(instance.m_instance));
                 }
             }
             else
             {
-                m_editor_ui_creator[field.getFieldTypeName()](field.getFieldName(),
-                                                                     field.get(instance.m_instance));
+                // 既存のUIクリエータがある場合、それを使用してUIを作成
+                m_editor_ui_creator[field.getFieldTypeName()](field.getFieldName(), field.get(instance.m_instance));
             }
         }
+
+        // 反復処理が終了したら、フィールドを削除
         delete[] fields;
     }
 
     void EditorUI::showEditorDetailWindow(bool* p_open)
     {
         ImGuiWindowFlags window_flags = ImGuiWindowFlags_None;
-
-        const ImGuiViewport* main_viewport = ImGui::GetMainViewport();
 
         if (!*p_open)
             return;
@@ -541,6 +601,7 @@ namespace LunarYue
             return;
         }
 
+        // 選択されたオブジェクトを取得
         std::shared_ptr<GObject> selected_object = g_editor_global_context.m_scene_manager->getSelectedGObject().lock();
         if (selected_object == nullptr)
         {
@@ -548,6 +609,7 @@ namespace LunarYue
             return;
         }
 
+        // オブジェクト名を表示
         const std::string& name = selected_object->getName();
         static char        cname[128];
         memset(cname, 0, 128);
@@ -557,25 +619,27 @@ namespace LunarYue
         ImGui::SameLine();
         ImGui::InputText("##Name", cname, IM_ARRAYSIZE(cname), ImGuiInputTextFlags_ReadOnly);
 
+        // コンポーネントを一覧表示
         static ImGuiTableFlags flags                      = ImGuiTableFlags_Resizable | ImGuiTableFlags_NoSavedSettings;
         auto&&                 selected_object_components = selected_object->getComponents();
-        for (auto component_ptr : selected_object_components)
+        for (auto& component_ptr : selected_object_components)
         {
-            m_editor_ui_creator["TreeNodePush"](("<" + component_ptr.getTypeName() + ">").c_str(), nullptr);
+            std::string componentNameTag = "<" + component_ptr.getTypeName() + ">";
+            m_editor_ui_creator["TreeNodePush"](componentNameTag.c_str(), nullptr);
+
             auto object_instance = Reflection::ReflectionInstance(
-                LunarYue::Reflection::TypeMeta::newMetaFromName(component_ptr.getTypeName().c_str()),
-                component_ptr.operator->());
+                LunarYue::Reflection::TypeMeta::newMetaFromName(component_ptr.getTypeName().c_str()), component_ptr.operator->());
+
             createClassUI(object_instance);
-            m_editor_ui_creator["TreeNodePop"](("<" + component_ptr.getTypeName() + ">").c_str(), nullptr);
+            m_editor_ui_creator["TreeNodePop"](componentNameTag.c_str(), nullptr);
         }
+
         ImGui::End();
     }
 
     void EditorUI::showEditorFileContentWindow(bool* p_open)
     {
         ImGuiWindowFlags window_flags = ImGuiWindowFlags_None;
-
-        const ImGuiViewport* main_viewport = ImGui::GetMainViewport();
 
         if (!*p_open)
             return;
@@ -586,8 +650,7 @@ namespace LunarYue
             return;
         }
 
-        static ImGuiTableFlags flags = ImGuiTableFlags_BordersV | ImGuiTableFlags_BordersOuterH |
-                                       ImGuiTableFlags_Resizable | ImGuiTableFlags_RowBg |
+        static ImGuiTableFlags flags = ImGuiTableFlags_BordersV | ImGuiTableFlags_BordersOuterH | ImGuiTableFlags_Resizable | ImGuiTableFlags_RowBg |
                                        ImGuiTableFlags_NoBordersInBody;
 
         if (ImGui::BeginTable("File Content", 2, flags))
@@ -717,9 +780,8 @@ namespace LunarYue
         }
         else
         {
-            ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f),
-                               "Current editor camera move speed: [%f]",
-                               g_editor_global_context.m_input_manager->getCameraSpeed());
+            ImGui::TextColored(
+                ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "Current editor camera move speed: [%f]", g_editor_global_context.m_input_manager->getCameraSpeed());
         }
 
         // GetWindowPos() ----->  X--------------------------------------------O
@@ -734,15 +796,16 @@ namespace LunarYue
         //                        |                                            |
         //                        O--------------------------------------------O
 
-        Vector2 render_target_window_pos = { 0.0f, 0.0f };
-        Vector2 render_target_window_size = { 0.0f, 0.0f };
+        Vector2 render_target_window_pos  = {0.0f, 0.0f};
+        Vector2 render_target_window_size = {0.0f, 0.0f};
 
         auto menu_bar_rect = ImGui::GetCurrentWindow()->MenuBarRect();
 
-        render_target_window_pos.x = ImGui::GetWindowPos().x;
-        render_target_window_pos.y = menu_bar_rect.Max.y;
+        render_target_window_pos.x  = ImGui::GetWindowPos().x;
+        render_target_window_pos.y  = menu_bar_rect.Max.y;
         render_target_window_size.x = ImGui::GetWindowSize().x;
-        render_target_window_size.y = (ImGui::GetWindowSize().y + ImGui::GetWindowPos().y) - menu_bar_rect.Max.y; // coord of right bottom point of full window minus coord of right bottom point of menu bar window.
+        render_target_window_size.y = (ImGui::GetWindowSize().y + ImGui::GetWindowPos().y) - menu_bar_rect.Max.y;
+        // coord of right bottom point of full window minus coord of right bottom point of menu bar window.
 
         // if (new_window_pos != m_engine_window_pos || new_window_size != m_engine_window_size)
         {
@@ -752,9 +815,9 @@ namespace LunarYue
             // glfwGetMonitorContentScale and glfwSetWindowContentScaleCallback are more adaptive.
             float dpi_scale = main_viewport->DpiScale;
             g_runtime_global_context.m_render_system->updateEngineContentViewport(render_target_window_pos.x * dpi_scale,
-                render_target_window_pos.y * dpi_scale,
-                render_target_window_size.x * dpi_scale,
-                render_target_window_size.y * dpi_scale);
+                                                                                  render_target_window_pos.y * dpi_scale,
+                                                                                  render_target_window_size.x * dpi_scale,
+                                                                                  render_target_window_size.y * dpi_scale);
 #else
             g_runtime_global_context.m_render_system->updateEngineContentViewport(
                 render_target_window_pos.x, render_target_window_pos.y, render_target_window_size.x, render_target_window_size.y);
@@ -771,9 +834,8 @@ namespace LunarYue
         if (check_state)
         {
             ImGui::PushID(string_id);
-            ImVec4 check_button_color = ImVec4(93.0f / 255.0f, 10.0f / 255.0f, 66.0f / 255.0f, 1.00f);
-            ImGui::PushStyleColor(ImGuiCol_Button,
-                                  ImVec4(check_button_color.x, check_button_color.y, check_button_color.z, 0.40f));
+            auto check_button_color = ImVec4(93.0f / 255.0f, 10.0f / 255.0f, 66.0f / 255.0f, 1.00f);
+            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(check_button_color.x, check_button_color.y, check_button_color.z, 0.40f));
             ImGui::PushStyleColor(ImGuiCol_ButtonHovered, check_button_color);
             ImGui::PushStyleColor(ImGuiCol_ButtonActive, check_button_color);
             ImGui::Button(string_id);
@@ -798,7 +860,12 @@ namespace LunarYue
         const bool is_folder = (node->m_child_nodes.size() > 0);
         if (is_folder)
         {
-            bool open = ImGui::TreeNodeEx(node->m_file_name.c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
+            bool open = ImGui::TreeNodeEx(node->m_file_name.c_str(), ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_OpenOnArrow);
+
+            // アイコンの表示
+            ImGui::SameLine();
+            ImGui::Text("%s %s", ICON_FA_FOLDER, node->m_file_name.c_str());
+
             ImGui::TableNextColumn();
             ImGui::SetNextItemWidth(100.0f);
             ImGui::TextUnformatted(node->m_file_type.c_str());
@@ -812,8 +879,12 @@ namespace LunarYue
         else
         {
             ImGui::TreeNodeEx(node->m_file_name.c_str(),
-                              ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen |
-                                  ImGuiTreeNodeFlags_SpanFullWidth);
+                              ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_SpanFullWidth);
+
+            // アイコンの表示
+            ImGui::SameLine();
+            ImGui::Text("%s %s", ICON_FA_FILE, node->m_file_name.c_str());
+
             if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
             {
                 onFileContentItemClicked(node);
@@ -836,10 +907,8 @@ namespace LunarYue
         const unsigned int new_object_index = ++m_new_object_index_map[node->m_file_name];
 
         ObjectInstanceRes new_object_instance_res;
-        new_object_instance_res.m_name =
-            "New_" + Path::getFilePureName(node->m_file_name) + "_" + std::to_string(new_object_index);
-        new_object_instance_res.m_definition =
-            g_runtime_global_context.m_asset_manager->getFullPath(node->m_file_path).generic_string();
+        new_object_instance_res.m_name       = "New_" + Path::getFilePureName(node->m_file_name) + "_" + std::to_string(new_object_index);
+        new_object_instance_res.m_definition = g_runtime_global_context.m_asset_manager->getFullPath(node->m_file_path).generic_string();
 
         size_t new_gobject_id = level->createObject(new_object_instance_res);
         if (new_gobject_id != k_invalid_gobject_id)
@@ -857,10 +926,7 @@ namespace LunarYue
         // TOOD: Reload fonts if DPI scale is larger than previous font loading DPI scale
     }
 
-    inline void windowContentScaleCallback(GLFWwindow* window, float x_scale, float y_scale)
-    {
-        windowContentScaleUpdate(fmaxf(x_scale, y_scale));
-    }
+    inline void windowContentScaleCallback(GLFWwindow* window, float x_scale, float y_scale) { windowContentScaleUpdate(fmaxf(x_scale, y_scale)); }
 
     void EditorUI::initialize(WindowUIInitInfo init_info)
     {
@@ -878,13 +944,32 @@ namespace LunarYue
         windowContentScaleUpdate(content_scale);
         glfwSetWindowContentScaleCallback(init_info.window_system->getWindow(), windowContentScaleCallback);
 
-        // load font for imgui
+        // Load font for imgui
         ImGuiIO& io = ImGui::GetIO();
         io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
         io.ConfigDockingAlwaysTabBar         = true;
         io.ConfigWindowsMoveFromTitleBarOnly = true;
-        io.Fonts->AddFontFromFileTTF(
-            config_manager->getEditorFontPath().generic_string().data(), content_scale * 16, nullptr, nullptr);
+
+        // Load the default font
+        ImFontConfig font_config;
+        font_config.MergeMode = true; // Merge the Font Awesome icons with the default font
+        const float font_size = content_scale * 16;
+
+        ImVector<ImWchar>        icon_ranges;
+        ImFontGlyphRangesBuilder builder;
+        builder.AddRanges(io.Fonts->GetGlyphRangesDefault());  // Add the default range
+        builder.AddRanges(io.Fonts->GetGlyphRangesJapanese()); // Add the Japanese range
+        builder.AddText(ICON_FA_FOLDER, ICON_FA_FOLDER + 1);   // Add the folder icon
+        // Add any additional Font Awesome icons you need using the same format as above
+        builder.BuildRanges(&icon_ranges); // Build the final result
+
+        // Load the default font
+        io.Fonts->AddFontFromFileTTF(config_manager->getEditorFontPath().generic_string().data(), font_size, nullptr, icon_ranges.Data);
+
+        // Load the Font Awesome font
+        std::filesystem::path fa_font_path = config_manager->getEditorFontPath().parent_path() / "fa-solid-900.ttf";
+        io.Fonts->AddFontFromFileTTF(fa_font_path.generic_string().data(), font_size, &font_config, icon_ranges.Data);
+
         io.Fonts->Build();
 
         ImGuiStyle& style     = ImGui::GetStyle();
@@ -901,10 +986,8 @@ namespace LunarYue
         GLFWimage   window_icon[2];
         std::string big_icon_path_string   = config_manager->getEditorBigIconPath().generic_string();
         std::string small_icon_path_string = config_manager->getEditorSmallIconPath().generic_string();
-        window_icon[0].pixels =
-            stbi_load(big_icon_path_string.data(), &window_icon[0].width, &window_icon[0].height, 0, 4);
-        window_icon[1].pixels =
-            stbi_load(small_icon_path_string.data(), &window_icon[1].width, &window_icon[1].height, 0, 4);
+        window_icon[0].pixels              = stbi_load(big_icon_path_string.data(), &window_icon[0].width, &window_icon[0].height, 0, 4);
+        window_icon[1].pixels              = stbi_load(small_icon_path_string.data(), &window_icon[1].width, &window_icon[1].height, 0, 4);
         glfwSetWindowIcon(init_info.window_system->getWindow(), 2, window_icon);
         stbi_image_free(window_icon[0].pixels);
         stbi_image_free(window_icon[1].pixels);

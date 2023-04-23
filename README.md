@@ -5,16 +5,10 @@
   </a>
 </p>
 
-LunarYueEngineは、C++とVulkanをベースにしたクロスプラットフォームのゲームエンジンです。現代の3Dゲームやアプリケーションを作成するための、強力で高性能なグラフィックスレンダリング機能を提供することを目指しています。
+## 主な特徴
 
-## 主な機能
 
-- Vulkanをベースにした高性能レンダリング
-- クロスプラットフォーム対応（Windows、macOS、Linux）
-- エンティティコンポーネントシステム（ECS）アーキテクチャ
-- 組み込みエディタ
-- 物理デバッグレンダラー（Windowsのみ）
-- 柔軟なリソース管理
+LunarYueEngineは、Windows、Linux、macOSで動作するクロスプラットフォーム対応のゲームエンジンです。C++で高効率に実装されており、モジュール式のコンポーネントベースの構造を採用しています。グラフィックスAPIにはVulkanを、物理エンジンにはJoltPhysicsを使用しています。また、CMakeを用いたビルドシステムを採用し、独自のエディタとImGuiを利用したカスタムUIシステムを提供しています。リソース管理機能により、アセットのインポートと最適化が可能です。今後の展望として、Luaをスクリプト言語として採用する予定です。
 
 ## 言語
 
@@ -139,7 +133,20 @@ cmake --build build --config Release
 **build_linux.sh**を実行してバイナリをビルドできます。
 
 ## ドキュメント
-ドキュメントについては、[Wiki](https://github.com/wuyukwi/LunarYueEngine/wiki)セクションを参照してください。
+
+詳細なドキュメントは、[Wiki](https://github.com/wuyukwi/LunarYueEngine/wiki)ページで確認できます。
+
+## ライセンス
+
+LunarYueEngineは、MITライセンスの下で公開されています。詳細については、[LICENSE](LICENSE)ファイルを参照してください。
+
+## コントリビューション
+
+プルリクエストやフィードバックは大歓迎です。問題を報告する場合は、[Issue](https://github.com/wuyukwi/LunarYueEngine/issues)ページで新しい問題を作成してください。
+
+<details>
+  <summary><b>追加情報</b></summary>
+  <br>
 
 ## 追加情報
 
@@ -167,3 +174,5 @@ cmake -S . -B build -DENABLE_PHYSICS_DEBUG_RENDERER=ON
 1. ソリューションを再生成する前に、ビルドディレクトリをクリーンしてください。以前のCMakeCacheを使用して直接再生成する際に、ビルドの問題が発生したことがあります。
 2. Physics Debug Rendererは、LunarYueEditorを起動すると実行されます。両方のシーンのカメラ位置は同期されています。ただし、Physics Debug Rendererの初期カメラモードが間違っています。マウスホイールを1回下にスクロールすると、Physics Debug Rendererのカメラが正しいモードに変わります。
 
+  <br>
+</details>

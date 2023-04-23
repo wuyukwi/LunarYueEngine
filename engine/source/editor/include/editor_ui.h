@@ -1,17 +1,11 @@
 #pragma once
 
-#include "editor/include/axis.h"
-
-#include "runtime/core/math/vector2.h"
-
 #include "runtime/function/framework/object/object.h"
 #include "runtime/function/ui/window_ui.h"
 
 #include "editor/include/editor_file_service.h"
 
 #include <chrono>
-#include <map>
-#include <vector>
 
 namespace LunarYue
 {
