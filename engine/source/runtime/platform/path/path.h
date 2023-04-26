@@ -10,14 +10,19 @@ namespace LunarYue
     class Path
     {
     public:
-        static const std::filesystem::path getRelativePath(const std::filesystem::path& directory,
-                                                    const std::filesystem::path& file_path) ;
+        // ディレクトリとファイルパスから相対パスを取得する
+        static std::filesystem::path getRelativePath(const std::filesystem::path& directory,
+                                                     const std::filesystem::path& file_path);
 
-        static const std::vector<std::string> getPathSegments(const std::filesystem::path& file_path) ;
+        // ファイルパスからパスセグメントを取得する
+        static std::vector<std::string>
+        getPathSegments(const std::filesystem::path& file_path);
 
-        static const std::tuple<std::string, std::string, std::string>
-        getFileExtensions(const std::filesystem::path& file_path);
+        // ファイルパスから拡張子を取得する
+        static std::tuple<std::string, std::string, std::string> getFileExtensions(
+            const std::filesystem::path& file_path);
 
-        static const std::string getFilePureName(const std::string);
+        // ファイル名から拡張子を除いた純粋な名前を取得する
+        static std::string getFilePureName(const std::string&);
     };
 } // namespace LunarYue

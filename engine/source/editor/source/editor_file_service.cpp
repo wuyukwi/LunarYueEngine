@@ -10,52 +10,24 @@
 
 namespace LunarYue
 {
-    /// helper function: split the input string with separator, and filter the substring
-    std::vector<std::string>
-    splitString(std::string input_string, const std::string& separator, const std::string& filter_string = "")
-    {
-        std::vector<std::string> output_string;
-        int                      pos = input_string.find(separator);
-        std::string              add_string;
-
-        while (pos != std::string::npos)
-        {
-            add_string = input_string.substr(0, pos);
-            if (!add_string.empty())
-            {
-                if (!filter_string.empty() && add_string == filter_string)
-                {
-                    // filter substring
-                }
-                else
-                {
-                    output_string.push_back(add_string);
-                }
-            }
-            input_string.erase(0, pos + 1);
-            pos = input_string.find(separator);
-        }
-        add_string = input_string;
-        if (!add_string.empty())
-        {
-            output_string.push_back(add_string);
-        }
-        return output_string;
-    }
-
     void EditorFileService::buildEngineFileTree()
     {
-        std::string                              asset_folder = g_runtime_global_context.m_config_manager->getAssetFolder().generic_string();
+        // アセットフォルダの取得
+        std::string asset_folder = g_runtime_global_context.m_config_manager->getAssetFolder().generic_string();
+        // アセットフォルダ内のファイルパスを取得
         const std::vector<std::filesystem::path> file_paths = g_runtime_global_context.m_file_system->getFiles(asset_folder);
         std::vector<std::vector<std::string>>    all_file_segments;
         for (const auto& path : file_paths)
         {
+            // 相対パスを取得
             const std::filesystem::path& relative_path = Path::getRelativePath(asset_folder, path);
+            // パスセグメントを取得
             all_file_segments.emplace_back(Path::getPathSegments(relative_path));
         }
 
         std::vector<std::shared_ptr<EditorFileNode>> node_array;
 
+        // ファイルノード配列をクリア
         m_file_node_array.clear();
         auto root_node = std::make_shared<EditorFileNode>();
         *root_node     = m_root_node;
@@ -80,13 +52,13 @@ namespace LunarYue
                 {
                     const auto& extensions = Path::getFileExtensions(file_paths[file_index]);
                     file_node->m_file_type = std::get<0>(extensions);
-                    if (file_node->m_file_type.size() == 0)
+                    if (file_node->m_file_type.empty())
                         continue;
 
-                    if (file_node->m_file_type.compare(".json") == 0)
+                    if (file_node->m_file_type == ".json")
                     {
                         file_node->m_file_type = std::get<1>(extensions);
-                        if (file_node->m_file_type.compare(".component") == 0)
+                        if (file_node->m_file_type == ".component")
                         {
                             file_node->m_file_type = std::get<2>(extensions) + std::get<1>(extensions);
                         }
@@ -114,11 +86,9 @@ namespace LunarYue
 
     bool EditorFileService::checkFileArray(EditorFileNode* file_node)
     {
-        int editor_node_count = m_file_node_array.size();
-        for (int file_node_index = 0; file_node_index < editor_node_count; file_node_index++)
+        for (const auto& editor_node : m_file_node_array)
         {
-            if (m_file_node_array[file_node_index]->m_file_name == file_node->m_file_name &&
-                m_file_node_array[file_node_index]->m_node_depth == file_node->m_node_depth)
+            if (editor_node->m_file_name == file_node->m_file_name && editor_node->m_node_depth == file_node->m_node_depth)
             {
                 return true;
             }
@@ -128,13 +98,11 @@ namespace LunarYue
 
     EditorFileNode* EditorFileService::getParentNodePtr(EditorFileNode* file_node)
     {
-        int editor_node_count = m_file_node_array.size();
-        for (int file_node_index = 0; file_node_index < editor_node_count; file_node_index++)
+        for (const auto& editor_file_node : m_file_node_array)
         {
-            if (m_file_node_array[file_node_index]->m_file_name == file_node->m_file_name &&
-                m_file_node_array[file_node_index]->m_node_depth == file_node->m_node_depth)
+            if (editor_file_node->m_file_name == file_node->m_file_name && editor_file_node->m_node_depth == file_node->m_node_depth)
             {
-                return m_file_node_array[file_node_index].get();
+                return editor_file_node.get();
             }
         }
         return nullptr;

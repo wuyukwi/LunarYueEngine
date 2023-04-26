@@ -32,6 +32,12 @@ namespace LunarYue
 {
     // エディタのノードの状態を保持するための配列
     std::vector<std::pair<std::string, bool>> g_editor_node_state_array;
+
+    const char* ICON_FA_FOLDER_STR      = ICON_FA_FOLDER;
+    const char* ICON_FA_FOLDER_OPEN_STR = ICON_FA_FOLDER_OPEN;
+
+    const char* ICON_FA_OBJECT_STR = ICON_FA_SPIDER;
+
     // 現在のノードの深さ
     int g_node_depth = -1;
 
@@ -639,6 +645,7 @@ namespace LunarYue
 
     void EditorUI::showEditorFileContentWindow(bool* p_open)
     {
+        // ウィンドウフラグを定義する
         ImGuiWindowFlags window_flags = ImGuiWindowFlags_None;
 
         if (!*p_open)
@@ -650,31 +657,163 @@ namespace LunarYue
             return;
         }
 
-        static ImGuiTableFlags flags = ImGuiTableFlags_BordersV | ImGuiTableFlags_BordersOuterH | ImGuiTableFlags_Resizable | ImGuiTableFlags_RowBg |
-                                       ImGuiTableFlags_NoBordersInBody;
-
-        if (ImGui::BeginTable("File Content", 2, flags))
+        // ファイルツリーを更新する
+        auto current_time = std::chrono::steady_clock::now();
+        if (current_time - m_last_file_tree_update > std::chrono::seconds(1))
         {
-            ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_NoHide);
-            ImGui::TableSetupColumn("Type", ImGuiTableColumnFlags_WidthFixed);
-            ImGui::TableHeadersRow();
-
-            auto current_time = std::chrono::steady_clock::now();
-            if (current_time - m_last_file_tree_update > std::chrono::seconds(1))
-            {
-                m_editor_file_service.buildEngineFileTree();
-                m_last_file_tree_update = current_time;
-            }
+            m_editor_file_service.buildEngineFileTree();
             m_last_file_tree_update = current_time;
-
-            EditorFileNode* editor_root_node = m_editor_file_service.getEditorRootNode();
-            buildEditorFileAssetsUITree(editor_root_node);
-            ImGui::EndTable();
         }
+        m_last_file_tree_update = current_time;
 
-        // file image list
+        // ファイルツリーのルートノードを取得する
+        EditorFileNode* editor_root_node = m_editor_file_service.getEditorRootNode();
+
+        // ウィンドウを2つのカラムに分割する
+        ImGui::Columns(2);
+        ImGui::SetColumnWidth(0, ImGui::GetWindowContentRegionWidth() * 0.45f);
+
+        // フォルダの階層を表示する
+        ImGui::BeginChild("FolderHierarchy", ImVec2(0, 0), false);
+        static int current_folder = 0;
+        current_folder            = 0;
+        buildEditorFolderHierarchy(nullptr, editor_root_node, current_folder);
+        ImGui::EndChild();
+
+        // 選択したフォルダのコンテンツを表示する
+        ImGui::NextColumn();
+        ImGui::BeginChild("FolderContent", ImVec2(0, 0), false, ImGuiWindowFlags_HorizontalScrollbar);
+        static int current_asset             = 0;
+        current_asset                        = 0;
+        EditorFileNode* selected_folder_node = m_editor_file_service.getSelectedFolderNode();
+        if (selected_folder_node)
+        {
+            buildEditorFileAssetsUIGrid(selected_folder_node, 1, current_asset);
+        }
+        ImGui::EndChild();
 
         ImGui::End();
+    }
+
+    void EditorUI::buildEditorFileAssetsUIGrid(EditorFileNode* node, int assets_per_row, int& current_asset)
+    {
+        if (node != m_editor_file_service.getSelectedFolderNode()) // Only display items inside the selected folder
+            return;
+
+        for (const auto& child_node : node->m_child_nodes)
+        {
+            const bool is_folder = (child_node->m_child_nodes.size() > 0);
+
+            if (is_folder) // Skip folders
+                continue;
+
+            ImGui::TextUnformatted(ICON_FA_OBJECT_STR);
+
+            ImGui::SameLine();
+            if (ImGui::Selectable(child_node->m_file_name.c_str(), false, ImGuiSelectableFlags_None, ImVec2(100, 15)))
+            {
+                onFileContentItemClicked(child_node.get());
+            }
+
+            current_asset++;
+            if (current_asset % assets_per_row != 0)
+            {
+                ImGui::SameLine();
+            }
+            else
+            {
+                ImGui::Spacing();
+            }
+        }
+    }
+
+    void EditorUI::buildEditorFolderHierarchy(EditorFileNode* parent_node, EditorFileNode* node, int& current_folder)
+    {
+        const bool is_folder = (node->m_child_nodes.size() > 0);
+
+        if (is_folder)
+        {
+            // Use a TreeNode for better visual representation and handling of folder states
+            ImGuiTreeNodeFlags node_flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
+            if (node == m_editor_file_service.getSelectedFolderNode())
+            {
+                node_flags |= ImGuiTreeNodeFlags_Selected;
+            }
+
+            // Display the folder with its appropriate icon
+            ImGui::PushID(current_folder);
+            bool open = ImGui::TreeNodeEx(node->m_file_name.c_str(),
+                                          node_flags,
+                                          "%s %s",
+                                          (node->m_node_depth % 2 == 1) ? ICON_FA_FOLDER_OPEN_STR : ICON_FA_FOLDER_STR,
+                                          node->m_file_name.c_str());
+            ImGui::PopID();
+
+            // Update the selected folder node when clicked
+            if (ImGui::IsItemClicked())
+            {
+                m_editor_file_service.setSelectedFolderNode(node);
+
+                // Close other folders at the same level
+                if (parent_node)
+                {
+                    for (const auto& sibling_node : parent_node->m_child_nodes)
+                    {
+                        if (sibling_node.get() != node)
+                        {
+                            sibling_node->m_node_depth = 0;
+                        }
+                    }
+                }
+            }
+
+            if (open)
+            {
+                node->m_node_depth = 1;
+
+                // Display child folders
+                ImGui::Indent(10.0f);
+                for (int child_n = 0; child_n < node->m_child_nodes.size(); child_n++)
+                {
+                    buildEditorFolderHierarchy(node, node->m_child_nodes[child_n].get(), current_folder); // Pass current node as parent_node
+                }
+                ImGui::Unindent(10.0f);
+
+                ImGui::TreePop();
+            }
+            else
+            {
+                node->m_node_depth = 0;
+            }
+        }
+    }
+
+    void EditorUI::onFileContentItemClicked(EditorFileNode* node)
+    {
+        // ファイルタイプが "object" でなければ処理を戻す
+        if (node->m_file_type != "object")
+            return;
+
+        // 現在のアクティブなレベルを取得する
+        std::shared_ptr<Level> level = g_runtime_global_context.m_world_manager->getCurrentActiveLevel().lock();
+        if (level == nullptr)
+            return;
+
+        // 新しいオブジェクトのインデックスをインクリメントする
+        const unsigned int new_object_index = ++m_new_object_index_map[node->m_file_name];
+
+        // 新しいオブジェクトインスタンスリソースを作成する
+        ObjectInstanceRes new_object_instance_res;
+        new_object_instance_res.m_name       = "New_" + Path::getFilePureName(node->m_file_name) + "_" + std::to_string(new_object_index);
+        new_object_instance_res.m_definition = g_runtime_global_context.m_asset_manager->getFullPath(node->m_file_path).generic_string();
+
+        // 新しいGameObjectを作成し、シーンに追加する
+        size_t new_gobject_id = level->createObject(new_object_instance_res);
+        if (new_gobject_id != k_invalid_gobject_id)
+        {
+            // 新しいGameObjectが正常に作成された場合、それを選択する
+            g_editor_global_context.m_scene_manager->onGObjectSelected(new_gobject_id);
+        }
     }
 
     void EditorUI::showEditorGameWindow(bool* p_open)
@@ -853,70 +992,6 @@ namespace LunarYue
         }
     }
 
-    void EditorUI::buildEditorFileAssetsUITree(EditorFileNode* node)
-    {
-        ImGui::TableNextRow();
-        ImGui::TableNextColumn();
-        const bool is_folder = (node->m_child_nodes.size() > 0);
-        if (is_folder)
-        {
-            bool open = ImGui::TreeNodeEx(node->m_file_name.c_str(), ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_OpenOnArrow);
-
-            // アイコンの表示
-            ImGui::SameLine();
-            ImGui::Text("%s %s", ICON_FA_FOLDER, node->m_file_name.c_str());
-
-            ImGui::TableNextColumn();
-            ImGui::SetNextItemWidth(100.0f);
-            ImGui::TextUnformatted(node->m_file_type.c_str());
-            if (open)
-            {
-                for (int child_n = 0; child_n < node->m_child_nodes.size(); child_n++)
-                    buildEditorFileAssetsUITree(node->m_child_nodes[child_n].get());
-                ImGui::TreePop();
-            }
-        }
-        else
-        {
-            ImGui::TreeNodeEx(node->m_file_name.c_str(),
-                              ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_SpanFullWidth);
-
-            // アイコンの表示
-            ImGui::SameLine();
-            ImGui::Text("%s %s", ICON_FA_FILE, node->m_file_name.c_str());
-
-            if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
-            {
-                onFileContentItemClicked(node);
-            }
-            ImGui::TableNextColumn();
-            ImGui::SetNextItemWidth(100.0f);
-            ImGui::TextUnformatted(node->m_file_type.c_str());
-        }
-    }
-
-    void EditorUI::onFileContentItemClicked(EditorFileNode* node)
-    {
-        if (node->m_file_type != "object")
-            return;
-
-        std::shared_ptr<Level> level = g_runtime_global_context.m_world_manager->getCurrentActiveLevel().lock();
-        if (level == nullptr)
-            return;
-
-        const unsigned int new_object_index = ++m_new_object_index_map[node->m_file_name];
-
-        ObjectInstanceRes new_object_instance_res;
-        new_object_instance_res.m_name       = "New_" + Path::getFilePureName(node->m_file_name) + "_" + std::to_string(new_object_index);
-        new_object_instance_res.m_definition = g_runtime_global_context.m_asset_manager->getFullPath(node->m_file_path).generic_string();
-
-        size_t new_gobject_id = level->createObject(new_object_instance_res);
-        if (new_gobject_id != k_invalid_gobject_id)
-        {
-            g_editor_global_context.m_scene_manager->onGObjectSelected(new_gobject_id);
-        }
-    }
-
     inline void windowContentScaleUpdate(float scale)
     {
 #if defined(__GNUC__) && defined(__MACH__)
@@ -950,23 +1025,25 @@ namespace LunarYue
         io.ConfigDockingAlwaysTabBar         = true;
         io.ConfigWindowsMoveFromTitleBarOnly = true;
 
-        // Load the default font
+        // デフォルトフォントをロードするための設定
         ImFontConfig font_config;
-        font_config.MergeMode = true; // Merge the Font Awesome icons with the default font
+        font_config.MergeMode = true; // Font Awesome アイコンをデフォルトフォントとマージ
         const float font_size = content_scale * 16;
 
         ImVector<ImWchar>        icon_ranges;
         ImFontGlyphRangesBuilder builder;
-        builder.AddRanges(io.Fonts->GetGlyphRangesDefault());  // Add the default range
-        builder.AddRanges(io.Fonts->GetGlyphRangesJapanese()); // Add the Japanese range
-        builder.AddText(ICON_FA_FOLDER, ICON_FA_FOLDER + 1);   // Add the folder icon
-        // Add any additional Font Awesome icons you need using the same format as above
-        builder.BuildRanges(&icon_ranges); // Build the final result
+        builder.AddRanges(io.Fonts->GetGlyphRangesDefault());  // デフォルト範囲を追加
+        builder.AddRanges(io.Fonts->GetGlyphRangesJapanese()); // 日本語範囲を追加
+        static const ImWchar icon_ranges_fa[] = {ICON_MIN_FA, ICON_MAX_FA, 0};
+        builder.AddRanges(icon_ranges_fa);
 
-        // Load the default font
+        // 上記と同じ形式で必要なFont Awesomeアイコンを追加
+        builder.BuildRanges(&icon_ranges); // 最終結果を構築
+
+        // デフォルトフォントをロード
         io.Fonts->AddFontFromFileTTF(config_manager->getEditorFontPath().generic_string().data(), font_size, nullptr, icon_ranges.Data);
 
-        // Load the Font Awesome font
+        // Font Awesome フォントをロード
         std::filesystem::path fa_font_path = config_manager->getEditorFontPath().parent_path() / "fa-solid-900.ttf";
         io.Fonts->AddFontFromFileTTF(fa_font_path.generic_string().data(), font_size, &font_config, icon_ranges.Data);
 
