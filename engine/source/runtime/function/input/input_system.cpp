@@ -12,6 +12,7 @@
 
 namespace LunarYue
 {
+    // ï‚äÆêßå‰ÉRÉ}ÉìÉh
     unsigned int k_complement_control_command = 0xFFFFFFFF;
 
     void InputSystem::onKey(int key, int scancode, int action, int mods)
@@ -142,14 +143,9 @@ namespace LunarYue
         std::shared_ptr<WindowSystem> window_system = g_runtime_global_context.m_window_system;
         ASSERT(window_system);
 
-        window_system->registerOnKeyFunc(std::bind(&InputSystem::onKey,
-                                                   this,
-                                                   std::placeholders::_1,
-                                                   std::placeholders::_2,
-                                                   std::placeholders::_3,
-                                                   std::placeholders::_4));
-        window_system->registerOnCursorPosFunc(
-            std::bind(&InputSystem::onCursorPos, this, std::placeholders::_1, std::placeholders::_2));
+        window_system->registerOnKeyFunc(
+            std::bind(&InputSystem::onKey, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
+        window_system->registerOnCursorPosFunc(std::bind(&InputSystem::onCursorPos, this, std::placeholders::_1, std::placeholders::_2));
     }
 
     void InputSystem::tick()
