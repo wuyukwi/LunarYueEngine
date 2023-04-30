@@ -5,6 +5,8 @@
 #include "runtime/resource/asset_manager/asset_manager.h"
 #include "runtime/resource/config_manager/config_manager.h"
 
+#include "runtime/function/global/global_context.h"
+#include "runtime/function/render/debugdraw/debug_draw_manager.h"
 #include "runtime/function/render/render_camera.h"
 #include "runtime/function/render/render_pass.h"
 #include "runtime/function/render/render_pipeline.h"
@@ -12,20 +14,16 @@
 #include "runtime/function/render/render_resource_base.h"
 #include "runtime/function/render/render_scene.h"
 #include "runtime/function/render/window_system.h"
-#include "runtime/function/global/global_context.h"
-#include "runtime/function/render/debugdraw/debug_draw_manager.h"
 
 #include "runtime/function/render/passes/main_camera_pass.h"
 #include "runtime/function/render/passes/particle_pass.h"
 
 #include "runtime/function/render/interface/vulkan/vulkan_rhi.h"
 
+
 namespace LunarYue
 {
-    RenderSystem::~RenderSystem()
-    {
-        clear();
-    }
+    RenderSystem::~RenderSystem() { clear(); }
 
     void RenderSystem::initialize(RenderSystemInitInfo init_info)
     {
@@ -48,11 +46,10 @@ namespace LunarYue
 
         // upload ibl, color grading textures
         LevelResourceDesc level_resource_desc;
-        level_resource_desc.m_ibl_resource_desc.m_skybox_irradiance_map = global_rendering_res.m_skybox_irradiance_map;
-        level_resource_desc.m_ibl_resource_desc.m_skybox_specular_map   = global_rendering_res.m_skybox_specular_map;
-        level_resource_desc.m_ibl_resource_desc.m_brdf_map              = global_rendering_res.m_brdf_map;
-        level_resource_desc.m_color_grading_resource_desc.m_color_grading_map =
-            global_rendering_res.m_color_grading_map;
+        level_resource_desc.m_ibl_resource_desc.m_skybox_irradiance_map       = global_rendering_res.m_skybox_irradiance_map;
+        level_resource_desc.m_ibl_resource_desc.m_skybox_specular_map         = global_rendering_res.m_skybox_specular_map;
+        level_resource_desc.m_ibl_resource_desc.m_brdf_map                    = global_rendering_res.m_brdf_map;
+        level_resource_desc.m_color_grading_resource_desc.m_color_grading_map = global_rendering_res.m_color_grading_map;
 
         m_render_resource = std::make_shared<RenderResource>();
         m_render_resource->uploadGlobalRenderResource(m_rhi, level_resource_desc);
@@ -63,15 +60,13 @@ namespace LunarYue
         m_render_camera->lookAt(camera_pose.m_position, camera_pose.m_target, camera_pose.m_up);
         m_render_camera->m_zfar  = global_rendering_res.m_camera_config.m_z_far;
         m_render_camera->m_znear = global_rendering_res.m_camera_config.m_z_near;
-        m_render_camera->setAspect(global_rendering_res.m_camera_config.m_aspect.x /
-                                   global_rendering_res.m_camera_config.m_aspect.y);
+        m_render_camera->setAspect(global_rendering_res.m_camera_config.m_aspect.x / global_rendering_res.m_camera_config.m_aspect.y);
 
         // setup render scene
-        m_render_scene                  = std::make_shared<RenderScene>();
-        m_render_scene->m_ambient_light = {global_rendering_res.m_ambient_light.toVector3()};
-        m_render_scene->m_directional_light.m_direction =
-            global_rendering_res.m_directional_light.m_direction.normalisedCopy();
-        m_render_scene->m_directional_light.m_color = global_rendering_res.m_directional_light.m_color.toVector3();
+        m_render_scene                                  = std::make_shared<RenderScene>();
+        m_render_scene->m_ambient_light                 = {global_rendering_res.m_ambient_light.toVector3()};
+        m_render_scene->m_directional_light.m_direction = global_rendering_res.m_directional_light.m_direction.normalisedCopy();
+        m_render_scene->m_directional_light.m_color     = global_rendering_res.m_directional_light.m_color.toVector3();
         m_render_scene->setVisibleNodesReference();
 
         // initialize render pipeline
@@ -85,9 +80,7 @@ namespace LunarYue
 
         // descriptor set layout in main camera pass will be used when uploading resource
         std::static_pointer_cast<RenderResource>(m_render_resource)->m_mesh_descriptor_set_layout =
-            &static_cast<RenderPass*>(m_render_pipeline->m_main_camera_pass.get())
-                 ->m_descriptor_infos[MainCameraPass::LayoutType::_per_mesh]
-                 .layout;
+            &static_cast<RenderPass*>(m_render_pipeline->m_main_camera_pass.get())->m_descriptor_infos[MainCameraPass::LayoutType::_per_mesh].layout;
         std::static_pointer_cast<RenderResource>(m_render_resource)->m_material_descriptor_set_layout =
             &static_cast<RenderPass*>(m_render_pipeline->m_main_camera_pass.get())
                  ->m_descriptor_infos[MainCameraPass::LayoutType::_mesh_per_material]
@@ -106,8 +99,7 @@ namespace LunarYue
         m_render_resource->updatePerFrameBuffer(m_render_scene, m_render_camera);
 
         // update per-frame visible objects
-        m_render_scene->updateVisibleObjects(std::static_pointer_cast<RenderResource>(m_render_resource),
-                                             m_render_camera);
+        m_render_scene->updateVisibleObjects(std::static_pointer_cast<RenderResource>(m_render_resource), m_render_camera);
 
         // prepare pipeline's render passes data
         m_render_pipeline->preparePassData(m_render_resource);
@@ -148,7 +140,7 @@ namespace LunarYue
             m_render_resource->clear();
         }
         m_render_resource.reset();
-        
+
         if (m_render_pipeline)
         {
             m_render_pipeline->clear();
@@ -162,7 +154,7 @@ namespace LunarYue
 
     std::shared_ptr<RenderCamera> RenderSystem::getRenderCamera() const { return m_render_camera; }
 
-    std::shared_ptr<RHI>          RenderSystem::getRHI() const { return m_rhi; }
+    std::shared_ptr<RHI> RenderSystem::getRHI() const { return m_rhi; }
 
     void RenderSystem::updateEngineContentViewport(float offset_x, float offset_y, float width, float height)
     {
@@ -185,15 +177,9 @@ namespace LunarYue
         return {x, y, width, height};
     }
 
-    uint32_t RenderSystem::getGuidOfPickedMesh(const Vector2& picked_uv)
-    {
-        return m_render_pipeline->getGuidOfPickedMesh(picked_uv);
-    }
+    uint32_t RenderSystem::getGuidOfPickedMesh(const Vector2& picked_uv) { return m_render_pipeline->getGuidOfPickedMesh(picked_uv); }
 
-    GObjectID RenderSystem::getGObjectIDByMeshID(uint32_t mesh_id) const
-    {
-        return m_render_scene->getGObjectIDByMeshID(mesh_id);
-    }
+    GObjectID RenderSystem::getGObjectIDByMeshID(uint32_t mesh_id) const { return m_render_scene->getGObjectIDByMeshID(mesh_id); }
 
     void RenderSystem::createAxis(std::array<RenderEntity, 3> axis_entities, std::array<RenderMeshData, 3> mesh_datas)
     {
@@ -222,15 +208,66 @@ namespace LunarYue
         std::static_pointer_cast<RenderPipeline>(m_render_pipeline)->setSelectedAxis(selected_axis);
     }
 
-    GuidAllocator<GameObjectPartId>& RenderSystem::getGOInstanceIdAllocator()
-    {
-        return m_render_scene->getInstanceIdAllocator();
-    }
+    GuidAllocator<GameObjectPartId>& RenderSystem::getGOInstanceIdAllocator() { return m_render_scene->getInstanceIdAllocator(); }
 
-    GuidAllocator<MeshSourceDesc>& RenderSystem::getMeshAssetIdAllocator()
-    {
-        return m_render_scene->getMeshAssetIdAllocator();
-    }
+    GuidAllocator<MeshSourceDesc>& RenderSystem::getMeshAssetIdAllocator() { return m_render_scene->getMeshAssetIdAllocator(); }
+
+    //std::shared_ptr<TextureData> RenderSystem::createImage(const char* filepath)
+    //{
+    //    int            icon_width, icon_height, icon_channels;
+    //    unsigned char* icon_pixels = stbi_load(filepath, &icon_width, &icon_height, &icon_channels, STBI_rgb_alpha);
+    //    if (!icon_pixels)
+    //    {
+    //        LOG_ERROR("Failed to load image file: %s", filepath);
+    //        return nullptr;
+    //    }
+
+    //    RHIImage*     icon_image      = nullptr;
+    //    RHIImageView* icon_image_view = nullptr;
+
+    //    VmaAllocation image_allocation;
+
+    //    RHIFormat icon_format = RHI_FORMAT_R8G8B8A8_UNORM;
+
+    //    uint32_t miplevels = 1;
+
+    //    m_rhi->createGlobalImage(icon_image, icon_image_view, image_allocation, icon_width, icon_height, icon_pixels, icon_format, miplevels);
+
+    //    stbi_image_free(icon_pixels);
+
+    //    return icon_image_view;
+    //}
+
+    //void RenderSystem::destroyImage(RHIImageView* image_view)
+    //{
+    //    if (!image_view)
+    //    {
+    //        LOG_ERROR("Invalid RHIImageView pointer provided for destruction.");
+    //        return;
+    //    }
+
+    //    // Retrieve the RHIImage and RHIDeviceMemory associated with the given RHIImageView
+    //    VulkanImageView* vulkan_image_view = static_cast<VulkanImageView*>(image_view);
+    //    VkImageView      vk_image_view     = vulkan_image_view->getResource();
+    //    VulkanImage*     vulkan_image      = static_cast<VulkanImage*>(vulkan_image_view->getImage());
+
+    //    VkImage             vk_image             = vulkan_image->getResource();
+    //    VulkanDeviceMemory* vulkan_device_memory = static_cast<VulkanDeviceMemory*>(vulkan_image_view->getMemory());
+    //    VmaAllocation       image_allocation     = vulkan_device_memory->getResource();
+
+    //    // Destroy the VkImageView
+    //    m_rhi->destroyImageView(icon_image_view);
+
+    //    // Destroy the VkImage and associated memory allocation
+    //    m_rhi->destroyImage(vk_image, image_allocation);
+
+    //    // Delete the VulkanImage and VulkanDeviceMemory objects
+    //    delete vulkan_image;
+    //    delete vulkan_device_memory;
+
+    //    // Delete the VulkanImageView object
+    //    delete vulkan_image_view;
+    //}
 
     void RenderSystem::clearForLevelReloading()
     {
@@ -241,15 +278,9 @@ namespace LunarYue
         m_swap_context.getLogicSwapData().m_particle_submit_request = request;
     }
 
-    void RenderSystem::setRenderPipelineType(RENDER_PIPELINE_TYPE pipeline_type)
-    {
-        m_render_pipeline_type = pipeline_type;
-    }
+    void RenderSystem::setRenderPipelineType(RENDER_PIPELINE_TYPE pipeline_type) { m_render_pipeline_type = pipeline_type; }
 
-    void RenderSystem::initializeUIRenderBackend(WindowUI* window_ui)
-    {
-        m_render_pipeline->initializeUIRenderBackend(window_ui);
-    }
+    void RenderSystem::initializeUIRenderBackend(WindowUI* window_ui) { m_render_pipeline->initializeUIRenderBackend(window_ui); }
 
     void RenderSystem::processSwapData()
     {
@@ -282,8 +313,7 @@ namespace LunarYue
                     bool is_entity_in_scene = m_render_scene->getInstanceIdAllocator().hasElement(part_id);
 
                     RenderEntity render_entity;
-                    render_entity.m_instance_id =
-                        static_cast<uint32_t>(m_render_scene->getInstanceIdAllocator().allocGuid(part_id));
+                    render_entity.m_instance_id  = static_cast<uint32_t>(m_render_scene->getInstanceIdAllocator().allocGuid(part_id));
                     render_entity.m_model_matrix = game_object_part.m_transform_desc.m_transform_matrix;
 
                     m_render_scene->addInstanceIdToMap(render_entity.m_instance_id, gobject.getId());
@@ -302,15 +332,12 @@ namespace LunarYue
                         render_entity.m_bounding_box = m_render_resource->getCachedBoudingBox(mesh_source);
                     }
 
-                    render_entity.m_mesh_asset_id = m_render_scene->getMeshAssetIdAllocator().allocGuid(mesh_source);
-                    render_entity.m_enable_vertex_blending =
-                        game_object_part.m_skeleton_animation_result.m_transforms.size() > 1; // take care
-                    render_entity.m_joint_matrices.resize(
-                        game_object_part.m_skeleton_animation_result.m_transforms.size());
+                    render_entity.m_mesh_asset_id          = m_render_scene->getMeshAssetIdAllocator().allocGuid(mesh_source);
+                    render_entity.m_enable_vertex_blending = game_object_part.m_skeleton_animation_result.m_transforms.size() > 1; // take care
+                    render_entity.m_joint_matrices.resize(game_object_part.m_skeleton_animation_result.m_transforms.size());
                     for (size_t i = 0; i < game_object_part.m_skeleton_animation_result.m_transforms.size(); ++i)
                     {
-                        render_entity.m_joint_matrices[i] =
-                            game_object_part.m_skeleton_animation_result.m_transforms[i].m_matrix;
+                        render_entity.m_joint_matrices[i] = game_object_part.m_skeleton_animation_result.m_transforms[i].m_matrix;
                     }
 
                     // material properties
@@ -326,12 +353,11 @@ namespace LunarYue
                     else
                     {
                         // TODO: move to default material definition json file
-                        material_source = {
-                            asset_manager->getFullPath("asset/texture/default/albedo.jpg").generic_string(),
-                            asset_manager->getFullPath("asset/texture/default/mr.jpg").generic_string(),
-                            asset_manager->getFullPath("asset/texture/default/normal.jpg").generic_string(),
-                            "",
-                            ""};
+                        material_source = {asset_manager->getFullPath("asset/texture/default/albedo.jpg").generic_string(),
+                                           asset_manager->getFullPath("asset/texture/default/mr.jpg").generic_string(),
+                                           asset_manager->getFullPath("asset/texture/default/normal.jpg").generic_string(),
+                                           "",
+                                           ""};
                     }
                     bool is_material_loaded = m_render_scene->getMaterialAssetdAllocator().hasElement(material_source);
 
@@ -341,8 +367,7 @@ namespace LunarYue
                         material_data = m_render_resource->loadMaterialData(material_source);
                     }
 
-                    render_entity.m_material_asset_id =
-                        m_render_scene->getMaterialAssetdAllocator().allocGuid(material_source);
+                    render_entity.m_material_asset_id = m_render_scene->getMaterialAssetdAllocator().allocGuid(material_source);
 
                     // create game object on the graphics api side
                     if (!is_mesh_loaded)
@@ -416,8 +441,7 @@ namespace LunarYue
 
         if (swap_data.m_particle_submit_request.has_value())
         {
-            std::shared_ptr<ParticlePass> particle_pass =
-                std::static_pointer_cast<ParticlePass>(m_render_pipeline->m_particle_pass);
+            std::shared_ptr<ParticlePass> particle_pass = std::static_pointer_cast<ParticlePass>(m_render_pipeline->m_particle_pass);
 
             int emitter_count = swap_data.m_particle_submit_request->getEmitterCount();
             particle_pass->setEmitterCount(emitter_count);

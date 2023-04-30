@@ -33,11 +33,6 @@ namespace LunarYue
     // エディタのノードの状態を保持するための配列
     std::vector<std::pair<std::string, bool>> g_editor_node_state_array;
 
-    const char* ICON_FA_FOLDER_STR      = ICON_FA_FOLDER;
-    const char* ICON_FA_FOLDER_OPEN_STR = ICON_FA_FOLDER_OPEN;
-
-    const char* ICON_FA_OBJECT_STR = ICON_FA_SPIDER;
-
     // 現在のノードの深さ
     int g_node_depth = -1;
 
@@ -645,147 +640,210 @@ namespace LunarYue
 
     void EditorUI::showEditorFileContentWindow(bool* p_open)
     {
-        // ウィンドウフラグを定義する
-        ImGuiWindowFlags window_flags = ImGuiWindowFlags_None;
+        //// ウィンドウフラグを定義する
+        // ImGuiWindowFlags window_flags = ImGuiWindowFlags_None;
 
-        if (!*p_open)
-            return;
+        // if (!*p_open)
+        //     return;
 
-        if (!ImGui::Begin("File Content", p_open, window_flags))
+        // if (!ImGui::Begin("File Content", p_open, window_flags))
+        //{
+        //     ImGui::End();
+        //     return;
+        // }
+
+        //// ファイルツリーを更新する
+        // auto current_time = std::chrono::steady_clock::now();
+        // if (current_time - m_last_file_tree_update > std::chrono::seconds(1))
+        //{
+        //     m_editor_file_service.buildEngineFileTree();
+        //     m_last_file_tree_update = current_time;
+        // }
+        // m_last_file_tree_update = current_time;
+
+        //// ファイルツリーのルートノードを取得する
+        // EditorFileNode* editor_root_node = m_editor_file_service.getEditorRootNode();
+
+        //// ウィンドウを2つのカラムに分割する
+        // ImGui::Columns(2);
+        // ImGui::SetColumnWidth(0, ImGui::GetWindowContentRegionWidth() * 0.45f);
+
+        //// フォルダの階層を表示する
+        // ImGui::BeginChild("FolderHierarchy", ImVec2(0, 0), false);
+        // static int current_folder = 0;
+        // current_folder            = 0;
+        // buildEditorFolderHierarchy(nullptr, editor_root_node, current_folder);
+        // ImGui::EndChild();
+
+        //// 選択したフォルダのコンテンツを表示する
+        // ImGui::NextColumn();
+        // ImGui::BeginChild("FolderContent", ImVec2(0, 0), false, ImGuiWindowFlags_HorizontalScrollbar);
+        // static int current_asset             = 0;
+        // current_asset                        = 0;
+        // EditorFileNode* selected_folder_node = m_editor_file_service.getSelectedFolderNode();
+        // if (selected_folder_node)
+        //{
+        //     buildEditorFileAssetsUIGrid(selected_folder_node, 1, current_asset);
+        // }
+        // ImGui::EndChild();
+
+        // ImGui::End();
+        ImGui::Begin("File Content");
+
+        static std::filesystem::path m_CurrentDirectory = g_runtime_global_context.m_config_manager->getAssetFolder();
+
+        if (m_CurrentDirectory != g_runtime_global_context.m_config_manager->getAssetFolder())
         {
-            ImGui::End();
-            return;
+            if (ImGui::Button("<-"))
+            {
+                m_CurrentDirectory = m_CurrentDirectory.parent_path();
+            }
         }
 
-        // ファイルツリーを更新する
-        auto current_time = std::chrono::steady_clock::now();
-        if (current_time - m_last_file_tree_update > std::chrono::seconds(1))
+        static float padding       = 16.0f;
+        static float thumbnailSize = 128.0f;
+        float        cellSize      = thumbnailSize + padding;
+
+        float panelWidth  = ImGui::GetContentRegionAvail().x;
+        int   columnCount = (int)(panelWidth / cellSize);
+        if (columnCount < 1)
+            columnCount = 1;
+
+        ImGui::Columns(columnCount, 0, false);
+
+        for (auto& directoryEntry : std::filesystem::directory_iterator(m_CurrentDirectory))
         {
-            m_editor_file_service.buildEngineFileTree();
-            m_last_file_tree_update = current_time;
+            const auto& path           = directoryEntry.path();
+            std::string filenameString = path.filename().string();
+            ImGui::PushID(filenameString.c_str());
+
+            // g_editor_global_context.m_render_system->createImage()
+            //  Ref<Texture2D> icon = directoryEntry.is_directory() ? m_DirectoryIcon : m_FileIcon;
+            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+            // ImGui::ImageButton((ImTextureID)icon->GetRendererID(), {thumbnailSize, thumbnailSize}, {0, 1}, {1, 0});
+            ImGui::Button(directoryEntry.is_directory() ? "DirectoryIcon" : " m_FileIcon ", {thumbnailSize, thumbnailSize});
+
+            if (ImGui::BeginDragDropSource())
+            {
+                std::filesystem::path relativePath(path);
+                const wchar_t*        itemPath = relativePath.c_str();
+                ImGui::SetDragDropPayload("CONTENT_BROWSER_ITEM", itemPath, (wcslen(itemPath) + 1) * sizeof(wchar_t));
+                ImGui::EndDragDropSource();
+            }
+
+            ImGui::PopStyleColor();
+            if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+            {
+                if (directoryEntry.is_directory())
+                    m_CurrentDirectory /= path.filename();
+            }
+            ImGui::TextWrapped(filenameString.c_str());
+
+            ImGui::NextColumn();
+
+            ImGui::PopID();
         }
-        m_last_file_tree_update = current_time;
 
-        // ファイルツリーのルートノードを取得する
-        EditorFileNode* editor_root_node = m_editor_file_service.getEditorRootNode();
+        ImGui::Columns(1);
 
-        // ウィンドウを2つのカラムに分割する
-        ImGui::Columns(2);
-        ImGui::SetColumnWidth(0, ImGui::GetWindowContentRegionWidth() * 0.45f);
+        ImGui::SliderFloat("Thumbnail Size", &thumbnailSize, 16, 512);
+        ImGui::SliderFloat("Padding", &padding, 0, 32);
 
-        // フォルダの階層を表示する
-        ImGui::BeginChild("FolderHierarchy", ImVec2(0, 0), false);
-        static int current_folder = 0;
-        current_folder            = 0;
-        buildEditorFolderHierarchy(nullptr, editor_root_node, current_folder);
-        ImGui::EndChild();
-
-        // 選択したフォルダのコンテンツを表示する
-        ImGui::NextColumn();
-        ImGui::BeginChild("FolderContent", ImVec2(0, 0), false, ImGuiWindowFlags_HorizontalScrollbar);
-        static int current_asset             = 0;
-        current_asset                        = 0;
-        EditorFileNode* selected_folder_node = m_editor_file_service.getSelectedFolderNode();
-        if (selected_folder_node)
-        {
-            buildEditorFileAssetsUIGrid(selected_folder_node, 1, current_asset);
-        }
-        ImGui::EndChild();
-
+        // TODO: status bar
         ImGui::End();
     }
 
     void EditorUI::buildEditorFileAssetsUIGrid(EditorFileNode* node, int assets_per_row, int& current_asset)
     {
-        if (node != m_editor_file_service.getSelectedFolderNode()) // Only display items inside the selected folder
-            return;
+        // if (node != m_editor_file_service.getSelectedFolderNode()) // Only display items inside the selected folder
+        //     return;
 
-        for (const auto& child_node : node->m_child_nodes)
-        {
-            const bool is_folder = (child_node->m_child_nodes.size() > 0);
+        // for (const auto& child_node : node->m_child_nodes)
+        //{
+        //     const bool is_folder = (child_node->m_child_nodes.size() > 0);
 
-            if (is_folder) // Skip folders
-                continue;
+        //    if (is_folder) // Skip folders
+        //        continue;
 
-            ImGui::TextUnformatted(ICON_FA_OBJECT_STR);
+        //    ImGui::TextUnformatted(ICON_FA_OBJECT_STR);
 
-            ImGui::SameLine();
-            if (ImGui::Selectable(child_node->m_file_name.c_str(), false, ImGuiSelectableFlags_None, ImVec2(100, 15)))
-            {
-                onFileContentItemClicked(child_node.get());
-            }
+        //    ImGui::SameLine();
+        //    if (ImGui::Selectable(child_node->m_file_name.c_str(), false, ImGuiSelectableFlags_None, ImVec2(100, 15)))
+        //    {
+        //        onFileContentItemClicked(child_node.get());
+        //    }
 
-            current_asset++;
-            if (current_asset % assets_per_row != 0)
-            {
-                ImGui::SameLine();
-            }
-            else
-            {
-                ImGui::Spacing();
-            }
-        }
+        //    current_asset++;
+        //    if (current_asset % assets_per_row != 0)
+        //    {
+        //        ImGui::SameLine();
+        //    }
+        //    else
+        //    {
+        //        ImGui::Spacing();
+        //    }
+        //}
     }
 
     void EditorUI::buildEditorFolderHierarchy(EditorFileNode* parent_node, EditorFileNode* node, int& current_folder)
     {
-        const bool is_folder = (node->m_child_nodes.size() > 0);
+        // const bool is_folder = (node->m_child_nodes.size() > 0);
 
-        if (is_folder)
-        {
-            // Use a TreeNode for better visual representation and handling of folder states
-            ImGuiTreeNodeFlags node_flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
-            if (node == m_editor_file_service.getSelectedFolderNode())
-            {
-                node_flags |= ImGuiTreeNodeFlags_Selected;
-            }
+        // if (is_folder)
+        //{
+        //     // Use a TreeNode for better visual representation and handling of folder states
+        //     ImGuiTreeNodeFlags node_flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
+        //     if (node == m_editor_file_service.getSelectedFolderNode())
+        //     {
+        //         node_flags |= ImGuiTreeNodeFlags_Selected;
+        //     }
 
-            // Display the folder with its appropriate icon
-            ImGui::PushID(current_folder);
-            bool open = ImGui::TreeNodeEx(node->m_file_name.c_str(),
-                                          node_flags,
-                                          "%s %s",
-                                          (node->m_node_depth % 2 == 1) ? ICON_FA_FOLDER_OPEN_STR : ICON_FA_FOLDER_STR,
-                                          node->m_file_name.c_str());
-            ImGui::PopID();
+        //    // Display the folder with its appropriate icon
+        //    ImGui::PushID(current_folder);
+        //    bool open = ImGui::TreeNodeEx(node->m_file_name.c_str(),
+        //                                  node_flags,
+        //                                  "%s %s",
+        //                                  (node->m_node_depth % 2 == 1) ? ICON_FA_FOLDER_OPEN_STR : ICON_FA_FOLDER_STR,
+        //                                  node->m_file_name.c_str());
+        //    ImGui::PopID();
 
-            // Update the selected folder node when clicked
-            if (ImGui::IsItemClicked())
-            {
-                m_editor_file_service.setSelectedFolderNode(node);
+        //    // Update the selected folder node when clicked
+        //    if (ImGui::IsItemClicked())
+        //    {
+        //        m_editor_file_service.setSelectedFolderNode(node);
 
-                // Close other folders at the same level
-                if (parent_node)
-                {
-                    for (const auto& sibling_node : parent_node->m_child_nodes)
-                    {
-                        if (sibling_node.get() != node)
-                        {
-                            sibling_node->m_node_depth = 0;
-                        }
-                    }
-                }
-            }
+        //        // Close other folders at the same level
+        //        if (parent_node)
+        //        {
+        //            for (const auto& sibling_node : parent_node->m_child_nodes)
+        //            {
+        //                if (sibling_node.get() != node)
+        //                {
+        //                    sibling_node->m_node_depth = 0;
+        //                }
+        //            }
+        //        }
+        //    }
 
-            if (open)
-            {
-                node->m_node_depth = 1;
+        //    if (open)
+        //    {
+        //        node->m_node_depth = 1;
 
-                // Display child folders
-                ImGui::Indent(10.0f);
-                for (int child_n = 0; child_n < node->m_child_nodes.size(); child_n++)
-                {
-                    buildEditorFolderHierarchy(node, node->m_child_nodes[child_n].get(), current_folder); // Pass current node as parent_node
-                }
-                ImGui::Unindent(10.0f);
+        //        // Display child folders
+        //        ImGui::Indent(10.0f);
+        //        for (int child_n = 0; child_n < node->m_child_nodes.size(); child_n++)
+        //        {
+        //            buildEditorFolderHierarchy(node, node->m_child_nodes[child_n].get(), current_folder); // Pass current node as parent_node
+        //        }
+        //        ImGui::Unindent(10.0f);
 
-                ImGui::TreePop();
-            }
-            else
-            {
-                node->m_node_depth = 0;
-            }
-        }
+        //        ImGui::TreePop();
+        //    }
+        //    else
+        //    {
+        //        node->m_node_depth = 0;
+        //    }
+        //}
     }
 
     void EditorUI::onFileContentItemClicked(EditorFileNode* node)
@@ -1133,6 +1191,21 @@ namespace LunarYue
         colors[ImGuiCol_NavWindowingHighlight] = ImVec4(1.00f, 1.00f, 1.00f, 0.70f);
         colors[ImGuiCol_NavWindowingDimBg]     = ImVec4(0.80f, 0.80f, 0.80f, 0.20f);
         colors[ImGuiCol_ModalWindowDimBg]      = ImVec4(0.80f, 0.80f, 0.80f, 0.35f);
+    }
+
+    void EditorUI::loadIconTexture()
+    {
+        // std::shared_ptr<TextureData> m_LunarYue_logo_texture_resource =
+        //     m_render_resource->loadTexture(m_particle_manager->getGlobalParticleRes().m_LunarYue_logo_texture_path, true);
+        // m_rhi->createGlobalImage(m_LunarYue_logo_texture_image,
+        //                          m_LunarYue_logo_texture_image_view,
+        //                          m_LunarYue_logo_texture_vma_allocation,
+        //                          m_LunarYue_logo_texture_resource->m_width,
+        //                          m_LunarYue_logo_texture_resource->m_height,
+        //                          m_LunarYue_logo_texture_resource->m_pixels,
+        //                          m_LunarYue_logo_texture_resource->m_format);
+
+        // g_runtime_global_context.m_render_system->
     }
 
     void EditorUI::preRender() { showEditorUI(); }

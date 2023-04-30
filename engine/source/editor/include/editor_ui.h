@@ -47,6 +47,8 @@ namespace LunarYue
         // UIのカラースタイルを設定
         void setUIColorStyle();
 
+        void loadIconTexture();
+
     public:
         // 初期化
         virtual void initialize(WindowUIInitInfo init_info) override final;

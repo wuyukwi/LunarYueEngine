@@ -26,6 +26,9 @@ namespace LunarYue
         std::shared_ptr<DebugDrawManager> debugdraw_manager;
     };
 
+    struct IconInfo
+    {};
+
     struct EngineContentViewport
     {
         float x {0.f};
@@ -80,6 +83,9 @@ namespace LunarYue
         GuidAllocator<GameObjectPartId>& getGOInstanceIdAllocator();
         // メッシュアセットIDアロケータの取得
         GuidAllocator<MeshSourceDesc>& getMeshAssetIdAllocator();
+
+        std::shared_ptr<TextureData> createImage(std::string& image_path);
+        // void                         destroyImage(RHIImageView* image_view);
 
         // レベルのリロードのためのクリア
         void clearForLevelReloading();
