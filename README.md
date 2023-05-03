@@ -176,3 +176,11 @@ cmake -S . -B build -DENABLE_PHYSICS_DEBUG_RENDERER=ON
 
   <br>
 </details>
+
+
+
+## 時期別のスターガザー
+
+[![Stargazers over time](https://starchart.cc/wuyukwi/LunarYueEngine.svg)](https://starchart.cc/wuyukwi/LunarYueEngine)
+
+
