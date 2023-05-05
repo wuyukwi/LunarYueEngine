@@ -20,7 +20,6 @@
 
 #include "runtime/function/render/interface/vulkan/vulkan_rhi.h"
 
-
 namespace LunarYue
 {
     RenderSystem::~RenderSystem() { clear(); }
@@ -212,62 +211,11 @@ namespace LunarYue
 
     GuidAllocator<MeshSourceDesc>& RenderSystem::getMeshAssetIdAllocator() { return m_render_scene->getMeshAssetIdAllocator(); }
 
-    //std::shared_ptr<TextureData> RenderSystem::createImage(const char* filepath)
-    //{
-    //    int            icon_width, icon_height, icon_channels;
-    //    unsigned char* icon_pixels = stbi_load(filepath, &icon_width, &icon_height, &icon_channels, STBI_rgb_alpha);
-    //    if (!icon_pixels)
-    //    {
-    //        LOG_ERROR("Failed to load image file: %s", filepath);
-    //        return nullptr;
-    //    }
+    bool RenderSystem::createIcon(const std::string& file) { return m_render_resource->loadIcon(m_rhi, file); }
 
-    //    RHIImage*     icon_image      = nullptr;
-    //    RHIImageView* icon_image_view = nullptr;
+    void* RenderSystem::getIconId(const std::string& file) { return m_render_resource->getIconId(file); }
 
-    //    VmaAllocation image_allocation;
-
-    //    RHIFormat icon_format = RHI_FORMAT_R8G8B8A8_UNORM;
-
-    //    uint32_t miplevels = 1;
-
-    //    m_rhi->createGlobalImage(icon_image, icon_image_view, image_allocation, icon_width, icon_height, icon_pixels, icon_format, miplevels);
-
-    //    stbi_image_free(icon_pixels);
-
-    //    return icon_image_view;
-    //}
-
-    //void RenderSystem::destroyImage(RHIImageView* image_view)
-    //{
-    //    if (!image_view)
-    //    {
-    //        LOG_ERROR("Invalid RHIImageView pointer provided for destruction.");
-    //        return;
-    //    }
-
-    //    // Retrieve the RHIImage and RHIDeviceMemory associated with the given RHIImageView
-    //    VulkanImageView* vulkan_image_view = static_cast<VulkanImageView*>(image_view);
-    //    VkImageView      vk_image_view     = vulkan_image_view->getResource();
-    //    VulkanImage*     vulkan_image      = static_cast<VulkanImage*>(vulkan_image_view->getImage());
-
-    //    VkImage             vk_image             = vulkan_image->getResource();
-    //    VulkanDeviceMemory* vulkan_device_memory = static_cast<VulkanDeviceMemory*>(vulkan_image_view->getMemory());
-    //    VmaAllocation       image_allocation     = vulkan_device_memory->getResource();
-
-    //    // Destroy the VkImageView
-    //    m_rhi->destroyImageView(icon_image_view);
-
-    //    // Destroy the VkImage and associated memory allocation
-    //    m_rhi->destroyImage(vk_image, image_allocation);
-
-    //    // Delete the VulkanImage and VulkanDeviceMemory objects
-    //    delete vulkan_image;
-    //    delete vulkan_device_memory;
-
-    //    // Delete the VulkanImageView object
-    //    delete vulkan_image_view;
-    //}
+    void RenderSystem::destroyIcon(const std::string& file) { m_render_resource->destroyIcon(file); }
 
     void RenderSystem::clearForLevelReloading()
     {

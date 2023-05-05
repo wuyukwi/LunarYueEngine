@@ -4,8 +4,8 @@
 #include "runtime/core/math/vector3.h"
 #include "runtime/core/math/vector4.h"
 
-#include "runtime/function/render/render_type.h"
 #include "interface/rhi.h"
+#include "runtime/function/render/render_type.h"
 
 #include <vk_mem_alloc.h>
 #include <vulkan/vulkan.h>
@@ -202,28 +202,28 @@ namespace LunarYue
     // material
     struct VulkanPBRMaterial
     {
-        RHIImage*       base_color_texture_image;
-        RHIImageView*   base_color_image_view;
-        VmaAllocation   base_color_image_allocation;
+        RHIImage*     base_color_texture_image;
+        RHIImageView* base_color_image_view;
+        VmaAllocation base_color_image_allocation;
 
-        RHIImage*       metallic_roughness_texture_image;
-        RHIImageView*   metallic_roughness_image_view;
-        VmaAllocation   metallic_roughness_image_allocation;
+        RHIImage*     metallic_roughness_texture_image;
+        RHIImageView* metallic_roughness_image_view;
+        VmaAllocation metallic_roughness_image_allocation;
 
-        RHIImage*       normal_texture_image;
-        RHIImageView*   normal_image_view;
-        VmaAllocation   normal_image_allocation;
+        RHIImage*     normal_texture_image;
+        RHIImageView* normal_image_view;
+        VmaAllocation normal_image_allocation;
 
-        RHIImage*       occlusion_texture_image;
-        RHIImageView*   occlusion_image_view;
-        VmaAllocation   occlusion_image_allocation;
+        RHIImage*     occlusion_texture_image;
+        RHIImageView* occlusion_image_view;
+        VmaAllocation occlusion_image_allocation;
 
-        RHIImage*       emissive_texture_image;
-        RHIImageView*   emissive_image_view;
-        VmaAllocation   emissive_image_allocation;
+        RHIImage*     emissive_texture_image;
+        RHIImageView* emissive_image_view;
+        VmaAllocation emissive_image_allocation;
 
-        RHIBuffer*      material_uniform_buffer;
-        VmaAllocation   material_uniform_buffer_allocation;
+        RHIBuffer*    material_uniform_buffer;
+        VmaAllocation material_uniform_buffer_allocation;
 
         RHIDescriptorSet* material_descriptor_set;
     };
@@ -236,7 +236,7 @@ namespace LunarYue
         uint32_t           joint_count {0};
         VulkanMesh*        ref_mesh {nullptr};
         VulkanPBRMaterial* ref_material {nullptr};
-        uint32_t           node_id;
+        uint32_t           node_id {};
         bool               enable_vertex_blending {false};
     };
 
@@ -253,23 +253,23 @@ namespace LunarYue
         void*              base_color_image_pixels;
         uint32_t           base_color_image_width;
         uint32_t           base_color_image_height;
-        RHIFormat base_color_image_format;
+        RHIFormat          base_color_image_format;
         void*              metallic_roughness_image_pixels;
         uint32_t           metallic_roughness_image_width;
         uint32_t           metallic_roughness_image_height;
-        RHIFormat metallic_roughness_image_format;
+        RHIFormat          metallic_roughness_image_format;
         void*              normal_roughness_image_pixels;
         uint32_t           normal_roughness_image_width;
         uint32_t           normal_roughness_image_height;
-        RHIFormat normal_roughness_image_format;
+        RHIFormat          normal_roughness_image_format;
         void*              occlusion_image_pixels;
         uint32_t           occlusion_image_width;
         uint32_t           occlusion_image_height;
-        RHIFormat occlusion_image_format;
+        RHIFormat          occlusion_image_format;
         void*              emissive_image_pixels;
         uint32_t           emissive_image_width;
         uint32_t           emissive_image_height;
-        RHIFormat emissive_image_format;
+        RHIFormat          emissive_image_format;
         VulkanPBRMaterial* now_material;
     };
 } // namespace LunarYue

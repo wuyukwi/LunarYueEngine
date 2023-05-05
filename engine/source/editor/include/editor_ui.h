@@ -20,8 +20,8 @@ namespace LunarYue
         // ファイルコンテンツアイテムがクリックされたときの処理
         void onFileContentItemClicked(EditorFileNode* node);
         // エディタファイルアセットUIツリーの構築
-        void buildEditorFolderHierarchy(EditorFileNode* parent_node, EditorFileNode* node, int& current_folder);
-        void buildEditorFileAssetsUIGrid(EditorFileNode* node, int assets_per_row, int& current_asset);
+        void buildEditorFolderHierarchy(EditorFileNode* node, int& current_folder);
+        void buildEditorFileAssetsUIGrid(EditorFileNode* node);
         // 軸のトグルボタンを描画
         void drawAxisToggleButton(const char* string_id, bool check_state, int axis_mode);
         // クラスUIを作成
@@ -46,8 +46,6 @@ namespace LunarYue
 
         // UIのカラースタイルを設定
         void setUIColorStyle();
-
-        void loadIconTexture();
 
     public:
         // 初期化

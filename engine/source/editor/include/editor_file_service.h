@@ -25,7 +25,7 @@ namespace LunarYue
         EditorFileNode() = default;
         // パラメータ付きコンストラクタ
         EditorFileNode(const std::string& name, const std::string& type, const std::string& path, int depth) :
-            m_file_name(name), m_file_type(type), m_file_path(path), m_node_depth(depth)
+            m_file_name(name), m_file_type(type), m_file_path(path), m_node_depth(depth), m_folder_open(false)
         {}
     };
 
