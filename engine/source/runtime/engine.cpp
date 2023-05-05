@@ -91,7 +91,6 @@ namespace LunarYue
         // ウィンドウタイトルを設定する
         g_runtime_global_context.m_window_system->setTitle(std::string("LunarYue - " + std::to_string(getFPS()) + " FPS").c_str());
 
-        // ウィンドウが閉じるべきかどうかを判定する
         const bool should_window_close = g_runtime_global_context.m_window_system->shouldClose();
         return !should_window_close;
     }
