@@ -211,11 +211,9 @@ namespace LunarYue
 
     GuidAllocator<MeshSourceDesc>& RenderSystem::getMeshAssetIdAllocator() { return m_render_scene->getMeshAssetIdAllocator(); }
 
-    bool RenderSystem::createIcon(const std::string& file) { return m_render_resource->loadIcon(m_rhi, file); }
+    void* RenderSystem::getIconId(const std::string& file) { return m_render_pipeline->getIconId(file); }
 
-    void* RenderSystem::getIconId(const std::string& file) { return m_render_resource->getIconId(file); }
-
-    void RenderSystem::destroyIcon(const std::string& file) { m_render_resource->destroyIcon(file); }
+    void RenderSystem::destroyIcon(const std::string& file) {}
 
     void RenderSystem::clearForLevelReloading()
     {

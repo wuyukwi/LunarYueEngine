@@ -29,29 +29,31 @@ namespace LunarYue
         GLFWwindow*        getWindow() const;
         std::array<int, 2> getWindowSize() const;
 
-        typedef std::function<void()>                   onResetFunc;
-        typedef std::function<void(int, int, int, int)> onKeyFunc;
-        typedef std::function<void(unsigned int)>       onCharFunc;
-        typedef std::function<void(int, unsigned int)>  onCharModsFunc;
-        typedef std::function<void(int, int, int)>      onMouseButtonFunc;
-        typedef std::function<void(double, double)>     onCursorPosFunc;
-        typedef std::function<void(int)>                onCursorEnterFunc;
-        typedef std::function<void(double, double)>     onScrollFunc;
-        typedef std::function<void(int, const char**)>  onDropFunc;
-        typedef std::function<void(int, int)>           onWindowSizeFunc;
-        typedef std::function<void()>                   onWindowCloseFunc;
+        // イベントのコールバック関数を登録するための型
+        typedef std::function<void()>                   onResetFunc;       // リセットイベント用
+        typedef std::function<void(int, int, int, int)> onKeyFunc;         // キーイベント用
+        typedef std::function<void(unsigned int)>       onCharFunc;        // 文字イベント用
+        typedef std::function<void(int, unsigned int)>  onCharModsFunc;    // 文字モディファイアイベント用
+        typedef std::function<void(int, int, int)>      onMouseButtonFunc; // マウスボタンイベント用
+        typedef std::function<void(double, double)>     onCursorPosFunc;   // カーソル位置イベント用
+        typedef std::function<void(int)>                onCursorEnterFunc; // カーソル進入イベント用
+        typedef std::function<void(double, double)>     onScrollFunc;      // スクロールイベント用
+        typedef std::function<void(int, const char**)>  onDropFunc;        // ドロップイベント用
+        typedef std::function<void(int, int)>           onWindowSizeFunc;  // ウィンドウサイズ変更イベント用
+        typedef std::function<void()>                   onWindowCloseFunc; // ウィンドウクローズイベント用
 
-        void registerOnResetFunc(onResetFunc func) { m_onResetFunc.push_back(func); }
-        void registerOnKeyFunc(onKeyFunc func) { m_onKeyFunc.push_back(func); }
-        void registerOnCharFunc(onCharFunc func) { m_onCharFunc.push_back(func); }
-        void registerOnCharModsFunc(onCharModsFunc func) { m_onCharModsFunc.push_back(func); }
-        void registerOnMouseButtonFunc(onMouseButtonFunc func) { m_onMouseButtonFunc.push_back(func); }
-        void registerOnCursorPosFunc(onCursorPosFunc func) { m_onCursorPosFunc.push_back(func); }
-        void registerOnCursorEnterFunc(onCursorEnterFunc func) { m_onCursorEnterFunc.push_back(func); }
-        void registerOnScrollFunc(onScrollFunc func) { m_onScrollFunc.push_back(func); }
-        void registerOnDropFunc(onDropFunc func) { m_onDropFunc.push_back(func); }
-        void registerOnWindowSizeFunc(onWindowSizeFunc func) { m_onWindowSizeFunc.push_back(func); }
-        void registerOnWindowCloseFunc(onWindowCloseFunc func) { m_onWindowCloseFunc.push_back(func); }
+        // イベントコールバック関数を登録するメソッド
+        void registerOnResetFunc(onResetFunc func) { m_onResetFunc.push_back(func); }                   // リセットイベント
+        void registerOnKeyFunc(onKeyFunc func) { m_onKeyFunc.push_back(func); }                         // キーイベント
+        void registerOnCharFunc(onCharFunc func) { m_onCharFunc.push_back(func); }                      // 文字イベント
+        void registerOnCharModsFunc(onCharModsFunc func) { m_onCharModsFunc.push_back(func); }          // 文字モディファイアイベント
+        void registerOnMouseButtonFunc(onMouseButtonFunc func) { m_onMouseButtonFunc.push_back(func); } // マウスボタンイベント
+        void registerOnCursorPosFunc(onCursorPosFunc func) { m_onCursorPosFunc.push_back(func); }       // カーソル位置イベント
+        void registerOnCursorEnterFunc(onCursorEnterFunc func) { m_onCursorEnterFunc.push_back(func); } // カーソル進入イベント
+        void registerOnScrollFunc(onScrollFunc func) { m_onScrollFunc.push_back(func); }                // スクロールイベント
+        void registerOnDropFunc(onDropFunc func) { m_onDropFunc.push_back(func); }                      // ドロップイベント
+        void registerOnWindowSizeFunc(onWindowSizeFunc func) { m_onWindowSizeFunc.push_back(func); }    // ウィンドウサイズ変更イベント
+        void registerOnWindowCloseFunc(onWindowCloseFunc func) { m_onWindowCloseFunc.push_back(func); } // ウィンドウクローズイベント
 
         bool isMouseButtonDown(int button) const
         {
@@ -210,7 +212,5 @@ namespace LunarYue
         std::vector<onDropFunc>        m_onDropFunc;
         std::vector<onWindowSizeFunc>  m_onWindowSizeFunc;
         std::vector<onWindowCloseFunc> m_onWindowCloseFunc;
-
-
     };
 } // namespace LunarYue

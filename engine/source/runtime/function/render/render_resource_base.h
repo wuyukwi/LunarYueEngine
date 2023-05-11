@@ -34,10 +34,6 @@ namespace LunarYue
 
         virtual void updatePerFrameBuffer(std::shared_ptr<RenderScene> render_scene, std::shared_ptr<RenderCamera> camera) = 0;
 
-        virtual bool  loadIcon(std::shared_ptr<RHI> rhi, const std::string& file) = 0;
-        virtual void* getIconId(const std::string& file)                          = 0;
-        virtual void  destroyIcon(const std::string& file)                        = 0;
-
         // TODO: data caching
         std::shared_ptr<TextureData> loadTextureHDR(std::string file, int desired_channels = 4);
         std::shared_ptr<TextureData> loadTexture(std::string file, bool is_srgb = false);

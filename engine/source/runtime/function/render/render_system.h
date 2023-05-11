@@ -84,7 +84,6 @@ namespace LunarYue
         // メッシュアセットIDアロケータの取得
         GuidAllocator<MeshSourceDesc>& getMeshAssetIdAllocator();
 
-        bool  createIcon(const std::string& file);
         void* getIconId(const std::string& file);
         void  destroyIcon(const std::string& file);
 

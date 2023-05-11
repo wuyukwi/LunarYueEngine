@@ -35,6 +35,7 @@ namespace LunarYue
 
         void             initializeUIRenderBackend(WindowUI* window_ui);
         virtual uint32_t getGuidOfPickedMesh(const Vector2& picked_uv) = 0;
+        virtual void*    getIconId(const std::string& name)            = 0;
 
     protected:
         std::shared_ptr<RHI> m_rhi;
@@ -49,6 +50,5 @@ namespace LunarYue
         std::shared_ptr<RenderPassBase> m_combine_ui_pass;
         std::shared_ptr<RenderPassBase> m_pick_pass;
         std::shared_ptr<RenderPassBase> m_particle_pass;
-
     };
 } // namespace LunarYue

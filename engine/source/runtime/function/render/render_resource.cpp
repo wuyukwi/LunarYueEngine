@@ -144,53 +144,6 @@ namespace LunarYue
         m_particlebillboard_perframe_storage_buffer_object.up_direction     = camera->up();
     }
 
-    bool RenderResource::loadIcon(std::shared_ptr<RHI> rhi, const std::string& file)
-    {
-        const std::shared_ptr<TextureData> icon_texture = loadTexture(file, true);
-        if (icon_texture == nullptr)
-            return false;
-
-        IconResource icon_resource;
-        icon_resource._icon_texture_image_pixels = icon_texture->m_pixels;
-        icon_resource._icon_texture_image_width  = icon_texture->m_width;
-        icon_resource._icon_texture_image_height = icon_texture->m_height;
-        icon_resource._icon_texture_image_format = icon_texture->m_format;
-
-        rhi->createGlobalImage(icon_resource._icon_texture_image,
-                               icon_resource._icon_texture_image_view,
-                               icon_resource._icon_texture_image_allocation,
-                               icon_resource._icon_texture_image_width,
-                               icon_resource._icon_texture_image_height,
-                               icon_resource._icon_texture_image_pixels,
-                               icon_resource._icon_texture_image_format);
-
-        m_iconResources.insert(std::pair(file, icon_resource));
-
-        return true;
-    }
-
-    void* RenderResource::getIconId(const std::string& file)
-    {
-        const auto it = m_iconResources.find(file);
-        if (it != m_iconResources.end())
-        {
-            const VkImageView texture_id = static_cast<VulkanImageView*>(it->second._icon_texture_image_view)->getResource();
-
-            return texture_id;
-        }
-
-        return nullptr;
-    }
-
-    void RenderResource::destroyIcon(const std::string& file)
-    {
-        const auto it = m_iconResources.find(file);
-        if (it != m_iconResources.end())
-        {
-            m_iconResources.erase(it);
-        }
-    }
-
     void RenderResource::bindIconTexturesToPipeline() {}
 
     void RenderResource::createIBLSamplers(std::shared_ptr<RHI> rhi)

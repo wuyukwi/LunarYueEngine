@@ -31,7 +31,7 @@ namespace LunarYue
         init_info.Queue                     = ((VulkanQueue*)m_rhi->getGraphicsQueue())->getResource();
         init_info.DescriptorPool            = std::static_pointer_cast<VulkanRHI>(m_rhi)->m_vk_descriptor_pool;
         init_info.Subpass                   = _main_camera_subpass_ui;
-        
+
         // may be different from the real swapchain image count
         // see ImGui_ImplVulkanH_GetMinImageCountFromPresentMode
         init_info.MinImageCount = 3;
@@ -39,15 +39,16 @@ namespace LunarYue
         ImGui_ImplVulkan_Init(&init_info, ((VulkanRenderPass*)m_framebuffer.render_pass)->getResource());
 
         uploadFonts();
+        uploadIconTexture();
     }
 
     void UIPass::uploadFonts()
     {
         RHICommandBufferAllocateInfo allocInfo = {};
-        allocInfo.sType                       = RHI_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-        allocInfo.level                       = RHI_COMMAND_BUFFER_LEVEL_PRIMARY;
-        allocInfo.commandPool                 = m_rhi->getCommandPoor();
-        allocInfo.commandBufferCount          = 1;
+        allocInfo.sType                        = RHI_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        allocInfo.level                        = RHI_COMMAND_BUFFER_LEVEL_PRIMARY;
+        allocInfo.commandPool                  = m_rhi->getCommandPoor();
+        allocInfo.commandBufferCount           = 1;
 
         RHICommandBuffer* commandBuffer = new VulkanCommandBuffer();
         if (RHI_SUCCESS != m_rhi->allocateCommandBuffers(&allocInfo, commandBuffer))
@@ -56,8 +57,8 @@ namespace LunarYue
         }
 
         RHICommandBufferBeginInfo beginInfo = {};
-        beginInfo.sType                    = RHI_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        beginInfo.flags                    = RHI_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+        beginInfo.sType                     = RHI_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        beginInfo.flags                     = RHI_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
         if (RHI_SUCCESS != m_rhi->beginCommandBuffer(commandBuffer, &beginInfo))
         {
@@ -84,6 +85,54 @@ namespace LunarYue
         ImGui_ImplVulkan_DestroyFontUploadObjects();
     }
 
+    void UIPass::uploadIconTexture()
+    {
+        const auto icon_map = m_window_ui->getIconTextureMap();
+
+        RHISampler*          sampler;
+        RHISamplerCreateInfo samplerCreateInfo {};
+        samplerCreateInfo.sType            = RHI_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+        samplerCreateInfo.maxAnisotropy    = 1.0f;
+        samplerCreateInfo.anisotropyEnable = true;
+        samplerCreateInfo.magFilter        = RHI_FILTER_LINEAR;
+        samplerCreateInfo.minFilter        = RHI_FILTER_LINEAR;
+        samplerCreateInfo.mipmapMode       = RHI_SAMPLER_MIPMAP_MODE_LINEAR;
+        samplerCreateInfo.addressModeU     = RHI_SAMPLER_ADDRESS_MODE_REPEAT;
+        samplerCreateInfo.addressModeV     = RHI_SAMPLER_ADDRESS_MODE_REPEAT;
+        samplerCreateInfo.addressModeW     = RHI_SAMPLER_ADDRESS_MODE_REPEAT;
+        samplerCreateInfo.mipLodBias       = 0.0f;
+        samplerCreateInfo.compareOp        = RHI_COMPARE_OP_NEVER;
+        samplerCreateInfo.minLod           = 0.0f;
+        samplerCreateInfo.maxLod           = 0.0f;
+        samplerCreateInfo.borderColor      = RHI_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
+
+        if (RHI_SUCCESS != m_rhi->createSampler(&samplerCreateInfo, sampler))
+        {
+            throw std::runtime_error("create sampler error");
+        }
+
+        for (const auto& icon : icon_map)
+        {
+            IconResource icon_resource {};
+            icon_resource.icon_texture_data = m_render_resource->loadTexture(icon.second);
+            m_rhi->createGlobalImage(icon_resource.icon_texture_image,
+                                     icon_resource.icon_texture_image_view,
+                                     icon_resource.icon_texture_image_allocation,
+                                     icon_resource.icon_texture_data->m_width,
+                                     icon_resource.icon_texture_data->m_height,
+                                     icon_resource.icon_texture_data->m_pixels,
+                                     icon_resource.icon_texture_data->m_format);
+
+            auto vulkanDescriptorSet = std::make_shared<VulkanDescriptorSet>();
+            vulkanDescriptorSet->setResource(ImGui_ImplVulkan_AddTexture(((VulkanSampler*)sampler)->getResource(),
+                                                                         ((VulkanImageView*)icon_resource.icon_texture_image_view)->getResource(),
+                                                                         VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL));
+            icon_resource.icon_texture_image_descriptorSet = vulkanDescriptorSet;
+
+            m_icon_map[icon.first] = icon_resource;
+        }
+    }
+
     void UIPass::draw()
     {
         if (m_window_ui)
@@ -94,7 +143,7 @@ namespace LunarYue
 
             m_window_ui->preRender();
 
-            float color[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+            float color[4] = {1.0f, 1.0f, 1.0f, 1.0f};
             m_rhi->pushEvent(m_rhi->getCurrentCommandBuffer(), "ImGUI", color);
 
             ImGui::Render();
@@ -103,5 +152,16 @@ namespace LunarYue
 
             m_rhi->popEvent(m_rhi->getCurrentCommandBuffer());
         }
+    }
+
+    void* UIPass::getIconId(const std::string& name)
+    {
+        const auto it = m_icon_map.find(name);
+        if (it != m_icon_map.end())
+        {
+            auto vulkanDescriptorSet = std::static_pointer_cast<VulkanDescriptorSet>(it->second.icon_texture_image_descriptorSet);
+            return vulkanDescriptorSet->getResource();
+        }
+        return nullptr;
     }
 } // namespace LunarYue

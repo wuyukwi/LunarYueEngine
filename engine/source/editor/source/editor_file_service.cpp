@@ -33,17 +33,28 @@ namespace LunarYue
         *root_node     = m_root_node;
         m_file_node_array.push_back(root_node);
 
-        int all_file_segments_count = all_file_segments.size();
+        const int all_file_segments_count = all_file_segments.size();
         for (int file_index = 0; file_index < all_file_segments_count; file_index++)
         {
             int depth = 0;
             node_array.clear();
             node_array.push_back(root_node);
-            int file_segment_count = all_file_segments[file_index].size();
+            const int file_segment_count = all_file_segments[file_index].size();
+
             for (int file_segment_index = 0; file_segment_index < file_segment_count; file_segment_index++)
             {
                 auto file_node         = std::make_shared<EditorFileNode>();
                 file_node->m_file_name = all_file_segments[file_index][file_segment_index];
+
+                if (depth > 0 && node_array[depth - 1]->m_file_type == "Folder")
+                {
+                    file_node->m_parent_node = node_array[depth - 1].get();
+                }
+                else
+                {
+                    file_node->m_parent_node = nullptr;
+                }
+
                 if (depth < file_segment_count - 1)
                 {
                     file_node->m_file_type = "Folder";

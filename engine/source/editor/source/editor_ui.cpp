@@ -1,6 +1,6 @@
 #include "editor/include/editor_ui.h"
 
-#include "editor/include/IconsFontAwesome5.h"
+#include "editor/include/IconsFontAwesome6.h"
 #include "editor/include/editor_global_context.h"
 #include "editor/include/editor_input_manager.h"
 #include "editor/include/editor_scene_manager.h"
@@ -32,6 +32,8 @@ namespace LunarYue
 {
     // エディタのノードの状態を保持するための配列
     std::vector<std::pair<std::string, bool>> g_editor_node_state_array;
+
+    static std::string test = "resource/icon/directory.png";
 
     // 現在のノードの深さ
     int g_node_depth = -1;
@@ -690,6 +692,14 @@ namespace LunarYue
 
     void EditorUI::buildEditorFileAssetsUIGrid(EditorFileNode* node)
     {
+        // if (ImGui::Button(ICON_FA_CIRCLE_ARROW_LEFT))
+        //{
+        //     if (node->m_parent_node)
+        //     {
+        //         m_editor_file_service.setSelectedFolderNode(node->m_parent_node);
+        //         return;
+        //     }
+        // }
 
         static float padding       = 32.0f;
         static float thumbnailSize = 90.0f;
@@ -709,21 +719,21 @@ namespace LunarYue
             std::string icon;
             if (!child_node->m_child_nodes.empty())
             {
-                icon = ICON_FA_FOLDER;
+                icon = "folder";
                 ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 0.0f, 1.0f));
             }
             else if (child_node->m_file_type == "object")
             {
-                icon = ICON_FA_OBJECT_GROUP;
+                icon = "object";
                 ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
             }
             else
             {
-                icon = ICON_FA_FILE_EXCEL;
+                icon = "question";
                 ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
             }
 
-            ImGui::Button(icon.c_str(), ImVec2(thumbnailSize, thumbnailSize));
+            ImGui::ImageButton(g_editor_global_context.m_render_system->getIconId(icon), ImVec2(thumbnailSize, thumbnailSize));
 
             if (ImGui::BeginDragDropSource())
             {
@@ -778,7 +788,7 @@ namespace LunarYue
             bool open = ImGui::TreeNodeEx(node->m_file_name.c_str(),
                                           node_flags,
                                           "%s %s",
-                                          (node->m_node_depth % 2 == 1) ? ICON_FA_FOLDER_OPEN : ICON_FA_FOLDER,
+                                          (node->m_node_depth % 2 == 1) ? ICON_FA_FOLDER_OPEN : ICON_FA_FOLDER_CLOSED,
                                           node->m_file_name.c_str());
             ImGui::PopID();
 
@@ -796,7 +806,8 @@ namespace LunarYue
                 ImGui::Indent(10.0f);
                 for (int child_n = 0; child_n < node->m_child_nodes.size(); child_n++)
                 {
-                    buildEditorFolderHierarchy(node->m_child_nodes[child_n].get(), current_folder); // 親ノードとして現在のノードを渡す
+                    buildEditorFolderHierarchy(node->m_child_nodes[child_n].get(),
+                                               current_folder); // 親ノードとして現在のノードを渡す
                 }
                 ImGui::Unindent(10.0f);
 
@@ -816,12 +827,12 @@ namespace LunarYue
             // ファイルタイプが "object" でなければ処理を戻す
             if (node->m_file_type == "object")
             {
-                icon = ICON_FA_OBJECT_GROUP;
+                icon = ICON_FA_FILE_CIRCLE_CHECK;
                 node_flags |= ImGuiTreeNodeFlags_Bullet;
             }
             else
             {
-                icon = ICON_FA_FILE_EXCEL;
+                icon = ICON_FA_FILE_CIRCLE_QUESTION;
             }
 
             std::string name = node->m_file_name.substr(0, node->m_file_name.find_last_of('.'));
@@ -1173,6 +1184,9 @@ namespace LunarYue
         stbi_image_free(window_icon[0].pixels);
         stbi_image_free(window_icon[1].pixels);
 
+        m_iconTextureMap["folder"]   = "resource/icon/folder.png";
+        m_iconTextureMap["object"]   = "resource/icon/object.png";
+        m_iconTextureMap["question"] = "resource/icon/question.png";
         // initialize imgui vulkan render backend
         init_info.render_system->initializeUIRenderBackend(this);
     }

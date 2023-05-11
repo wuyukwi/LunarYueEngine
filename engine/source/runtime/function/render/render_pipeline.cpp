@@ -5,11 +5,11 @@
 #include "runtime/function/render/passes/combine_ui_pass.h"
 #include "runtime/function/render/passes/directional_light_pass.h"
 #include "runtime/function/render/passes/main_camera_pass.h"
+#include "runtime/function/render/passes/particle_pass.h"
 #include "runtime/function/render/passes/pick_pass.h"
 #include "runtime/function/render/passes/point_light_pass.h"
 #include "runtime/function/render/passes/tone_mapping_pass.h"
 #include "runtime/function/render/passes/ui_pass.h"
-#include "runtime/function/render/passes/particle_pass.h"
 
 #include "runtime/function/render/debugdraw/debug_draw_manager.h"
 
@@ -48,11 +48,11 @@ namespace LunarYue
         m_point_light_shadow_pass->initialize(nullptr);
         m_directional_light_pass->initialize(nullptr);
 
-        std::shared_ptr<MainCameraPass> main_camera_pass = std::static_pointer_cast<MainCameraPass>(m_main_camera_pass);
+        std::shared_ptr<MainCameraPass> main_camera_pass  = std::static_pointer_cast<MainCameraPass>(m_main_camera_pass);
         std::shared_ptr<RenderPass>     _main_camera_pass = std::static_pointer_cast<RenderPass>(m_main_camera_pass);
-        std::shared_ptr<ParticlePass> particle_pass = std::static_pointer_cast<ParticlePass>(m_particle_pass);
+        std::shared_ptr<ParticlePass>   particle_pass     = std::static_pointer_cast<ParticlePass>(m_particle_pass);
 
-        ParticlePassInitInfo particle_init_info{};
+        ParticlePassInitInfo particle_init_info {};
         particle_init_info.m_particle_manager = g_runtime_global_context.m_particle_manager;
         m_particle_pass->initialize(&particle_init_info);
 
@@ -78,15 +78,13 @@ namespace LunarYue
         m_directional_light_pass->postInitialize();
 
         ToneMappingPassInitInfo tone_mapping_init_info;
-        tone_mapping_init_info.render_pass = _main_camera_pass->getRenderPass();
-        tone_mapping_init_info.input_attachment =
-            _main_camera_pass->getFramebufferImageViews()[_main_camera_pass_backup_buffer_odd];
+        tone_mapping_init_info.render_pass      = _main_camera_pass->getRenderPass();
+        tone_mapping_init_info.input_attachment = _main_camera_pass->getFramebufferImageViews()[_main_camera_pass_backup_buffer_odd];
         m_tone_mapping_pass->initialize(&tone_mapping_init_info);
 
         ColorGradingPassInitInfo color_grading_init_info;
-        color_grading_init_info.render_pass = _main_camera_pass->getRenderPass();
-        color_grading_init_info.input_attachment =
-            _main_camera_pass->getFramebufferImageViews()[_main_camera_pass_backup_buffer_even];
+        color_grading_init_info.render_pass      = _main_camera_pass->getRenderPass();
+        color_grading_init_info.input_attachment = _main_camera_pass->getFramebufferImageViews()[_main_camera_pass_backup_buffer_even];
         m_color_grading_pass->initialize(&color_grading_init_info);
 
         UIPassInitInfo ui_init_info;
@@ -94,11 +92,9 @@ namespace LunarYue
         m_ui_pass->initialize(&ui_init_info);
 
         CombineUIPassInitInfo combine_ui_init_info;
-        combine_ui_init_info.render_pass = _main_camera_pass->getRenderPass();
-        combine_ui_init_info.scene_input_attachment =
-            _main_camera_pass->getFramebufferImageViews()[_main_camera_pass_backup_buffer_odd];
-        combine_ui_init_info.ui_input_attachment =
-            _main_camera_pass->getFramebufferImageViews()[_main_camera_pass_backup_buffer_even];
+        combine_ui_init_info.render_pass            = _main_camera_pass->getRenderPass();
+        combine_ui_init_info.scene_input_attachment = _main_camera_pass->getFramebufferImageViews()[_main_camera_pass_backup_buffer_odd];
+        combine_ui_init_info.ui_input_attachment    = _main_camera_pass->getFramebufferImageViews()[_main_camera_pass_backup_buffer_even];
         m_combine_ui_pass->initialize(&combine_ui_init_info);
 
         PickPassInitInfo pick_init_info;
@@ -106,11 +102,9 @@ namespace LunarYue
         m_pick_pass->initialize(&pick_init_info);
 
         FXAAPassInitInfo fxaa_init_info;
-        fxaa_init_info.render_pass = _main_camera_pass->getRenderPass();
-        fxaa_init_info.input_attachment =
-            _main_camera_pass->getFramebufferImageViews()[_main_camera_pass_post_process_buffer_odd];
+        fxaa_init_info.render_pass      = _main_camera_pass->getRenderPass();
+        fxaa_init_info.input_attachment = _main_camera_pass->getFramebufferImageViews()[_main_camera_pass_post_process_buffer_odd];
         m_fxaa_pass->initialize(&fxaa_init_info);
-
     }
 
     void RenderPipeline::forwardRender(std::shared_ptr<RHI> rhi, std::shared_ptr<RenderResourceBase> render_resource)
@@ -124,8 +118,7 @@ namespace LunarYue
 
         vulkan_rhi->resetCommandPool();
 
-        bool recreate_swapchain =
-            vulkan_rhi->prepareBeforePass(std::bind(&RenderPipeline::passUpdateAfterRecreateSwapchain, this));
+        bool recreate_swapchain = vulkan_rhi->prepareBeforePass(std::bind(&RenderPipeline::passUpdateAfterRecreateSwapchain, this));
         if (recreate_swapchain)
         {
             return;
@@ -143,8 +136,7 @@ namespace LunarYue
         ParticlePass&     particle_pass      = *(static_cast<ParticlePass*>(m_particle_pass.get()));
 
         static_cast<ParticlePass*>(m_particle_pass.get())
-            ->setRenderCommandBufferHandle(
-                static_cast<MainCameraPass*>(m_main_camera_pass.get())->getRenderCommandBuffer());
+            ->setRenderCommandBufferHandle(static_cast<MainCameraPass*>(m_main_camera_pass.get())->getRenderCommandBuffer());
 
         static_cast<MainCameraPass*>(m_main_camera_pass.get())
             ->drawForward(color_grading_pass,
@@ -155,7 +147,6 @@ namespace LunarYue
                           particle_pass,
                           vulkan_rhi->m_current_swapchain_image_index);
 
-        
         g_runtime_global_context.m_debugdraw_manager->draw(vulkan_rhi->m_current_swapchain_image_index);
 
         vulkan_rhi->submitRendering(std::bind(&RenderPipeline::passUpdateAfterRecreateSwapchain, this));
@@ -174,8 +165,7 @@ namespace LunarYue
 
         vulkan_rhi->resetCommandPool();
 
-        bool recreate_swapchain =
-            vulkan_rhi->prepareBeforePass(std::bind(&RenderPipeline::passUpdateAfterRecreateSwapchain, this));
+        bool recreate_swapchain = vulkan_rhi->prepareBeforePass(std::bind(&RenderPipeline::passUpdateAfterRecreateSwapchain, this));
         if (recreate_swapchain)
         {
             return;
@@ -193,8 +183,7 @@ namespace LunarYue
         ParticlePass&     particle_pass      = *(static_cast<ParticlePass*>(m_particle_pass.get()));
 
         static_cast<ParticlePass*>(m_particle_pass.get())
-            ->setRenderCommandBufferHandle(
-                static_cast<MainCameraPass*>(m_main_camera_pass.get())->getRenderCommandBuffer());
+            ->setRenderCommandBufferHandle(static_cast<MainCameraPass*>(m_main_camera_pass.get())->getRenderCommandBuffer());
 
         static_cast<MainCameraPass*>(m_main_camera_pass.get())
             ->draw(color_grading_pass,
@@ -204,7 +193,7 @@ namespace LunarYue
                    combine_ui_pass,
                    particle_pass,
                    vulkan_rhi->m_current_swapchain_image_index);
-                   
+
         g_runtime_global_context.m_debugdraw_manager->draw(vulkan_rhi->m_current_swapchain_image_index);
 
         vulkan_rhi->submitRendering(std::bind(&RenderPipeline::passUpdateAfterRecreateSwapchain, this));
@@ -223,15 +212,11 @@ namespace LunarYue
         ParticlePass&     particle_pass      = *(static_cast<ParticlePass*>(m_particle_pass.get()));
 
         main_camera_pass.updateAfterFramebufferRecreate();
-        tone_mapping_pass.updateAfterFramebufferRecreate(
-            main_camera_pass.getFramebufferImageViews()[_main_camera_pass_backup_buffer_odd]);
-        color_grading_pass.updateAfterFramebufferRecreate(
-            main_camera_pass.getFramebufferImageViews()[_main_camera_pass_backup_buffer_even]);
-        fxaa_pass.updateAfterFramebufferRecreate(
-            main_camera_pass.getFramebufferImageViews()[_main_camera_pass_post_process_buffer_odd]);
-        combine_ui_pass.updateAfterFramebufferRecreate(
-            main_camera_pass.getFramebufferImageViews()[_main_camera_pass_backup_buffer_odd],
-            main_camera_pass.getFramebufferImageViews()[_main_camera_pass_backup_buffer_even]);
+        tone_mapping_pass.updateAfterFramebufferRecreate(main_camera_pass.getFramebufferImageViews()[_main_camera_pass_backup_buffer_odd]);
+        color_grading_pass.updateAfterFramebufferRecreate(main_camera_pass.getFramebufferImageViews()[_main_camera_pass_backup_buffer_even]);
+        fxaa_pass.updateAfterFramebufferRecreate(main_camera_pass.getFramebufferImageViews()[_main_camera_pass_post_process_buffer_odd]);
+        combine_ui_pass.updateAfterFramebufferRecreate(main_camera_pass.getFramebufferImageViews()[_main_camera_pass_backup_buffer_odd],
+                                                       main_camera_pass.getFramebufferImageViews()[_main_camera_pass_backup_buffer_even]);
         pick_pass.recreateFramebuffer();
         particle_pass.updateAfterFramebufferRecreate();
         g_runtime_global_context.m_debugdraw_manager->updateAfterRecreateSwapchain();
@@ -241,6 +226,8 @@ namespace LunarYue
         PickPass& pick_pass = *(static_cast<PickPass*>(m_pick_pass.get()));
         return pick_pass.pick(picked_uv);
     }
+
+    void* RenderPipeline::getIconId(const std::string& name) { return static_cast<UIPass*>(m_ui_pass.get())->getIconId(name); }
 
     void RenderPipeline::setAxisVisibleState(bool state)
     {
