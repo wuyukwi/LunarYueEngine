@@ -68,6 +68,18 @@ namespace LunarYue
         RHIFormat _color_grading_LUT_texture_image_format;
     };
 
+    struct IconResource
+    {
+        RHIImage*     _icon_texture_image;
+        RHIImageView* _icon_texture_image_view;
+        VmaAllocation _icon_texture_image_allocation;
+
+        void*     _icon_texture_image_pixels;
+        uint32_t  _icon_texture_image_width;
+        uint32_t  _icon_texture_image_height;
+        RHIFormat _icon_texture_image_format;
+    };
+
     struct StorageBuffer
     {
         // limits
@@ -141,6 +153,9 @@ namespace LunarYue
         // cached mesh and material
         std::map<size_t, VulkanMesh>        m_vulkan_meshes;
         std::map<size_t, VulkanPBRMaterial> m_vulkan_pbr_materials;
+
+        // cached icon
+        std::map<std::string, IconResource> m_iconResources;
 
         // descriptor set layout in main camera pass will be used when uploading resource
         RHIDescriptorSetLayout* const* m_mesh_descriptor_set_layout {nullptr};
