@@ -27,5 +27,30 @@ namespace LunarYue
             temp.makeTransform(m_position, m_scale, m_rotation);
             return temp;
         }
+
+        void degreesToQuaternion(const Vector3& degrees)
+        {
+            float pitch = Math::degreesToRadians(degrees.x / 2);
+            float roll  = Math::degreesToRadians(degrees.y / 2);
+            float yaw   = Math::degreesToRadians(degrees.z / 2);
+
+            m_rotation.w = Math::cos(pitch) * Math::cos(roll) * Math::cos(yaw) + Math::sin(pitch) * Math::sin(roll) * Math::sin(yaw);
+            m_rotation.x = Math::sin(pitch) * Math::cos(roll) * Math::cos(yaw) - Math::cos(pitch) * Math::sin(roll) * Math::sin(yaw);
+            m_rotation.y = Math::cos(pitch) * Math::sin(roll) * Math::cos(yaw) + Math::sin(pitch) * Math::cos(roll) * Math::sin(yaw);
+            m_rotation.z = Math::cos(pitch) * Math::cos(roll) * Math::sin(yaw) - Math::sin(pitch) * Math::sin(roll) * Math::cos(yaw);
+
+            m_rotation.normalise();
+        }
+
+        Vector3 getRotationDegrees()
+        {
+            Vector3 degrees_val;
+
+            degrees_val.x = m_rotation.getPitch(false).valueDegrees();
+            degrees_val.y = m_rotation.getRoll(false).valueDegrees();
+            degrees_val.z = m_rotation.getYaw(false).valueDegrees();
+
+            return degrees_val;
+        }
     };
 } // namespace LunarYue

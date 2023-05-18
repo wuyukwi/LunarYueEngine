@@ -20,8 +20,8 @@ namespace LunarYue
         // ファイルコンテンツアイテムがクリックされたときの処理
         void onFileContentItemClicked(EditorFileNode* node);
         // エディタファイルアセットUIツリーの構築
-        void buildEditorFolderHierarchy(EditorFileNode* node, int& current_folder);
-        void buildEditorFileAssetsUIGrid(EditorFileNode* node);
+        void buildEditorFolderHierarchy(EditorFileNode* node);
+        void buildEditorFileAssetsUIGrid(const EditorFileNode* node);
         // 軸のトグルボタンを描画
         void drawAxisToggleButton(const char* string_id, bool check_state, int axis_mode);
         // クラスUIを作成
@@ -71,5 +71,6 @@ namespace LunarYue
         bool m_detail_window_open            = true;
         bool m_scene_lights_window_open      = true;
         bool m_scene_lights_data_window_open = true;
+        bool m_imgui_demo_window_open        = false;
     };
 } // namespace LunarYue

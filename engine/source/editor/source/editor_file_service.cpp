@@ -46,15 +46,6 @@ namespace LunarYue
                 auto file_node         = std::make_shared<EditorFileNode>();
                 file_node->m_file_name = all_file_segments[file_index][file_segment_index];
 
-                if (depth > 0 && node_array[depth - 1]->m_file_type == "Folder")
-                {
-                    file_node->m_parent_node = node_array[depth - 1].get();
-                }
-                else
-                {
-                    file_node->m_parent_node = nullptr;
-                }
-
                 if (depth < file_segment_count - 1)
                 {
                     file_node->m_file_type = "Folder";
@@ -80,15 +71,25 @@ namespace LunarYue
                 file_node->m_node_depth = depth;
                 node_array.push_back(file_node);
 
-                bool node_exists = checkFileArray(file_node.get());
+                bool       node_exists = checkFileArray(file_node.get());
+                static int check       = 0;
+                LOG_DEBUG(std::to_string(check));
+                check++;
+
                 if (node_exists == false)
                 {
                     m_file_node_array.push_back(file_node);
                 }
-                EditorFileNode* parent_node_ptr = getParentNodePtr(node_array[depth].get());
+
+                auto parent_node_ptr = getParentNodePtr(node_array[depth].get());
                 if (parent_node_ptr != nullptr && node_exists == false)
                 {
                     parent_node_ptr->m_child_nodes.push_back(file_node);
+
+                    if (!file_node->m_parent_node)
+                    {
+                        file_node->m_parent_node = parent_node_ptr;
+                    }
                 }
                 depth++;
             }
@@ -107,13 +108,13 @@ namespace LunarYue
         return false;
     }
 
-    EditorFileNode* EditorFileService::getParentNodePtr(EditorFileNode* file_node)
+    std::shared_ptr<EditorFileNode> EditorFileService::getParentNodePtr(EditorFileNode* file_node)
     {
         for (const auto& editor_file_node : m_file_node_array)
         {
             if (editor_file_node->m_file_name == file_node->m_file_name && editor_file_node->m_node_depth == file_node->m_node_depth)
             {
-                return editor_file_node.get();
+                return editor_file_node;
             }
         }
         return nullptr;

@@ -33,8 +33,6 @@ namespace LunarYue
     // エディタのノードの状態を保持するための配列
     std::vector<std::pair<std::string, bool>> g_editor_node_state_array;
 
-    static std::string test = "resource/icon/directory.png";
-
     // 現在のノードの深さ
     int g_node_depth = -1;
 
@@ -98,12 +96,8 @@ namespace LunarYue
             {
                 auto trans_ptr = static_cast<Transform*>(value_ptr);
 
-                Vector3 degrees_val;
-
                 // 角度を度数法で取得
-                degrees_val.x = trans_ptr->m_rotation.getPitch(false).valueDegrees();
-                degrees_val.y = trans_ptr->m_rotation.getRoll(false).valueDegrees();
-                degrees_val.z = trans_ptr->m_rotation.getYaw(false).valueDegrees();
+                Vector3 degrees_val = trans_ptr->getRotationDegrees();
 
                 // 位置、回転、スケールのUIを描画
                 DrawVecControl("Position", trans_ptr->m_position);
@@ -111,27 +105,7 @@ namespace LunarYue
                 DrawVecControl("Scale", trans_ptr->m_scale);
 
                 // Quaternionに角度を反映
-                trans_ptr->m_rotation.w =
-                    Math::cos(Math::degreesToRadians(degrees_val.x / 2)) * Math::cos(Math::degreesToRadians(degrees_val.y / 2)) *
-                        Math::cos(Math::degreesToRadians(degrees_val.z / 2)) +
-                    Math::sin(Math::degreesToRadians(degrees_val.x / 2)) * Math::sin(Math::degreesToRadians(degrees_val.y / 2)) *
-                        Math::sin(Math::degreesToRadians(degrees_val.z / 2));
-                trans_ptr->m_rotation.x =
-                    Math::sin(Math::degreesToRadians(degrees_val.x / 2)) * Math::cos(Math::degreesToRadians(degrees_val.y / 2)) *
-                        Math::cos(Math::degreesToRadians(degrees_val.z / 2)) -
-                    Math::cos(Math::degreesToRadians(degrees_val.x / 2)) * Math::sin(Math::degreesToRadians(degrees_val.y / 2)) *
-                        Math::sin(Math::degreesToRadians(degrees_val.z / 2));
-                trans_ptr->m_rotation.y =
-                    Math::cos(Math::degreesToRadians(degrees_val.x / 2)) * Math::sin(Math::degreesToRadians(degrees_val.y / 2)) *
-                        Math::cos(Math::degreesToRadians(degrees_val.z / 2)) +
-                    Math::sin(Math::degreesToRadians(degrees_val.x / 2)) * Math::cos(Math::degreesToRadians(degrees_val.y / 2)) *
-                        Math::sin(Math::degreesToRadians(degrees_val.z / 2));
-                trans_ptr->m_rotation.z =
-                    Math::cos(Math::degreesToRadians(degrees_val.x / 2)) * Math::cos(Math::degreesToRadians(degrees_val.y / 2)) *
-                        Math::sin(Math::degreesToRadians(degrees_val.z / 2)) -
-                    Math::sin(Math::degreesToRadians(degrees_val.x / 2)) * Math::sin(Math::degreesToRadians(degrees_val.y / 2)) *
-                        Math::cos(Math::degreesToRadians(degrees_val.z / 2));
-                trans_ptr->m_rotation.normalise();
+                trans_ptr->degreesToQuaternion(degrees_val);
 
                 // 選択されたエンティティの軸を描画
                 g_editor_global_context.m_scene_manager->drawSelectedEntityAxis();
@@ -318,6 +292,10 @@ namespace LunarYue
         showEditorGameWindow(&m_game_engine_window_open);
         showEditorFileContentWindow(&m_file_content_window_open);
         showEditorDetailWindow(&m_detail_window_open);
+        if (m_imgui_demo_window_open)
+        {
+            ImGui::ShowDemoWindow(&m_imgui_demo_window_open);
+        }
     }
 
     void EditorUI::showEditorMenu(bool* p_open)
@@ -418,6 +396,7 @@ namespace LunarYue
                 ImGui::MenuItem("Game", nullptr, &m_game_engine_window_open);
                 ImGui::MenuItem("File Content", nullptr, &m_file_content_window_open);
                 ImGui::MenuItem("Detail", nullptr, &m_detail_window_open);
+                ImGui::MenuItem("ImGui Demo", nullptr, &m_imgui_demo_window_open);
                 ImGui::EndMenu();
             }
 
@@ -613,9 +592,8 @@ namespace LunarYue
         }
 
         // オブジェクト名を表示
-        const std::string& name = selected_object->getName();
-        static char        cname[128];
-        memset(cname, 0, 128);
+        const std::string& name       = selected_object->getName();
+        static char        cname[128] = {};
         memcpy(cname, name.c_str(), name.size());
 
         ImGui::Text("Name");
@@ -628,13 +606,13 @@ namespace LunarYue
         for (auto& component_ptr : selected_object_components)
         {
             std::string componentNameTag = "<" + component_ptr.getTypeName() + ">";
-            m_editor_ui_creator["TreeNodePush"](componentNameTag.c_str(), nullptr);
+            m_editor_ui_creator["TreeNodePush"](componentNameTag, nullptr);
 
-            auto object_instance = Reflection::ReflectionInstance(
-                LunarYue::Reflection::TypeMeta::newMetaFromName(component_ptr.getTypeName().c_str()), component_ptr.operator->());
+            auto object_instance = Reflection::ReflectionInstance(LunarYue::Reflection::TypeMeta::newMetaFromName(component_ptr.getTypeName()),
+                                                                  component_ptr.operator->());
 
             createClassUI(object_instance);
-            m_editor_ui_creator["TreeNodePop"](componentNameTag.c_str(), nullptr);
+            m_editor_ui_creator["TreeNodePop"](componentNameTag, nullptr);
         }
 
         ImGui::End();
@@ -656,61 +634,96 @@ namespace LunarYue
 
         // ファイルツリーを更新する
         auto current_time = std::chrono::steady_clock::now();
-        if (current_time - m_last_file_tree_update > std::chrono::seconds(1))
+        if (current_time - m_last_file_tree_update > std::chrono::seconds(600))
         {
             m_editor_file_service.buildEngineFileTree();
             m_last_file_tree_update = current_time;
         }
         m_last_file_tree_update = current_time;
 
+        ImGui::SameLine();
+        if (ImGui::Button(ICON_FA_ROTATE))
+        {
+            m_editor_file_service.buildEngineFileTree();
+            m_last_file_tree_update = current_time;
+        }
+
         // ファイルツリーのルートノードを取得する
         EditorFileNode* editor_root_node = m_editor_file_service.getEditorRootNode();
 
-        // ウィンドウを2つのカラムに分割する
-        ImGui::Columns(2);
-        ImGui::SetColumnWidth(0, ImGui::GetWindowContentRegionWidth() * 0.4f);
+        static float size_ratio   = 0.35f;
+        float        window_width = ImGui::GetWindowContentRegionWidth();
 
         // フォルダの階層を表示する
-        ImGui::BeginChild("FolderHierarchy", ImVec2(0, 0), false);
+        ImGui::BeginChild("FolderHierarchy", ImVec2(window_width * size_ratio, 0), true);
         static int current_folder = 0;
         current_folder            = 0;
-        buildEditorFolderHierarchy(editor_root_node, current_folder);
+        buildEditorFolderHierarchy(editor_root_node);
         ImGui::EndChild();
 
+        ImGui::SameLine();
+
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.8f, 0.8f, 0.8f, 0.4f));
+        ImGui::Button("##vsplitter", ImVec2(8.0f, -1.0f));
+        ImGui::PopStyleColor();
+        if (ImGui::IsItemHovered())
+            ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
+        if (ImGui::IsItemActive())
+            size_ratio += ImGui::GetIO().MouseDelta.x / window_width;
+
         // フォルダのコンテンツを表示する
-        ImGui::NextColumn();
-        ImGui::BeginChild("FolderContent", ImVec2(0, 0), false, ImGuiWindowFlags_HorizontalScrollbar);
+        ImGui::SameLine();
+        ImGui::BeginChild("FolderContent", ImVec2(0, 0), true);
         EditorFileNode* node = m_editor_file_service.getSelectedFolderNode();
-        if (node != nullptr)
+        if (node == nullptr)
         {
-            buildEditorFileAssetsUIGrid(node);
+            node = m_editor_file_service.getEditorRootNode();
         }
+        buildEditorFileAssetsUIGrid(node);
+
         ImGui::EndChild();
 
         ImGui::End();
     }
 
-    void EditorUI::buildEditorFileAssetsUIGrid(EditorFileNode* node)
+    void EditorUI::buildEditorFileAssetsUIGrid(const EditorFileNode* node)
     {
-        // if (ImGui::Button(ICON_FA_CIRCLE_ARROW_LEFT))
-        //{
-        //     if (node->m_parent_node)
-        //     {
-        //         m_editor_file_service.setSelectedFolderNode(node->m_parent_node);
-        //         return;
-        //     }
-        // }
-
-        static float padding       = 32.0f;
+        static float padding       = 45.0f;
         static float thumbnailSize = 90.0f;
         float        cellSize      = thumbnailSize + padding;
 
-        float panelWidth  = ImGui::GetContentRegionAvail().x;
-        int   columnCount = static_cast<int>(panelWidth / cellSize);
+        if (ImGui::Button(ICON_FA_ARROW_LEFT))
+        {
+            if (node->m_parent_node)
+                m_editor_file_service.setSelectedFolderNode(node->m_parent_node.get());
+        }
+        ImGui::SameLine();
+        ImGui::Dummy(ImVec2(20.0f, 0.0f));
+        ImGui::SameLine();
+        if (ImGui::Button(ICON_FA_S))
+        {
+            thumbnailSize = 60.0f;
+            padding       = 30.0f;
+        }
+        ImGui::SameLine();
+        if (ImGui::Button(ICON_FA_M))
+        {
+            thumbnailSize = 90.0f;
+            padding       = 45.0f;
+        }
+        ImGui::SameLine();
+        if (ImGui::Button(ICON_FA_L))
+        {
+            thumbnailSize = 120.0f;
+            padding       = 60.0f;
+        }
+
+        const float panelWidth  = ImGui::GetContentRegionAvail().x;
+        int         columnCount = static_cast<int>(panelWidth / cellSize);
         if (columnCount < 1)
             columnCount = 1;
 
-        ImGui::Columns(columnCount, 0, false);
+        ImGui::Columns(columnCount, nullptr, false);
 
         for (const auto& child_node : node->m_child_nodes)
         {
@@ -763,16 +776,16 @@ namespace LunarYue
         }
 
         ImGui::Columns(1);
-
-        ImGui::SliderFloat("Thumbnail Size", &thumbnailSize, 16, 512);
-        ImGui::SliderFloat("Padding", &padding, 0, 320);
     }
 
-    void EditorUI::buildEditorFolderHierarchy(EditorFileNode* node, int& current_folder)
+    void EditorUI::buildEditorFolderHierarchy(EditorFileNode* node)
     {
-
         // フォルダかどうかを判断する
         const bool is_folder = (!node->m_child_nodes.empty());
+
+        bool is_root_node = false;
+        if (node->m_file_name == m_editor_file_service.getEditorRootNode()->m_file_name)
+            is_root_node = true;
 
         if (is_folder)
         {
@@ -784,12 +797,19 @@ namespace LunarYue
             }
 
             // アイコンとともにフォルダを表示する
-            ImGui::PushID(current_folder);
-            bool open = ImGui::TreeNodeEx(node->m_file_name.c_str(),
-                                          node_flags,
-                                          "%s %s",
-                                          (node->m_node_depth % 2 == 1) ? ICON_FA_FOLDER_OPEN : ICON_FA_FOLDER_CLOSED,
-                                          node->m_file_name.c_str());
+            ImGui::PushID(node->m_file_name.c_str());
+
+            if (is_root_node)
+            {
+                node_flags |= ImGuiTreeNodeFlags_DefaultOpen;
+            }
+
+            const bool open = ImGui::TreeNodeEx(node->m_file_name.c_str(),
+                                                node_flags,
+                                                "%s %s",
+                                                node->m_folder_open ? ICON_FA_FOLDER_OPEN : ICON_FA_FOLDER_CLOSED,
+                                                node->m_file_name.c_str());
+
             ImGui::PopID();
 
             // フォルダがクリックされたら、選択されたフォルダを更新する
@@ -800,14 +820,13 @@ namespace LunarYue
 
             if (open)
             {
-                node->m_node_depth = 1;
+                node->m_folder_open = true;
 
                 // 子フォルダを表示する
                 ImGui::Indent(10.0f);
-                for (int child_n = 0; child_n < node->m_child_nodes.size(); child_n++)
+                for (auto& m_child_node : node->m_child_nodes)
                 {
-                    buildEditorFolderHierarchy(node->m_child_nodes[child_n].get(),
-                                               current_folder); // 親ノードとして現在のノードを渡す
+                    buildEditorFolderHierarchy(m_child_node.get()); // 親ノードとして現在のノードを渡す
                 }
                 ImGui::Unindent(10.0f);
 
@@ -815,13 +834,13 @@ namespace LunarYue
             }
             else
             {
-                node->m_node_depth = 0;
+                node->m_folder_open = false;
             }
         }
         // フォルダじゃない場合
         else
         {
-            const char*        icon       = nullptr;
+            const char*        icon;
             ImGuiTreeNodeFlags node_flags = ImGuiTreeNodeFlags_Leaf;
 
             // ファイルタイプが "object" でなければ処理を戻す
@@ -835,10 +854,10 @@ namespace LunarYue
                 icon = ICON_FA_FILE_CIRCLE_QUESTION;
             }
 
-            std::string name = node->m_file_name.substr(0, node->m_file_name.find_last_of('.'));
+            const std::string name = node->m_file_name.substr(0, node->m_file_name.find_last_of('.'));
 
             // アイコンとともにフォルダを表示する
-            ImGui::PushID(current_folder);
+            ImGui::PushID(name.c_str());
             ImGui::TreeNodeEx(name.c_str(), node_flags, "%s %s", icon, name.c_str());
             ImGui::TreePop();
             ImGui::PopID();
@@ -1147,8 +1166,7 @@ namespace LunarYue
 
         ImVector<ImWchar>        icon_ranges;
         ImFontGlyphRangesBuilder builder;
-        builder.AddRanges(io.Fonts->GetGlyphRangesDefault());  // デフォルト範囲を追加
-        builder.AddRanges(io.Fonts->GetGlyphRangesJapanese()); // 日本語範囲を追加
+        builder.AddRanges(io.Fonts->GetGlyphRangesDefault()); // デフォルト範囲を追加
         static const ImWchar icon_ranges_fa[] = {ICON_MIN_FA, ICON_MAX_FA, 0};
         builder.AddRanges(icon_ranges_fa);
 
@@ -1161,6 +1179,17 @@ namespace LunarYue
         // Font Awesome フォントをロード
         std::filesystem::path fa_font_path = config_manager->getEditorFontPath().parent_path() / "fa-solid-900.ttf";
         io.Fonts->AddFontFromFileTTF(fa_font_path.generic_string().data(), font_size, &font_config, icon_ranges.Data);
+
+        //// 日本語フォントをロード
+        // std::filesystem::path japanese_font_path = config_manager->getEditorFontPath().parent_path() / "GenEiNuGothic-EB.ttf";
+        // static const ImWchar  rangesJapanese[]   = {
+        //     0x3040,
+        //     0x30FF, // Hiragana + Katakana
+        //     0x4E00,
+        //     0x9FBB, // Kanji
+        //     0,
+        // };
+        // io.Fonts->AddFontFromFileTTF(japanese_font_path.generic_string().data(), font_size, nullptr, rangesJapanese);
 
         io.Fonts->Build();
 
