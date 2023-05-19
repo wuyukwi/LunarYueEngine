@@ -301,7 +301,7 @@ namespace LunarYue
     void EditorUI::showEditorMenu(bool* p_open)
     {
         ImGuiDockNodeFlags dock_flags = ImGuiDockNodeFlags_DockSpace;
-        // ウィンドウフラグの設定
+
         ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse |
                                         ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBackground |
                                         ImGuiConfigFlags_NoMouseCursorChange | ImGuiWindowFlags_NoBringToFrontOnFocus;
@@ -348,7 +348,11 @@ namespace LunarYue
         {
             if (ImGui::BeginMenu("Menu"))
             {
-                // 現在のレベルを保存
+                if (ImGui::MenuItem("Reload Current Level"))
+                {
+                    g_runtime_global_context.m_world_manager->reloadCurrentLevel();
+                }
+
                 if (ImGui::MenuItem("Save Current Level"))
                 {
                     g_runtime_global_context.m_world_manager->saveCurrentLevel();
@@ -482,10 +486,14 @@ namespace LunarYue
         for (size_t index = 0; index < fields_count; index++)
         {
             auto field = fields[index];
+            LOG_DEBUG("field index :" + std::to_string(index) + " fields_count:" + std::to_string(fields_count));
+            LOG_DEBUG("field type: " + field.getFieldTypeName() + " name :" + field.getFieldName());
 
             // フィールドが配列タイプの場合
             if (field.isArrayType())
             {
+                LOG_DEBUG("-field isArrayType");
+
                 Reflection::ArrayAccessor array_accessor;
                 if (Reflection::TypeMeta::newArrayAccessorFromName(field.getFieldTypeName(), array_accessor))
                 {
@@ -500,25 +508,31 @@ namespace LunarYue
                     auto item_ui_creator_iterator = m_editor_ui_creator.find(item_type_meta_item.getTypeName());
 
                     // 配列の各要素についてUIを作成
-                    for (int index = 0; index < array_count; index++)
+                    for (int val = 0; val < array_count; val++)
                     {
+                        LOG_DEBUG("--array index :" + std::to_string(val) + " array_count:" + std::to_string(val));
+
                         if (item_ui_creator_iterator == m_editor_ui_creator.end())
                         {
-                            m_editor_ui_creator["TreeNodePush"]("[" + std::to_string(index) + "]", nullptr);
+                            LOG_DEBUG(std::to_string(val) + "--- No ui type: " + item_type_meta_item.getTypeName());
+
+                            m_editor_ui_creator["TreeNodePush"]("[" + std::to_string(val) + "]", nullptr);
 
                             // 配列要素のインスタンスを作成し、対応するUIを生成
-                            auto object_instance = Reflection::ReflectionInstance(
-                                LunarYue::Reflection::TypeMeta::newMetaFromName(item_type_meta_item.getTypeName().c_str()),
-                                array_accessor.get(index, field_instance));
+                            auto object_instance =
+                                Reflection::ReflectionInstance(LunarYue::Reflection::TypeMeta::newMetaFromName(item_type_meta_item.getTypeName()),
+                                                               array_accessor.get(val, field_instance));
+                            LOG_DEBUG(std::to_string(val) + "---- createClassUI meta type: " + object_instance.m_meta.getTypeName());
                             createClassUI(object_instance);
 
-                            m_editor_ui_creator["TreeNodePop"]("[" + std::to_string(index) + "]", nullptr);
+                            m_editor_ui_creator["TreeNodePop"]("[" + std::to_string(val) + "]", nullptr);
                         }
                         else
                         {
                             // 既存のUIクリエータがある場合、それを使用してUIを作成
-                            m_editor_ui_creator[item_type_meta_item.getTypeName()]("[" + std::to_string(index) + "]",
-                                                                                   array_accessor.get(index, field_instance));
+                            m_editor_ui_creator[item_type_meta_item.getTypeName()]("[" + std::to_string(val) + "]",
+                                                                                   array_accessor.get(val, field_instance));
+                            LOG_DEBUG(std::to_string(val) + "--- creator ui type: " + item_type_meta_item.getTypeName());
                         }
                     }
 
@@ -526,17 +540,20 @@ namespace LunarYue
                     m_editor_ui_creator["TreeNodePop"](field.getFieldName(), nullptr);
                 }
             }
-
+            LOG_DEBUG("-- field noArrayType");
             // フィールドの型に対応するUIクリエータを検索
             auto ui_creator_iterator = m_editor_ui_creator.find(field.getFieldTypeName());
 
             // 既存のUIクリエータがない場合、
             if (ui_creator_iterator == m_editor_ui_creator.end())
             {
+                LOG_DEBUG("--- No UI type: " + field.getFieldTypeName() + " name :" + field.getFieldName());
+
                 // フィールドの型情報を取得し、型に対応するUIを作成
                 Reflection::TypeMeta field_meta = Reflection::TypeMeta::newMetaFromName(field.getFieldTypeName());
                 if (field.getTypeMeta(field_meta))
                 {
+                    LOG_DEBUG("---- field.getTypeMeta ture");
                     // 子クラスのインスタンスを作成し、対応するUIを生成
                     auto child_instance = Reflection::ReflectionInstance(field_meta, field.get(instance.m_instance));
 
@@ -544,25 +561,30 @@ namespace LunarYue
                     m_editor_ui_creator["TreeNodePush"](field_meta.getTypeName(), nullptr);
 
                     createClassUI(child_instance);
+                    LOG_DEBUG(std::to_string(index) + "----- createClassUI type: " + child_instance.m_meta.getTypeName());
 
                     // 子クラスのUIノードを閉じる
                     m_editor_ui_creator["TreeNodePop"](field_meta.getTypeName(), nullptr);
                 }
                 else
                 {
+                    LOG_DEBUG("---- field.getTypeMeta false");
                     // 既存のUIクリエータがない場合、処理をスキップ
                     if (ui_creator_iterator == m_editor_ui_creator.end())
                     {
+                        LOG_DEBUG("----- No UI type: " + field.getFieldTypeName() + " name :" + field.getFieldName());
                         continue;
                     }
                     // 既存のUIクリエータがある場合、それを使用してUIを作成
                     m_editor_ui_creator[field.getFieldTypeName()](field.getFieldName(), field.get(instance.m_instance));
+                    LOG_DEBUG("----- creator UI  type: " + field.getFieldTypeName() + " name :" + field.getFieldName());
                 }
             }
             else
             {
                 // 既存のUIクリエータがある場合、それを使用してUIを作成
                 m_editor_ui_creator[field.getFieldTypeName()](field.getFieldName(), field.get(instance.m_instance));
+                LOG_DEBUG("--- creator UI  type: " + field.getFieldTypeName() + " name :" + field.getFieldName());
             }
         }
 
@@ -1179,17 +1201,6 @@ namespace LunarYue
         // Font Awesome フォントをロード
         std::filesystem::path fa_font_path = config_manager->getEditorFontPath().parent_path() / "fa-solid-900.ttf";
         io.Fonts->AddFontFromFileTTF(fa_font_path.generic_string().data(), font_size, &font_config, icon_ranges.Data);
-
-        //// 日本語フォントをロード
-        // std::filesystem::path japanese_font_path = config_manager->getEditorFontPath().parent_path() / "GenEiNuGothic-EB.ttf";
-        // static const ImWchar  rangesJapanese[]   = {
-        //     0x3040,
-        //     0x30FF, // Hiragana + Katakana
-        //     0x4E00,
-        //     0x9FBB, // Kanji
-        //     0,
-        // };
-        // io.Fonts->AddFontFromFileTTF(japanese_font_path.generic_string().data(), font_size, nullptr, rangesJapanese);
 
         io.Fonts->Build();
 

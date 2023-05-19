@@ -18,4 +18,6 @@ namespace LunarYue
         return new_emitter_ret;
     }
 
+    void ParticleEmitterIDAllocator::reset() { m_next_id.store(0); }
+
 } // namespace LunarYue

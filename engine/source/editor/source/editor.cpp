@@ -19,6 +19,12 @@ namespace LunarYue
     {
         registerEdtorTickComponent("TransformComponent");
         registerEdtorTickComponent("MeshComponent");
+        // registerEdtorTickComponent("RigidbodyComponent");
+        // registerEdtorTickComponent("MotorComponent");
+        // registerEdtorTickComponent("AnimationComponent");
+        // registerEdtorTickComponent("CameraComponent");
+        // registerEdtorTickComponent("ParticleComponent");
+        // registerEdtorTickComponent("LuaComponent");
     }
 
     LunarYueEditor::~LunarYueEditor() {}

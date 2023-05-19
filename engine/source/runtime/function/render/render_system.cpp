@@ -215,14 +215,7 @@ namespace LunarYue
 
     void RenderSystem::destroyIcon(const std::string& file) {}
 
-    void RenderSystem::clearForLevelReloading()
-    {
-        m_render_scene->clearForLevelReloading();
-
-        ParticleSubmitRequest request;
-
-        m_swap_context.getLogicSwapData().m_particle_submit_request = request;
-    }
+    void RenderSystem::clearForLevelReloading() { m_render_scene->clearForLevelReloading(); }
 
     void RenderSystem::setRenderPipelineType(RENDER_PIPELINE_TYPE pipeline_type) { m_render_pipeline_type = pipeline_type; }
 

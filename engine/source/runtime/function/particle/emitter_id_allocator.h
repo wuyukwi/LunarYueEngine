@@ -13,6 +13,7 @@ namespace LunarYue
     {
     public:
         static ParticleEmitterID alloc();
+        static void              reset();
 
     private:
         static std::atomic<ParticleEmitterID> m_next_id;

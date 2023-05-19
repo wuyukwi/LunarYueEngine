@@ -67,6 +67,7 @@ namespace LunarYue
 
         ASSERT(g_runtime_global_context.m_physics_manager);
         m_physics_scene = g_runtime_global_context.m_physics_manager->createPhysicsScene(level_res.m_gravity);
+        ParticleEmitterIDAllocator::reset();
 
         for (const ObjectInstanceRes& object_instance_res : level_res.m_objects)
         {
@@ -119,8 +120,7 @@ namespace LunarYue
             }
         }
 
-        const bool is_save_success =
-            g_runtime_global_context.m_asset_manager->saveAsset(output_level_res, m_level_res_url);
+        const bool is_save_success = g_runtime_global_context.m_asset_manager->saveAsset(output_level_res, m_level_res_url);
 
         if (is_save_success == false)
         {

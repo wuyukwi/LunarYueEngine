@@ -57,7 +57,15 @@ if(NOT TARGET Jolt)
     endif()
 
     add_subdirectory(JoltPhysics/Build)
-
+	
+    if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        include(CheckCXXCompilerFlag)
+        check_cxx_compiler_flag("-Wno-unqualified-std-cast-call" COMPILER_CHECK_UNQUALIFIED)
+        if(COMPILER_CHECK_UNQUALIFIED)
+            target_compile_options(Jolt PRIVATE "-Wno-unqualified-std-cast-call")
+        endif()
+    endif()
+	
     # 物理デバッグレンダリングが有効な場合はTestFrameworkも含める
     if(ENABLE_PHYSICS_DEBUG_RENDERER)
         set_target_properties(Jolt TestFramework
