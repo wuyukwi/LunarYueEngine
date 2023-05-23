@@ -9,6 +9,7 @@
 #include "editor/include/editor_input_manager.h"
 #include "editor/include/editor_scene_manager.h"
 #include "editor/include/editor_ui.h"
+#include "function/render/window_system.h"
 #include "resource/asset_manager/asset_manager.h"
 
 namespace LunarYue
@@ -44,7 +45,8 @@ namespace LunarYue
 
         m_editor_ui = std::make_shared<EditorUI>();
 
-        WindowUIInitInfo ui_init_info = {g_runtime_global_context.m_window_system, g_runtime_global_context.m_render_system};
+        WindowUIInitInfo ui_init_info = {
+            g_runtime_global_context.m_window_system, g_runtime_global_context.m_render_system, g_runtime_global_context.m_config_manager};
 
         m_editor_ui->initialize(ui_init_info);
     }
@@ -56,7 +58,7 @@ namespace LunarYue
         assert(m_engine_runtime);
         assert(m_editor_ui);
         float delta_time;
-        while (true)
+        while (!g_runtime_global_context.m_window_system->shouldClose())
         {
             delta_time = m_engine_runtime->calculateDeltaTime();
             g_editor_global_context.m_scene_manager->tick(delta_time);

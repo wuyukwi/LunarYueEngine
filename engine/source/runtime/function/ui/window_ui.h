@@ -8,11 +8,13 @@ namespace LunarYue
 {
     class WindowSystem;
     class RenderSystem;
+    class ConfigManager;
 
     struct WindowUIInitInfo
     {
-        std::shared_ptr<WindowSystem> window_system;
-        std::shared_ptr<RenderSystem> render_system;
+        std::shared_ptr<WindowSystem>  window_system;
+        std::shared_ptr<RenderSystem>  render_system;
+        std::shared_ptr<ConfigManager> config_manager;
     };
 
     class WindowUI

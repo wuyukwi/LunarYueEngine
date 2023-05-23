@@ -29,10 +29,9 @@ namespace LunarYue
 
         struct IconResource
         {
-            RHIImage*     icon_texture_image;
-            RHIImageView* icon_texture_image_view;
-            VmaAllocation icon_texture_image_allocation;
-            // RHIDescriptorSet icon_texture_image_descriptorSet;
+            RHIImage*                         icon_texture_image {};
+            RHIImageView*                     icon_texture_image_view {};
+            VmaAllocation                     icon_texture_image_allocation {};
             std::shared_ptr<RHIDescriptorSet> icon_texture_image_descriptorSet;
 
             std::shared_ptr<TextureData> icon_texture_data;

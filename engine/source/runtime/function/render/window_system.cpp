@@ -48,6 +48,8 @@ namespace LunarYue
 
     void WindowSystem::pollEvents() const { glfwPollEvents(); }
 
+    void WindowSystem::setShouldClose(bool value) const { glfwSetWindowShouldClose(m_window, value); }
+
     bool WindowSystem::shouldClose() const { return glfwWindowShouldClose(m_window); }
 
     void WindowSystem::setTitle(const char* title) { glfwSetWindowTitle(m_window, title); }

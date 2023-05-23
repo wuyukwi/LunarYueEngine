@@ -91,3 +91,9 @@ if(NOT TARGET lua)
     include(lua.cmake)
     set_target_properties(lua_static PROPERTIES FOLDER ${third_party_folder}/lua)
 endif()
+
+# assimpのビルドとプロパティ設定
+if(NOT TARGET assimp)
+    add_subdirectory(assimp)
+    set_target_properties(assimp PROPERTIES FOLDER ${third_party_folder}/assimp)
+endif()

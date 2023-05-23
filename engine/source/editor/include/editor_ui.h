@@ -1,11 +1,14 @@
 #pragma once
 
 #include "runtime/function/framework/object/object.h"
+#include "runtime/function/ui/Core/UIManager.h"
 #include "runtime/function/ui/window_ui.h"
 
 #include "editor/include/editor_file_service.h"
 
 #include <chrono>
+
+#include "editor_panels_manager.h"
 
 namespace LunarYue
 {
@@ -44,8 +47,7 @@ namespace LunarYue
         // エディタ詳細ウィンドウを表示
         void showEditorDetailWindow(bool* p_open);
 
-        // UIのカラースタイルを設定
-        void setUIColorStyle();
+        void setupUI();
 
     public:
         // 初期化
@@ -62,6 +64,10 @@ namespace LunarYue
         EditorFileService m_editor_file_service;
         // 最後のファイルツリーアップデート
         std::chrono::time_point<std::chrono::steady_clock> m_last_file_tree_update;
+
+        UI::Modules::Canvas                  m_canvas;
+        std::shared_ptr<UI::Core::UIManager> m_ui_manager;
+        std::shared_ptr<PanelsManager>       m_panels_manager;
 
         // 各ウィンドウのオープン状態フラグ
         bool m_editor_menu_window_open       = true;

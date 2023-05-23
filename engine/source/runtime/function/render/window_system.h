@@ -24,6 +24,7 @@ namespace LunarYue
         ~WindowSystem();
         void               initialize(WindowCreateInfo create_info);
         void               pollEvents() const;
+        void               setShouldClose(bool value) const;
         bool               shouldClose() const;
         void               setTitle(const char* title);
         GLFWwindow*        getWindow() const;
