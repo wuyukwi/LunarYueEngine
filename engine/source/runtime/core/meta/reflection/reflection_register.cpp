@@ -12,6 +12,6 @@ namespace LunarYue
 {
     namespace Reflection
     {
-        void TypeMetaRegister::metaUnregister() { TypeMetaRegisterinterface::unregisterAll(); }
+        void TypeMetaRegister::metaUnregister() { TypeMetaRegisterInterface::unRegisterAll(); }
     } // namespace Reflection
 } // namespace LunarYue

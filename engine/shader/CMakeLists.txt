@@ -15,6 +15,9 @@ file(GLOB_RECURSE SHADER_FILES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/gl
                                             "${CMAKE_CURRENT_SOURCE_DIR}/glsl/*.rmiss"
                                             "${CMAKE_CURRENT_SOURCE_DIR}/glsl/*.rcall")
 
+file(GLOB_RECURSE INCLUDE_FILES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/include/*")
+SOURCE_GROUP("include" FILES ${INCLUDE_FILES})
+
 # シェーダーファイルをグループ化
 SOURCE_GROUP("shaders" FILES ${SHADER_FILES})
 
@@ -38,6 +41,7 @@ compile_shader(
   "${SHADER_FILES}"
   "${TARGET_NAME}"
   "${SHADER_INCLUDE_FOLDER}"
+  "${INCLUDE_FILES}"
   "${GENERATED_SHADER_FOLDER}"
   "${glslangValidator_executable}")
 

@@ -27,37 +27,47 @@ namespace LunarYue
         m_config_manager = std::make_shared<ConfigManager>();
         m_config_manager->initialize(config_file_path);
 
-        m_file_system = std::make_shared<FileSystem>();
-
         m_logger_system = std::make_shared<LogSystem>();
 
         m_asset_manager = std::make_shared<AssetManager>();
 
         m_physics_manager = std::make_shared<PhysicsManager>();
-        m_physics_manager->initialize();
 
         m_world_manager = std::make_shared<WorldManager>();
-        m_world_manager->initialize();
 
         m_window_system = std::make_shared<WindowSystem>();
+
+        m_input_system = std::make_shared<InputSystem>();
+
+        m_particle_manager = std::make_shared<ParticleManager>();
+
+        m_render_system = std::make_shared<RenderSystem>();
+
+        m_debugdraw_manager = std::make_shared<DebugDrawManager>();
+
+        m_render_debug_config = std::make_shared<RenderDebugConfig>();
+
+        m_file_system = std::make_shared<FileSystem>();
+    }
+
+    void RuntimeGlobalContext::initSystems()
+    {
+        m_physics_manager->initialize();
+
+        m_world_manager->initialize();
+
         WindowCreateInfo window_create_info;
         m_window_system->initialize(window_create_info);
 
-        m_input_system = std::make_shared<InputSystem>();
         m_input_system->initialize();
 
-        m_particle_manager = std::make_shared<ParticleManager>();
         m_particle_manager->initialize();
 
-        m_render_system = std::make_shared<RenderSystem>();
         RenderSystemInitInfo render_init_info;
         render_init_info.window_system = m_window_system;
         m_render_system->initialize(render_init_info);
 
-        m_debugdraw_manager = std::make_shared<DebugDrawManager>();
         m_debugdraw_manager->initialize();
-
-        m_render_debug_config = std::make_shared<RenderDebugConfig>();
     }
 
     void RuntimeGlobalContext::shutdownSystems()
@@ -83,8 +93,6 @@ namespace LunarYue
         m_asset_manager.reset();
 
         m_logger_system.reset();
-
-        m_file_system.reset();
 
         m_config_manager.reset();
 

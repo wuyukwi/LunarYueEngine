@@ -26,6 +26,10 @@ namespace LunarYue
     public:
         // create all global systems and initialize these systems
         void startSystems(const std::string& config_file_path);
+
+        // init all systems
+        void initSystems();
+
         // destroy all global systems
         void shutdownSystems();
 

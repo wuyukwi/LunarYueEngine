@@ -155,7 +155,7 @@ namespace LunarYue
     //	* Calculate the position where to spawn the actor using the current camera position and forward
     //	* @param p_distanceToCamera
     //	*/
-    //	OvMaths::FVector3 CalculateActorSpawnPoint(float p_distanceToCamera);
+    //	Vector3 CalculateActorSpawnPoint(float p_distanceToCamera);
 
     //	/**
     //	* Create an empty actor
@@ -174,7 +174,7 @@ namespace LunarYue
     //       * @param p_name
     //	*/
     //	OvCore::ECS::Actor&	CreateActorWithModel(const std::string& p_path, bool p_focusOnCreation = true, OvCore::ECS::Actor* p_parent = nullptr,
-    //const std::string& p_name = "");
+    // const std::string& p_name = "");
 
     //	/**
     //	* Destroy an actor from his scene
@@ -297,7 +297,7 @@ namespace LunarYue
     //	* @param p_fileType
     //	*/
     //	void PropagateFileRenameThroughSavedFilesOfType(const std::string& p_previousName, const std::string& p_newName,
-    //OvTools::Utils::PathParser::EFileType p_fileType); 	#pragma endregion
+    // OvTools::Utils::PathParser::EFileType p_fileType); 	#pragma endregion
 
     //	#pragma region SCENE
     //	/**

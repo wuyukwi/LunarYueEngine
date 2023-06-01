@@ -1,80 +1,99 @@
 #include "editor/include/editor_menu_bar.h"
+#include "editor/include/editor_global_context.h"
 
 #include "function/framework/world/world_manager.h"
 #include "function/render/window_system.h"
 #include "function/ui/Widgets/Visual/Separator.h"
-#include "runtime/function/global/global_context.h"
 
 using namespace LunarYue::UI::Widgets;
 
-LunarYue::MenuBar::MenuBar()
+namespace LunarYue
 {
-    CreateFileMenu();
-    CreateBuildMenu();
-    CreateWindowMenu();
-    CreateActorsMenu();
-    CreateResourcesMenu();
-    CreateSettingsMenu();
-    CreateLayoutMenu();
-    CreateHelpMenu();
-}
+    MenuBar::MenuBar()
+    {
+        CreateFileMenu();
+        CreateBuildMenu();
+        CreateWindowMenu();
+        CreateActorsMenu();
+        CreateResourcesMenu();
+        CreateSettingsMenu();
+        CreateLayoutMenu();
+        CreateHelpMenu();
+    }
 
-void LunarYue::MenuBar::HandleShortcuts(float p_deltaTime) {}
+    void MenuBar::HandleShortcuts(float p_deltaTime) {}
 
-void LunarYue::MenuBar::RegisterPanel(const std::string& p_name, UI::Panels::PanelWindow& p_panel)
-{
-    auto& menuItem = m_windowMenu->CreateWidget<UI::Widgets::Menu::MenuItem>(p_name, "", true, true);
-    menuItem.ValueChangedEvent += [ObjectPtr = &p_panel](auto&& PH1) { ObjectPtr->SetOpened(std::forward<decltype(PH1)>(PH1)); };
+    void MenuBar::RegisterPanel(const std::string& p_name, UI::Panels::PanelWindow& p_panel)
+    {
+        auto& menuItem = m_window_menu->createWidget<Menu::MenuItem>(p_name, "", true, true);
+        menuItem.ValueChangedEvent += [ObjectPtr = &p_panel](auto&& PH1) { ObjectPtr->SetOpened(std::forward<decltype(PH1)>(PH1)); };
 
-    m_panels.emplace(p_name, std::make_pair(std::ref(p_panel), std::ref(menuItem)));
-}
+        m_panels.emplace(p_name, std::make_pair(std::ref(p_panel), std::ref(menuItem)));
+    }
 
-void test() {}
-void LunarYue::MenuBar::CreateFileMenu()
-{
-    auto& fileMenu = CreateWidget<Menu::MenuList>("File");
+    void MenuBar::CreateFileMenu()
+    {
+        auto& file_menu = createWidget<Menu::MenuList>("File");
 
-    fileMenu.CreateWidget<Menu::MenuItem>("Save Current Level", "CTRL + N").ClickedEvent +=
-        [ObjectPtr = g_runtime_global_context.m_world_manager] { ObjectPtr->saveCurrentLevel(); };
+        file_menu.createWidget<Menu::MenuItem>("Save Current Level").ClickedEvent +=
+            [ObjectPtr = g_editor_global_context.m_world_manager] { ObjectPtr->saveCurrentLevel(); };
 
-    fileMenu.CreateWidget<Menu::MenuItem>("Reload Current Level", "CTRL + S").ClickedEvent +=
-        [ObjectPtr = g_runtime_global_context.m_world_manager] { ObjectPtr->reloadCurrentLevel(); };
+        file_menu.createWidget<Menu::MenuItem>("Reload Current Level").ClickedEvent +=
+            [ObjectPtr = g_editor_global_context.m_world_manager] { ObjectPtr->reloadCurrentLevel(); };
 
-    fileMenu.CreateWidget<Menu::MenuItem>("Exit", "ALT + F4").ClickedEvent +=
-        [ObjectPtr = g_runtime_global_context.m_window_system] { ObjectPtr->setShouldClose(true); };
-};
+        file_menu.createWidget<Menu::MenuItem>("Exit", "ALT + F4").ClickedEvent +=
+            [ObjectPtr = g_editor_global_context.m_window_system] { ObjectPtr->setShouldClose(true); };
+    };
 
-void LunarYue::MenuBar::CreateBuildMenu() {}
+    void MenuBar::CreateBuildMenu() {}
 
-void LunarYue::MenuBar::CreateWindowMenu()
-{
-    m_windowMenu = &CreateWidget<Menu::MenuList>("Window");
-    m_windowMenu->CreateWidget<Menu::MenuItem>("Close all").ClickedEvent += [this] { OpenEveryWindows(false); };
-    m_windowMenu->CreateWidget<Menu::MenuItem>("Open all").ClickedEvent += [this] { OpenEveryWindows(true); };
-    m_windowMenu->CreateWidget<Visual::Separator>();
+    void MenuBar::CreateWindowMenu()
+    {
+        m_window_menu = &createWidget<Menu::MenuList>("Window");
+        m_window_menu->createWidget<Menu::MenuItem>("Close all").ClickedEvent += [this] { OpenEveryWindows(false); };
+        m_window_menu->createWidget<Menu::MenuItem>("Open all").ClickedEvent += [this] { OpenEveryWindows(true); };
+        m_window_menu->createWidget<Visual::Separator>();
 
-    /* When the menu is opened, we update which window is marked as "Opened" or "Closed" */
-    m_windowMenu->ClickedEvent += [this] { UpdateToggleableItems(); };
-}
+        /* When the menu is opened, we update which window is marked as "Opened" or "Closed" */
+        m_window_menu->ClickedEvent += [this] { UpdateToggleableItems(); };
+    }
 
-void LunarYue::MenuBar::CreateActorsMenu() {}
+    void MenuBar::CreateActorsMenu() {}
 
-void LunarYue::MenuBar::CreateResourcesMenu() {}
+    void MenuBar::CreateResourcesMenu() {}
 
-void LunarYue::MenuBar::CreateSettingsMenu() {}
+    void MenuBar::CreateSettingsMenu() {}
 
-void LunarYue::MenuBar::CreateLayoutMenu() {}
+    void MenuBar::CreateLayoutMenu()
+    {
+        auto& setting_menu = createWidget<Menu::MenuList>("Setting");
 
-void LunarYue::MenuBar::CreateHelpMenu() {}
+        auto& editor_style = setting_menu.createWidget<Menu::MenuList>("Editor Style");
+        editor_style.createWidget<Menu::MenuItem>("DUNE_DARK").ClickedEvent +=
+            [ObjectPtr = g_editor_global_context.m_ui_manager] { ObjectPtr->ApplyStyle(UI::Core::EditorStyle::DUNE_DARK); };
+        editor_style.createWidget<Menu::MenuItem>("ALTERNATIVE_DARK").ClickedEvent +=
+            [ObjectPtr = g_editor_global_context.m_ui_manager] { ObjectPtr->ApplyStyle(UI::Core::EditorStyle::ALTERNATIVE_DARK); };
+        editor_style.createWidget<Menu::MenuItem>("IM_CLASSIC_STYLE").ClickedEvent +=
+            [ObjectPtr = g_editor_global_context.m_ui_manager] { ObjectPtr->ApplyStyle(UI::Core::EditorStyle::IM_CLASSIC_STYLE); };
+        editor_style.createWidget<Menu::MenuItem>("IM_DARK_STYLE").ClickedEvent +=
+            [ObjectPtr = g_editor_global_context.m_ui_manager] { ObjectPtr->ApplyStyle(UI::Core::EditorStyle::IM_DARK_STYLE); };
+        editor_style.createWidget<Menu::MenuItem>("IM_LIGHT_STYLE").ClickedEvent +=
+            [ObjectPtr = g_editor_global_context.m_ui_manager] { ObjectPtr->ApplyStyle(UI::Core::EditorStyle::IM_LIGHT_STYLE); };
+        editor_style.createWidget<Menu::MenuItem>("PICCOLO_STYLE").ClickedEvent +=
+            [ObjectPtr = g_editor_global_context.m_ui_manager] { ObjectPtr->ApplyStyle(UI::Core::EditorStyle::PICCOLO_STYLE); };
+    }
 
-void LunarYue::MenuBar::UpdateToggleableItems()
-{
-    for (auto& [name, panel] : m_panels)
-        panel.second.get().checked = panel.first.get().IsOpened();
-}
+    void MenuBar::CreateHelpMenu() {}
 
-void LunarYue::MenuBar::OpenEveryWindows(bool p_state)
-{
-    for (auto& [name, panel] : m_panels)
-        panel.first.get().SetOpened(p_state);
-}
+    void MenuBar::UpdateToggleableItems()
+    {
+        for (auto& [name, panel] : m_panels)
+            panel.second.get().checked = panel.first.get().IsOpened();
+    }
+
+    void MenuBar::OpenEveryWindows(bool p_state)
+    {
+        for (auto& [name, panel] : m_panels)
+            panel.first.get().SetOpened(p_state);
+    }
+} // namespace LunarYue

@@ -49,11 +49,11 @@ namespace LunarYue
         }
     }
 
-    bool GObject::hasComponent(const std::string& compenent_type_name) const
+    bool GObject::hasComponent(const std::string& component_type_name) const
     {
         for (const auto& component : m_components)
         {
-            if (component.getTypeName() == compenent_type_name)
+            if (component.getTypeName() == component_type_name)
                 return true;
         }
 
@@ -99,6 +99,24 @@ namespace LunarYue
         }
 
         return true;
+    }
+
+    void GObject::create(const ObjectInstanceRes& object_instance_res)
+    {
+        // clear old components
+        m_components.clear();
+
+        setName(object_instance_res.m_name);
+
+        // load object instanced components
+        m_components = object_instance_res.m_instanced_components;
+        for (auto component : m_components)
+        {
+            if (component)
+            {
+                component->postLoadResource(weak_from_this());
+            }
+        }
     }
 
     void GObject::save(ObjectInstanceRes& out_object_instance_res)

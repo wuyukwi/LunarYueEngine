@@ -24,19 +24,19 @@ namespace LunarYue
 
         // エンジンの初期化
         // engine_runtime: LunarYueEngineインスタンスへのポインタ
-        void initialize(LunarYueEngine* engine_runtime);
+        void initialize(std::shared_ptr<LunarYueEngine> engine_runtime);
 
         // エディタの状態をクリア
         void clear();
 
         // エディタの実行
-        void run();
+        void run() const;
 
     protected:
         // EditorUIのインスタンスへの共有ポインタ
         std::shared_ptr<EditorUI> m_editor_ui;
 
         // LunarYueEngineインスタンスへのポインタ
-        LunarYueEngine* m_engine_runtime {nullptr};
+        std::shared_ptr<LunarYueEngine> m_engine_runtime;
     };
 } // namespace LunarYue

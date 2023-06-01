@@ -1,6 +1,7 @@
 #pragma once
 
 #include "runtime/function/framework/object/object_id_allocator.h"
+#include "runtime/resource/res_type/common/level.h"
 
 #include <memory>
 #include <string>
@@ -19,9 +20,10 @@ namespace LunarYue
     class Level
     {
     public:
-        virtual ~Level(){};
+        virtual ~Level() {};
 
         bool load(const std::string& level_res_url);
+        void create(const std::string& level_res_url);
         void unload();
 
         bool save();
@@ -36,6 +38,7 @@ namespace LunarYue
         std::weak_ptr<Character> getCurrentActiveCharacter() const { return m_current_active_character; }
 
         GObjectID createObject(const ObjectInstanceRes& object_instance_res);
+        GObjectID createEmptyObject(const std::string& object_res_url);
         void      deleteGObjectByID(GObjectID go_id);
 
         std::weak_ptr<PhysicsScene> getPhysicsScene() const { return m_physics_scene; }

@@ -1,14 +1,9 @@
-/**
- * @project: Overload
- * @author: Overload Tech.
- * @licence: MIT
- */
-
 #pragma once
 
 #include "function/ui/Panels/PanelMenuBar.h"
 #include "function/ui/Panels/PanelWindow.h"
 #include "function/ui/Widgets/Menu/MenuItem.h"
+#include "function/ui/Widgets/Menu/MenuList.h"
 
 namespace LunarYue
 {
@@ -51,6 +46,6 @@ namespace LunarYue
     private:
         PanelMap m_panels;
 
-        UI::Widgets::Menu::MenuList* m_windowMenu = nullptr;
+        UI::Widgets::Menu::MenuList* m_window_menu = nullptr;
     };
 } // namespace LunarYue

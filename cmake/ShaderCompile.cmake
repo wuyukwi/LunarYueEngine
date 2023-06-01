@@ -10,7 +10,7 @@
 # GENERATED_DIR: 生成されるSPVファイルとC++ヘッダファイルを格納するディレクトリ。
 # GLSLANG_BIN: glslangValidatorバイナリへのパス。これはGLSLファイルをSPVファイルにコンパイルするために使用されます。
 
-function(compile_shader SHADERS TARGET_NAME SHADER_INCLUDE_FOLDER GENERATED_DIR GLSLANG_BIN)
+function(compile_shader SHADERS TARGET_NAME SHADER_INCLUDE_FOLDER INCLUDE_FILES GENERATED_DIR GLSLANG_BIN)
 
     set(working_dir "${CMAKE_CURRENT_SOURCE_DIR}")
 
@@ -62,6 +62,6 @@ function(compile_shader SHADERS TARGET_NAME SHADER_INCLUDE_FOLDER GENERATED_DIR 
     endforeach()
 
     add_custom_target(${TARGET_NAME}
-        DEPENDS ${ALL_GENERATED_SPV_FILES} ${ALL_GENERATED_CPP_FILES} SOURCES ${SHADERS})
+        DEPENDS ${ALL_GENERATED_SPV_FILES} ${ALL_GENERATED_CPP_FILES} SOURCES ${SHADERS} ${INCLUDE_FILES})
 
 endfunction()

@@ -41,10 +41,8 @@ namespace LunarYue
         m_physics.m_jolt_physics_system              = new JPH::PhysicsSystem();
         m_physics.m_jolt_broad_phase_layer_interface = new BPLayerInterfaceImpl();
 
-        m_physics.m_jolt_job_system =
-            new JPH::JobSystemThreadPool(m_config.m_max_job_count,
-                                         m_config.m_max_barrier_count,
-                                         static_cast<int>(m_config.m_max_concurrent_job_count));
+        m_physics.m_jolt_job_system = new JPH::JobSystemThreadPool(
+            m_config.m_max_job_count, m_config.m_max_barrier_count, static_cast<int>(m_config.m_max_concurrent_job_count));
 
         // 16M temp memory
         m_physics.m_temp_allocator = new JPH::TempAllocatorImpl(16 * 1024 * 1024);
@@ -74,8 +72,7 @@ namespace LunarYue
         JPH::Factory::sInstance = nullptr;
     }
 
-    uint32_t PhysicsScene::createRigidBody(const Transform&             global_transform,
-                                           const RigidBodyComponentRes& rigidbody_actor_res)
+    uint32_t PhysicsScene::createRigidBody(const Transform& global_transform, const RigidBodyComponentRes& rigidbody_actor_res)
     {
         JPH::BodyInterface& body_interface = m_physics.m_jolt_physics_system->GetBodyInterface();
 
@@ -105,8 +102,7 @@ namespace LunarYue
 
             if (jph_shape)
             {
-                jph_shapes.push_back(
-                    {jph_shape, shape.m_local_transform, global_position, global_scale, global_rotation});
+                jph_shapes.push_back({jph_shape, shape.m_local_transform, global_position, global_scale, global_rotation});
             }
         }
 
@@ -128,11 +124,8 @@ namespace LunarYue
                                             shape_data.shape);
         }
 
-        JPH::Body* jph_body = body_interface.CreateBody(JPH::BodyCreationSettings(compund_shape_setting,
-                                                                                  toVec3(global_transform.m_position),
-                                                                                  toQuat(global_transform.m_rotation),
-                                                                                  motion_type,
-                                                                                  layer));
+        JPH::Body* jph_body = body_interface.CreateBody(JPH::BodyCreationSettings(
+            compund_shape_setting, toVec3(global_transform.m_position), toQuat(global_transform.m_rotation), motion_type, layer));
 
         if (jph_body == nullptr)
         {
@@ -146,7 +139,7 @@ namespace LunarYue
         }
 
         body_interface.AddBody(jph_body->GetID(), JPH::EActivation::Activate);
-        LOG_INFO("Add Body: {}", jph_body->GetID().GetIndexAndSequenceNumber());
+        // LOG_INFO("Add Body: {}", jph_body->GetID().GetIndexAndSequenceNumber());
 
         return jph_body->GetID().GetIndexAndSequenceNumber();
     }
@@ -157,21 +150,16 @@ namespace LunarYue
     {
         JPH::BodyInterface& body_interface = m_physics.m_jolt_physics_system->GetBodyInterface();
 
-        body_interface.SetPositionAndRotation(JPH::BodyID(body_id),
-                                              toVec3(global_transform.m_position),
-                                              toQuat(global_transform.m_rotation),
-                                              JPH::EActivation::Activate);
+        body_interface.SetPositionAndRotation(
+            JPH::BodyID(body_id), toVec3(global_transform.m_position), toQuat(global_transform.m_rotation), JPH::EActivation::Activate);
     }
 
     void PhysicsScene::tick(float delta_time)
     {
         const float time_step = 1.f / m_config.m_update_frequency;
 
-        m_physics.m_jolt_physics_system->Update(time_step,
-                                                m_physics.m_collision_steps,
-                                                m_physics.m_integration_substeps,
-                                                m_physics.m_temp_allocator,
-                                                m_physics.m_jolt_job_system);
+        m_physics.m_jolt_physics_system->Update(
+            time_step, m_physics.m_collision_steps, m_physics.m_integration_substeps, m_physics.m_temp_allocator, m_physics.m_jolt_job_system);
 
         JPH::BodyInterface& body_interface = m_physics.m_jolt_physics_system->GetBodyInterface();
         for (uint32_t body_id : m_pending_remove_bodies)
@@ -183,10 +171,7 @@ namespace LunarYue
         m_pending_remove_bodies.clear();
     }
 
-    bool PhysicsScene::raycast(Vector3                      ray_origin,
-                               Vector3                      ray_directory,
-                               float                        ray_length,
-                               std::vector<PhysicsHitInfo>& out_hits)
+    bool PhysicsScene::raycast(Vector3 ray_origin, Vector3 ray_directory, float ray_length, std::vector<PhysicsHitInfo>& out_hits)
     {
         const JPH::NarrowPhaseQuery& scene_query = m_physics.m_jolt_physics_system->GetNarrowPhaseQuery();
 
@@ -225,8 +210,7 @@ namespace LunarYue
             JPH::BodyLockRead body_lock(m_physics.m_jolt_physics_system->GetBodyLockInterface(), cast_result.mBodyID);
             const JPH::Body&  hit_body = body_lock.GetBody();
 
-            hit.hit_normal =
-                toVec3(hit_body.GetWorldSpaceSurfaceNormal(cast_result.mSubShapeID2, toVec3(hit.hit_position)));
+            hit.hit_normal = toVec3(hit_body.GetWorldSpaceSurfaceNormal(cast_result.mSubShapeID2, toVec3(hit.hit_position)));
         }
 
         return true;
@@ -254,11 +238,8 @@ namespace LunarYue
             return false;
         }
 
-        JPH::ShapeCast shape_cast =
-            JPH::ShapeCast::sFromWorldTransform(jph_shape,
-                                                JPH::Vec3::sReplicate(1.f),
-                                                toMat44(shape_global_transform),
-                                                toVec3(sweep_direction.normalisedCopy() * sweep_length));
+        JPH::ShapeCast shape_cast = JPH::ShapeCast::sFromWorldTransform(
+            jph_shape, JPH::Vec3::sReplicate(1.f), toMat44(shape_global_transform), toVec3(sweep_direction.normalisedCopy() * sweep_length));
 
         JPH::AllHitCollisionCollector<JPH::CastShapeCollector> collector;
         scene_query.CastShape(shape_cast, JPH::ShapeCastSettings(), collector);
@@ -307,11 +288,7 @@ namespace LunarYue
         }
 
         JPH::AnyHitCollisionCollector<JPH::CollideShapeCollector> collector;
-        scene_query.CollideShape(jph_shape,
-                                 JPH::Vec3::sReplicate(1.0f),
-                                 toMat44(shape_global_transform),
-                                 JPH::CollideShapeSettings(),
-                                 collector);
+        scene_query.CollideShape(jph_shape, JPH::Vec3::sReplicate(1.0f), toMat44(shape_global_transform), JPH::CollideShapeSettings(), collector);
 
         return collector.HadHit();
     }

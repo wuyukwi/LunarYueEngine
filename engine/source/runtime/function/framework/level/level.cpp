@@ -11,6 +11,7 @@
 #include "runtime/function/particle/particle_manager.h"
 #include "runtime/function/physics/physics_manager.h"
 #include "runtime/function/physics/physics_scene.h"
+#include "runtime/platform/path/path.h"
 #include <limits>
 
 namespace LunarYue
@@ -29,26 +30,41 @@ namespace LunarYue
         GObjectID object_id = ObjectIDAllocator::alloc();
         ASSERT(object_id != k_invalid_gobject_id);
 
-        std::shared_ptr<GObject> gobject;
-        try
-        {
-            gobject = std::make_shared<GObject>(object_id);
-        }
-        catch (const std::bad_alloc&)
-        {
-            LOG_FATAL("cannot allocate memory for new gobject");
-        }
+        auto object = std::make_shared<GObject>(object_id);
 
-        bool is_loaded = gobject->load(object_instance_res);
+        bool is_loaded = object->load(object_instance_res);
         if (is_loaded)
         {
-            m_gobjects.emplace(object_id, gobject);
+            m_gobjects.emplace(object_id, object);
         }
         else
         {
             LOG_ERROR("loading object " + object_instance_res.m_name + " failed");
             return k_invalid_gobject_id;
         }
+        return object_id;
+    }
+
+    GObjectID Level::createEmptyObject(const std::string& object_res_url)
+    {
+        GObjectID object_id = ObjectIDAllocator::alloc();
+        ASSERT(object_id != k_invalid_gobject_id);
+
+        auto object = std::make_shared<GObject>(object_id);
+
+        ObjectInstanceRes res {};
+
+        res.m_name       = Path::getFilePureName(object_res_url);
+        res.m_definition = g_runtime_global_context.m_asset_manager->getFullPath(object_res_url).generic_string();
+
+        // res.m_instanced_components.push_back(Reflection::TypeMeta::newMetaFromName(""));
+
+        object->create(res);
+
+        m_gobjects.emplace(object_id, object);
+
+        LOG_ERROR("create object " + res.m_name);
+
         return object_id;
     }
 
@@ -95,6 +111,23 @@ namespace LunarYue
         return true;
     }
 
+    void Level::create(const std::string& level_res_url)
+    {
+        LOG_INFO("create level: {}");
+
+        // m_level_res_url = level_res_url;
+
+        const LevelRes level_res {};
+
+        ASSERT(g_runtime_global_context.m_physics_manager);
+        m_physics_scene = g_runtime_global_context.m_physics_manager->createPhysicsScene(level_res.m_gravity);
+        ParticleEmitterIDAllocator::reset();
+
+        m_is_loaded = g_runtime_global_context.m_asset_manager->saveAsset(level_res, level_res_url);
+
+        LOG_INFO("level create succeed");
+    }
+
     void Level::unload()
     {
         clear();
@@ -104,6 +137,7 @@ namespace LunarYue
     bool Level::save()
     {
         LOG_INFO("saving level: {}", m_level_res_url);
+
         LevelRes output_level_res;
 
         const size_t                    object_cout    = m_gobjects.size();

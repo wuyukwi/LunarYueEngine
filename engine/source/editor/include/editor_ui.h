@@ -51,7 +51,7 @@ namespace LunarYue
 
     public:
         // 初期化
-        virtual void initialize(WindowUIInitInfo init_info) override final;
+        virtual void initialize() override final;
         // プリレンダー
         virtual void preRender() override final;
 
@@ -65,9 +65,7 @@ namespace LunarYue
         // 最後のファイルツリーアップデート
         std::chrono::time_point<std::chrono::steady_clock> m_last_file_tree_update;
 
-        UI::Modules::Canvas                  m_canvas;
-        std::shared_ptr<UI::Core::UIManager> m_ui_manager;
-        std::shared_ptr<PanelsManager>       m_panels_manager;
+        UI::Modules::Canvas m_canvas;
 
         // 各ウィンドウのオープン状態フラグ
         bool m_editor_menu_window_open       = true;

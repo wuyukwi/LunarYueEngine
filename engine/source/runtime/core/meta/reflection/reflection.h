@@ -3,7 +3,6 @@
 
 #include <functional>
 #include <string>
-#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
@@ -14,12 +13,12 @@ namespace LunarYue
 #define META(...) __attribute__((annotate(#__VA_ARGS__)))
 #define CLASS(class_name, ...) class __attribute__((annotate(#__VA_ARGS__))) class_name
 #define STRUCT(struct_name, ...) struct __attribute__((annotate(#__VA_ARGS__))) struct_name
-//#define CLASS(class_name,...) class __attribute__((annotate(#__VA_ARGS__))) class_name:public Reflection::object
+// #define CLASS(class_name,...) class __attribute__((annotate(#__VA_ARGS__))) class_name:public Reflection::object
 #else
 #define META(...)
 #define CLASS(class_name, ...) class class_name
 #define STRUCT(struct_name, ...) struct struct_name
-//#define CLASS(class_name,...) class class_name:public Reflection::object
+// #define CLASS(class_name,...) class class_name:public Reflection::object
 #endif // __REFLECTION_PARSER__
 
 #define REFLECTION_BODY(class_name) \
@@ -36,36 +35,33 @@ namespace LunarYue
         } \
     };
 
-#define REGISTER_FIELD_TO_MAP(name, value) TypeMetaRegisterinterface::registerToFieldMap(name, value);
-#define REGISTER_Method_TO_MAP(name, value) TypeMetaRegisterinterface::registerToMethodMap(name, value);
-#define REGISTER_BASE_CLASS_TO_MAP(name, value) TypeMetaRegisterinterface::registerToClassMap(name, value);
-#define REGISTER_ARRAY_TO_MAP(name, value) TypeMetaRegisterinterface::registerToArrayMap(name, value);
-#define UNREGISTER_ALL TypeMetaRegisterinterface::unregisterAll();
+#define REGISTER_FIELD_TO_MAP(name, value) TypeMetaRegisterInterface::registerToFieldMap(name, value);
+#define REGISTER_Method_TO_MAP(name, value) TypeMetaRegisterInterface::registerToMethodMap(name, value);
+#define REGISTER_BASE_CLASS_TO_MAP(name, value) TypeMetaRegisterInterface::registerToClassMap(name, value);
+#define REGISTER_ARRAY_TO_MAP(name, value) TypeMetaRegisterInterface::registerToArrayMap(name, value);
+#define UNREGISTER_ALL TypeMetaRegisterInterface::unRegisterAll();
 
 #define LunarYue_REFLECTION_NEW(name, ...) Reflection::ReflectionPtr(#name, new name(__VA_ARGS__));
 #define LunarYue_REFLECTION_DELETE(value) \
     if (value) \
     { \
-        delete value.operator->(); \
-        value.getPtrReference() = nullptr; \
+        delete (value).operator->(); \
+        (value).getPtrReference() = nullptr; \
     }
-#define LunarYue_REFLECTION_DEEP_COPY(type, dst_ptr, src_ptr) \
-    *static_cast<type*>(dst_ptr) = *static_cast<type*>(src_ptr.getPtr());
+#define LunarYue_REFLECTION_DEEP_COPY(type, dst_ptr, src_ptr) *static_cast<(type)*>(dst_ptr) = *static_cast<(type)*>((src_ptr).getPtr());
 
 #define TypeMetaDef(class_name, ptr) \
-    LunarYue::Reflection::ReflectionInstance(LunarYue::Reflection::TypeMeta::newMetaFromName(#class_name), \
-                                            (class_name*)ptr)
+    LunarYue::Reflection::ReflectionInstance(LunarYue::Reflection::TypeMeta::newMetaFromName(#class_name), (class_name*)(ptr))
 
 #define TypeMetaDefPtr(class_name, ptr) \
-    new LunarYue::Reflection::ReflectionInstance(LunarYue::Reflection::TypeMeta::newMetaFromName(#class_name), \
-                                                (class_name*)ptr)
+    new LunarYue::Reflection::ReflectionInstance(LunarYue::Reflection::TypeMeta::newMetaFromName(#class_name), (class_name*)(ptr))
 
     template<typename T, typename U, typename = void>
-    struct is_safely_castable : std::false_type
+    struct is_safely_castTable : std::false_type
     {};
 
     template<typename T, typename U>
-    struct is_safely_castable<T, U, std::void_t<decltype(static_cast<U>(std::declval<T>()))>> : std::true_type
+    struct is_safely_castTable<T, U, std::void_t<decltype(static_cast<U>(std::declval<T>()))>> : std::true_type
     {};
 
     namespace Reflection
@@ -76,9 +72,9 @@ namespace LunarYue
         class ArrayAccessor;
         class ReflectionInstance;
     } // namespace Reflection
-    typedef std::function<void(void*, void*)>      SetFuncion;
-    typedef std::function<void*(void*)>            GetFuncion;
-    typedef std::function<const char*()>           GetNameFuncion;
+    typedef std::function<void(void*, void*)>      SetFunction;
+    typedef std::function<void*(void*)>            GetFunction;
+    typedef std::function<const char*()>           GetNameFunction;
     typedef std::function<void(int, void*, void*)> SetArrayFunc;
     typedef std::function<void*(int, void*)>       GetArrayFunc;
     typedef std::function<int(void*)>              GetSizeFunc;
@@ -89,15 +85,46 @@ namespace LunarYue
     typedef std::function<Json(void*)>                                  WriteJsonByName;
     typedef std::function<int(Reflection::ReflectionInstance*&, void*)> GetBaseClassReflectionInstanceListFunc;
 
-    typedef std::tuple<SetFuncion, GetFuncion, GetNameFuncion, GetNameFuncion, GetNameFuncion, GetBoolFunc>
-                                                       FieldFunctionTuple;
-    typedef std::tuple<GetNameFuncion, InvokeFunction> MethodFunctionTuple;
-    typedef std::tuple<GetBaseClassReflectionInstanceListFunc, ConstructorWithJson, WriteJsonByName> ClassFunctionTuple;
-    typedef std::tuple<SetArrayFunc, GetArrayFunc, GetSizeFunc, GetNameFuncion, GetNameFuncion>      ArrayFunctionTuple;
+    struct FieldFunctionStruct
+    {
+        SetFunction     setFunc;
+        GetFunction     getFunc;
+        GetNameFunction getOwnerTypeNameFunc;
+        GetNameFunction getFieldNameFunc;
+        GetNameFunction getFieldTypeFunc;
+        GetBoolFunc     isArrayTypeFunc;
+    };
+
+    struct MethodFunctionStruct
+    {
+        GetNameFunction getMethodNameFunc;
+        InvokeFunction  invokeMethodFunc;
+    };
+
+    struct ClassFunctionStruct
+    {
+        GetBaseClassReflectionInstanceListFunc getBaseClassReflectionInstanceListFunc;
+        ConstructorWithJson                    constructorWithJson;
+        WriteJsonByName                        writeJsonByName;
+    };
+
+    struct ArrayFunctionStruct
+    {
+        SetArrayFunc    setArrayFunc;
+        GetArrayFunc    getArrayFunc;
+        GetSizeFunc     getSizeFunc;
+        GetNameFunction getArrayOwnerTypeNameFunc;
+        GetNameFunction getArrayNameFunc;
+    };
+
+    typedef std::tuple<SetFunction, GetFunction, GetNameFunction, GetNameFunction, GetNameFunction, GetBoolFunc> FieldFunctionTuple;
+    typedef std::tuple<GetNameFunction, InvokeFunction>                                                          MethodFunctionTuple;
+    typedef std::tuple<GetBaseClassReflectionInstanceListFunc, ConstructorWithJson, WriteJsonByName>             ClassFunctionTuple;
+    typedef std::tuple<SetArrayFunc, GetArrayFunc, GetSizeFunc, GetNameFunction, GetNameFunction>                ArrayFunctionTuple;
 
     namespace Reflection
     {
-        class TypeMetaRegisterinterface
+        class TypeMetaRegisterInterface
         {
         public:
             static void registerToClassMap(const char* name, ClassFunctionTuple* value);
@@ -106,7 +133,7 @@ namespace LunarYue
             static void registerToMethodMap(const char* name, MethodFunctionTuple* value);
             static void registerToArrayMap(const char* name, ArrayFunctionTuple* value);
 
-            static void unregisterAll();
+            static void unRegisterAll();
         };
         class TypeMeta
         {
@@ -119,28 +146,28 @@ namespace LunarYue
 
             // static void Register();
 
-            static TypeMeta newMetaFromName(std::string type_name);
+            static TypeMeta newMetaFromName(const std::string& type_name);
 
-            static bool               newArrayAccessorFromName(std::string array_type_name, ArrayAccessor& accessor);
-            static ReflectionInstance newFromNameAndJson(std::string type_name, const Json& json_context);
-            static Json               writeByName(std::string type_name, void* instance);
+            static bool               newArrayAccessorFromName(const std::string& array_type_name, ArrayAccessor& accessor);
+            static ReflectionInstance newFromNameAndJson(const std::string& type_name, const Json& json_context);
+            static Json               writeByName(const std::string& type_name, void* instance);
 
             std::string getTypeName();
 
-            int getFieldsList(FieldAccessor*& out_list);
-            int getMethodsList(MethodAccessor*& out_list);
+            int getFieldsList(FieldAccessor*& out_list) const;
+            int getMethodsList(MethodAccessor*& out_list) const;
 
-            int getBaseClassReflectionInstanceList(ReflectionInstance*& out_list, void* instance);
+            int getBaseClassReflectionInstanceList(ReflectionInstance*& out_list, void* instance) const;
 
-            FieldAccessor getFieldByName(const char* name);
+            FieldAccessor  getFieldByName(const char* name);
             MethodAccessor getMethodByName(const char* name);
 
-            bool isValid() { return m_is_valid; }
+            bool isValid() const { return m_is_valid; }
 
             TypeMeta& operator=(const TypeMeta& dest);
 
         private:
-            TypeMeta(std::string type_name);
+            TypeMeta(const std::string& type_name);
 
         private:
             std::vector<FieldAccessor, std::allocator<FieldAccessor>>   m_fields;
@@ -173,7 +200,7 @@ namespace LunarYue
             bool        getTypeMeta(TypeMeta& field_type);
             const char* getFieldName() const;
             const char* getFieldTypeName();
-            bool        isArrayType();
+            bool        isArrayType() const;
 
             FieldAccessor& operator=(const FieldAccessor& dest);
 
@@ -192,7 +219,7 @@ namespace LunarYue
         public:
             MethodAccessor();
 
-            void invoke(void* instance);
+            void invoke(void* instance) const;
 
             const char* getMethodName() const;
 
@@ -214,14 +241,14 @@ namespace LunarYue
 
         public:
             ArrayAccessor();
-            const char* getArrayTypeName();
-            const char* getElementTypeName();
-            void        set(int index, void* instance, void* element_value);
+            const char* getArrayTypeName() const;
+            const char* getElementTypeName() const;
+            void        set(int index, void* instance, void* element_value) const;
 
-            void* get(int index, void* instance);
-            int   getSize(void* instance);
+            void* get(int index, void* instance) const;
+            int   getSize(void* instance) const;
 
-            ArrayAccessor& operator=(ArrayAccessor& dest);
+            ArrayAccessor& operator=(const ArrayAccessor& dest);
 
         private:
             ArrayAccessor(ArrayFunctionTuple* array_func);
@@ -236,9 +263,9 @@ namespace LunarYue
         {
         public:
             ReflectionInstance(TypeMeta meta, void* instance) : m_meta(meta), m_instance(instance) {}
-            ReflectionInstance() : m_meta(), m_instance(nullptr) {}
+            ReflectionInstance() : m_instance(nullptr) {}
 
-            ReflectionInstance& operator=(ReflectionInstance& dest);
+            ReflectionInstance& operator=(const ReflectionInstance& dest);
 
             ReflectionInstance& operator=(ReflectionInstance&& dest);
 
@@ -255,11 +282,11 @@ namespace LunarYue
 
         public:
             ReflectionPtr(std::string type_name, T* instance) : m_type_name(type_name), m_instance(instance) {}
-            ReflectionPtr() : m_type_name(), m_instance(nullptr) {}
+            ReflectionPtr() : m_instance(nullptr) {}
 
             ReflectionPtr(const ReflectionPtr& dest) : m_type_name(dest.m_type_name), m_instance(dest.m_instance) {}
 
-            template<typename U /*, typename = typename std::enable_if<std::is_safely_castable<T*, U*>::value>::type */>
+            template<typename U /*, typename = typename std::enable_if<std::is_safely_castTable<T*, U*>::value>::type */>
             ReflectionPtr<T>& operator=(const ReflectionPtr<U>& dest)
             {
                 if (this == static_cast<void*>(&dest))
@@ -271,7 +298,7 @@ namespace LunarYue
                 return *this;
             }
 
-            template<typename U /*, typename = typename std::enable_if<std::is_safely_castable<T*, U*>::value>::type*/>
+            template<typename U /*, typename = typename std::enable_if<std::is_safely_castTable<T*, U*>::value>::type*/>
             ReflectionPtr<T>& operator=(ReflectionPtr<U>&& dest)
             {
                 if (this == static_cast<void*>(&dest))
@@ -317,29 +344,25 @@ namespace LunarYue
 
             bool operator!=(const ReflectionPtr<T>& rhs_ptr) const { return (m_instance != rhs_ptr.m_instance); }
 
-            template<
-                typename T1 /*, typename = typename std::enable_if<std::is_safely_castable<T*, T1*>::value>::type*/>
+            template<typename T1 /*, typename = typename std::enable_if<std::is_safely_castTable<T*, T1*>::value>::type*/>
             explicit operator T1*()
             {
                 return static_cast<T1*>(m_instance);
             }
 
-            template<
-                typename T1 /*, typename = typename std::enable_if<std::is_safely_castable<T*, T1*>::value>::type*/>
+            template<typename T1 /*, typename = typename std::enable_if<std::is_safely_castTable<T*, T1*>::value>::type*/>
             operator ReflectionPtr<T1>()
             {
                 return ReflectionPtr<T1>(m_type_name, (T1*)(m_instance));
             }
 
-            template<
-                typename T1 /*, typename = typename std::enable_if<std::is_safely_castable<T*, T1*>::value>::type*/>
+            template<typename T1 /*, typename = typename std::enable_if<std::is_safely_castTable<T*, T1*>::value>::type*/>
             explicit operator const T1*() const
             {
                 return static_cast<T1*>(m_instance);
             }
 
-            template<
-                typename T1 /*, typename = typename std::enable_if<std::is_safely_castable<T*, T1*>::value>::type*/>
+            template<typename T1 /*, typename = typename std::enable_if<std::is_safely_castTable<T*, T1*>::value>::type*/>
             operator const ReflectionPtr<T1>() const
             {
                 return ReflectionPtr<T1>(m_type_name, (T1*)(m_instance));
@@ -362,7 +385,7 @@ namespace LunarYue
             operator bool() const { return (m_instance != nullptr); }
 
         private:
-            std::string m_type_name {""};
+            std::string m_type_name;
             typedef T   m_type;
             T*          m_instance {nullptr};
         };

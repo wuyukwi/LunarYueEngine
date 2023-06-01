@@ -24,6 +24,8 @@ namespace LunarYue
         void reloadCurrentLevel();
         void saveCurrentLevel();
 
+        void createNewLevel(const std::string& level_res_url);
+
         void                 tick(float delta_time);
         std::weak_ptr<Level> getCurrentActiveLevel() const { return m_current_active_level; }
 

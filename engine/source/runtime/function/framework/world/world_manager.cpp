@@ -6,8 +6,8 @@
 #include "runtime/resource/config_manager/config_manager.h"
 
 #include "runtime/function/framework/level/level.h"
-#include "runtime/function/global/global_context.h"
 #include "runtime/function/framework/level/level_debugger.h"
+#include "runtime/function/global/global_context.h"
 
 #include "_generated/serializer/all_serializer.h"
 
@@ -20,7 +20,7 @@ namespace LunarYue
         m_is_world_loaded   = false;
         m_current_world_url = g_runtime_global_context.m_config_manager->getDefaultWorldUrl();
 
-        //debugger
+        // debugger
         m_level_debugger = std::make_shared<LevelDebugger>();
     }
 
@@ -40,7 +40,7 @@ namespace LunarYue
         m_current_world_url.clear();
         m_is_world_loaded = false;
 
-        //clear debugger
+        // clear debugger
         m_level_debugger.reset();
     }
 
@@ -105,7 +105,7 @@ namespace LunarYue
     {
         std::shared_ptr<Level> level = std::make_shared<Level>();
         // set current level temporary
-        m_current_active_level       = level;
+        m_current_active_level = level;
 
         const bool is_level_load_success = level->load(level_url);
         if (is_level_load_success == false)
@@ -158,5 +158,37 @@ namespace LunarYue
         }
 
         active_level->save();
+    }
+
+    void WorldManager::createNewLevel(const std::string& level_res_url)
+    {
+        auto active_level = m_current_active_level.lock();
+        if (active_level == nullptr)
+        {
+            LOG_WARN("current level is nil");
+            return;
+        }
+
+        saveCurrentLevel();
+
+        const std::string level_url = active_level->getLevelResUrl();
+        active_level->unload();
+        m_loaded_levels.erase(level_url);
+
+        std::shared_ptr<Level> level = std::make_shared<Level>();
+
+        m_current_active_level = level;
+
+        level->create(level_res_url);
+
+        m_loaded_levels.emplace(level_res_url, level);
+
+        // update the active level instance
+        auto iter = m_loaded_levels.find(level_res_url);
+        ASSERT(iter != m_loaded_levels.end());
+
+        m_current_active_level = iter->second;
+
+        LOG_INFO("create current evel succeed");
     }
 } // namespace LunarYue

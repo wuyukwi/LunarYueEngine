@@ -17,7 +17,6 @@
 
 #include "runtime/function/framework/level/level.h"
 #include "runtime/function/framework/world/world_manager.h"
-#include "runtime/function/global/global_context.h"
 #include "runtime/function/input/input_system.h"
 #include "runtime/function/render/render_camera.h"
 #include "runtime/function/render/render_debug_config.h"
@@ -26,8 +25,8 @@
 
 #include <imgui.h>
 #include <imgui_internal.h>
-#include <stb_image.h>
 
+#include "editor/include/editor_scene_view.h"
 #include "function/ui/Settings/PanelWindowSettings.h"
 
 namespace LunarYue
@@ -406,6 +405,61 @@ namespace LunarYue
                 ImGui::EndMenu();
             }
 
+            if (ImGui::BeginMenu("Create new level"))
+            {
+                g_editor_global_context.m_world_manager->createNewLevel("asset/level/test.json");
+            }
+            if (ImGui::BeginMenu("Create new object"))
+            {
+
+                // 現在のアクティブなレベルを取得する
+                std::shared_ptr<Level> level = g_runtime_global_context.m_world_manager->getCurrentActiveLevel().lock();
+                if (level == nullptr)
+                    return;
+
+                // 新しいGameObjectを作成し、シーンに追加する
+                size_t new_gobject_id = level->createEmptyObject("asset/object/test.object.json");
+                if (new_gobject_id != k_invalid_gobject_id)
+                {
+                    // 新しいGameObjectが正常に作成された場合、それを選択する
+                    g_editor_global_context.m_scene_manager->onGObjectSelected(new_gobject_id);
+                }
+            }
+            if (ImGui::BeginMenu("add component"))
+            {
+                // 選択されたオブジェクトを取得
+                std::shared_ptr<GObject> selected_object = g_editor_global_context.m_scene_manager->getSelectedGObject().lock();
+                if (selected_object == nullptr)
+                {
+                    ImGui::End();
+                    return;
+                }
+
+                auto&& selected_object_components = selected_object->getComponents();
+                for (auto& component_ptr : selected_object_components)
+                {
+                    auto object_instance =
+                        Reflection::ReflectionInstance(Reflection::TypeMeta::newMetaFromName(component_ptr.getTypeName()), component_ptr.getPtr());
+
+                    // 基本クラスのリフレクションインスタンスリストを取得
+                    Reflection::ReflectionInstance* reflection_instance;
+                    const int count = object_instance.m_meta.getBaseClassReflectionInstanceList(reflection_instance, object_instance.m_instance);
+
+                    // 基本クラスのリフレクションインスタンスを反復処理し、対応するUIを作成
+                    for (int index = 0; index < count; index++)
+                    {
+                        createClassUI(reflection_instance[index]);
+                    }
+
+                    // リーフノードUIを作成
+                    // createLeafNodeUI(instance);
+
+                    // 反復処理中に割り当てたリフレクションインスタンスを削除（必要に応じて）
+                    if (count > 0)
+                        delete[] reflection_instance;
+                }
+            }
+
             ImGui::EndMenuBar();
         }
 
@@ -649,10 +703,11 @@ namespace LunarYue
         settings.collapsable = true;
         settings.dockable    = true;
 
-        m_panels_manager->CreatePanel<MenuBar>("Menu Bar");
+        g_editor_global_context.m_panels_manager->CreatePanel<MenuBar>("Menu Bar");
+        g_editor_global_context.m_panels_manager->CreatePanel<SceneView>("Scene View", true, settings);
 
         m_canvas.MakeDockspace(true);
-        m_ui_manager->SetCanvas(m_canvas);
+        g_editor_global_context.m_ui_manager->SetCanvas(m_canvas);
     }
 
     void EditorUI::showEditorFileContentWindow(bool* p_open)
@@ -949,101 +1004,102 @@ namespace LunarYue
             ImGui::End();
             return;
         }
-
-        static bool trans_button_ckecked  = false;
-        static bool rotate_button_ckecked = false;
-        static bool scale_button_ckecked  = false;
-
-        switch (g_editor_global_context.m_scene_manager->getEditorAxisMode())
-        {
-            case EditorAxisMode::TranslateMode:
-                trans_button_ckecked  = true;
-                rotate_button_ckecked = false;
-                scale_button_ckecked  = false;
-                break;
-            case EditorAxisMode::RotateMode:
-                trans_button_ckecked  = false;
-                rotate_button_ckecked = true;
-                scale_button_ckecked  = false;
-                break;
-            case EditorAxisMode::ScaleMode:
-                trans_button_ckecked  = false;
-                rotate_button_ckecked = false;
-                scale_button_ckecked  = true;
-                break;
-            default:
-                break;
-        }
-
-        if (ImGui::BeginMenuBar())
-        {
-            ImGui::Indent(10.f);
-            drawAxisToggleButton("Trans", trans_button_ckecked, (int)EditorAxisMode::TranslateMode);
-            ImGui::Unindent();
-
-            ImGui::SameLine();
-
-            drawAxisToggleButton("Rotate", rotate_button_ckecked, (int)EditorAxisMode::RotateMode);
-
-            ImGui::SameLine();
-
-            drawAxisToggleButton("Scale", scale_button_ckecked, (int)EditorAxisMode::ScaleMode);
-
-            ImGui::SameLine();
-
-            float indent_val = 0.0f;
-
-#if defined(__GNUC__) && defined(__MACH__)
-            float indent_scale = 1.0f;
-#else // Not tested on Linux
-            float x_scale, y_scale;
-            glfwGetWindowContentScale(g_editor_global_context.m_window_system->getWindow(), &x_scale, &y_scale);
-            float indent_scale = fmaxf(1.0f, fmaxf(x_scale, y_scale));
-#endif
-            indent_val = g_editor_global_context.m_input_manager->getEngineWindowSize().x - 100.0f * indent_scale;
-
-            ImGui::Indent(indent_val);
-            if (g_is_editor_mode)
-            {
-                ImGui::PushID("Editor Mode");
-                ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 1.0f, 0.0f, 1.0f));
-                if (ImGui::Button(ICON_FA_PLAY))
-                {
-                    g_is_editor_mode = false;
-                    g_editor_global_context.m_scene_manager->drawSelectedEntityAxis();
-                    g_editor_global_context.m_input_manager->resetEditorCommand();
-                    g_editor_global_context.m_window_system->setFocusMode(true);
-                }
-                ImGui::PopStyleColor();
-                ImGui::PopID();
-            }
-            else
-            {
-                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
-                if (ImGui::Button(ICON_FA_PAUSE))
-                {
-                    g_is_editor_mode = true;
-                    g_editor_global_context.m_scene_manager->drawSelectedEntityAxis();
-                    g_runtime_global_context.m_input_system->resetGameCommand();
-                    g_editor_global_context.m_render_system->getRenderCamera()->setMainViewMatrix(
-                        g_editor_global_context.m_scene_manager->getEditorCamera()->getViewMatrix());
-                }
-                ImGui::PopStyleColor();
-            }
-
-            ImGui::Unindent();
-            ImGui::EndMenuBar();
-        }
-
-        if (!g_is_editor_mode)
-        {
-            ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Press Left Alt key to display the mouse cursor!");
-        }
-        else
-        {
-            ImGui::TextColored(
-                ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "Current editor camera move speed: [%f]", g_editor_global_context.m_input_manager->getCameraSpeed());
-        }
+        //
+        //        static bool trans_button_ckecked  = false;
+        //        static bool rotate_button_ckecked = false;
+        //        static bool scale_button_ckecked  = false;
+        //
+        //        switch (g_editor_global_context.m_scene_manager->getEditorAxisMode())
+        //        {
+        //            case EditorAxisMode::TranslateMode:
+        //                trans_button_ckecked  = true;
+        //                rotate_button_ckecked = false;
+        //                scale_button_ckecked  = false;
+        //                break;
+        //            case EditorAxisMode::RotateMode:
+        //                trans_button_ckecked  = false;
+        //                rotate_button_ckecked = true;
+        //                scale_button_ckecked  = false;
+        //                break;
+        //            case EditorAxisMode::ScaleMode:
+        //                trans_button_ckecked  = false;
+        //                rotate_button_ckecked = false;
+        //                scale_button_ckecked  = true;
+        //                break;
+        //            default:
+        //                break;
+        //        }
+        //
+        //        if (ImGui::BeginMenuBar())
+        //        {
+        //            ImGui::Indent(10.f);
+        //            drawAxisToggleButton("Trans", trans_button_ckecked, (int)EditorAxisMode::TranslateMode);
+        //            ImGui::Unindent();
+        //
+        //            ImGui::SameLine();
+        //
+        //            drawAxisToggleButton("Rotate", rotate_button_ckecked, (int)EditorAxisMode::RotateMode);
+        //
+        //            ImGui::SameLine();
+        //
+        //            drawAxisToggleButton("Scale", scale_button_ckecked, (int)EditorAxisMode::ScaleMode);
+        //
+        //            ImGui::SameLine();
+        //
+        //            float indent_val = 0.0f;
+        //
+        // #if defined(__GNUC__) && defined(__MACH__)
+        //            float indent_scale = 1.0f;
+        // #else // Not tested on Linux
+        //            float x_scale, y_scale;
+        //            glfwGetWindowContentScale(g_editor_global_context.m_window_system->getWindow(), &x_scale, &y_scale);
+        //            float indent_scale = fmaxf(1.0f, fmaxf(x_scale, y_scale));
+        // #endif
+        //            indent_val = g_editor_global_context.m_input_manager->getEngineWindowSize().x - 100.0f * indent_scale;
+        //
+        //            ImGui::Indent(indent_val);
+        //            if (g_is_editor_mode)
+        //            {
+        //                ImGui::PushID("Editor Mode");
+        //                ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 1.0f, 0.0f, 1.0f));
+        //                if (ImGui::Button(ICON_FA_PLAY))
+        //                {
+        //                    g_is_editor_mode = false;
+        //                    g_editor_global_context.m_scene_manager->drawSelectedEntityAxis();
+        //                    g_editor_global_context.m_input_manager->resetEditorCommand();
+        //                    g_editor_global_context.m_window_system->setFocusMode(true);
+        //                }
+        //                ImGui::PopStyleColor();
+        //                ImGui::PopID();
+        //            }
+        //            else
+        //            {
+        //                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
+        //                if (ImGui::Button(ICON_FA_PAUSE))
+        //                {
+        //                    g_is_editor_mode = true;
+        //                    g_editor_global_context.m_scene_manager->drawSelectedEntityAxis();
+        //                    g_runtime_global_context.m_input_system->resetGameCommand();
+        //                    g_editor_global_context.m_render_system->getRenderCamera()->setMainViewMatrix(
+        //                        g_editor_global_context.m_scene_manager->getEditorCamera()->getViewMatrix());
+        //                }
+        //                ImGui::PopStyleColor();
+        //            }
+        //
+        //            ImGui::Unindent();
+        //            ImGui::EndMenuBar();
+        //        }
+        //
+        //        if (!g_is_editor_mode)
+        //        {
+        //            ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Press Left Alt key to display the mouse cursor!");
+        //        }
+        //        else
+        //        {
+        //            ImGui::TextColored(
+        //                ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "Current editor camera move speed: [%f]",
+        //                g_editor_global_context.m_input_manager->getCameraSpeed());
+        //        }
 
         // GetWindowPos() ----->  X--------------------------------------------O
         //                        |                                            |
@@ -1087,54 +1143,54 @@ namespace LunarYue
             g_editor_global_context.m_input_manager->setEngineWindowSize(render_target_window_size);
         }
 
-        ImGui::InvisibleButton("DropTarget", ImVec2(render_target_window_size.x, render_target_window_size.y));
-        if (ImGui::BeginDragDropTarget())
-        {
-            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FILE_DRAG_DROP"))
-            {
-                IM_ASSERT(payload->DataSize == sizeof(std::shared_ptr<EditorFileNode>));
-                std::shared_ptr<EditorFileNode>* dropped_node_ptr = static_cast<std::shared_ptr<EditorFileNode>*>(payload->Data);
-                std::shared_ptr<EditorFileNode>  dropped_node     = *dropped_node_ptr;
+        // ImGui::InvisibleButton("DropTarget", ImVec2(render_target_window_size.x, render_target_window_size.y));
+        // if (ImGui::BeginDragDropTarget())
+        //{
+        //     if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FILE_DRAG_DROP"))
+        //     {
+        //         IM_ASSERT(payload->DataSize == sizeof(std::shared_ptr<EditorFileNode>));
+        //         std::shared_ptr<EditorFileNode>* dropped_node_ptr = static_cast<std::shared_ptr<EditorFileNode>*>(payload->Data);
+        //         std::shared_ptr<EditorFileNode>  dropped_node     = *dropped_node_ptr;
 
-                ImVec2 mouse_pos = ImGui::GetMousePos();
+        //        ImVec2 mouse_pos = ImGui::GetMousePos();
 
-                ImVec2 game_window_pos  = ImGui::GetWindowPos();
-                ImVec2 game_window_size = ImGui::GetWindowSize();
-                ImVec2 relative_mouse_pos;
-                relative_mouse_pos.x = mouse_pos.x - game_window_pos.x;
-                relative_mouse_pos.y = mouse_pos.y - game_window_pos.y;
+        //        ImVec2 game_window_pos  = ImGui::GetWindowPos();
+        //        ImVec2 game_window_size = ImGui::GetWindowSize();
+        //        ImVec2 relative_mouse_pos;
+        //        relative_mouse_pos.x = mouse_pos.x - game_window_pos.x;
+        //        relative_mouse_pos.y = mouse_pos.y - game_window_pos.y;
 
-                ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "relative_mouse_pos: [%f][%f]", relative_mouse_pos.x, relative_mouse_pos.y);
+        //        ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "relative_mouse_pos: [%f][%f]", relative_mouse_pos.x, relative_mouse_pos.y);
 
-                if (relative_mouse_pos.x >= 0 && relative_mouse_pos.y >= 0 && relative_mouse_pos.x < game_window_size.x &&
-                    relative_mouse_pos.y < game_window_size.y)
-                {
-                    // 現在のアクティブなレベルを取得する
-                    std::shared_ptr<Level> level = g_runtime_global_context.m_world_manager->getCurrentActiveLevel().lock();
-                    if (level == nullptr)
-                        return;
+        //        if (relative_mouse_pos.x >= 0 && relative_mouse_pos.y >= 0 && relative_mouse_pos.x < game_window_size.x &&
+        //            relative_mouse_pos.y < game_window_size.y)
+        //        {
+        //            // 現在のアクティブなレベルを取得する
+        //            std::shared_ptr<Level> level = g_runtime_global_context.m_world_manager->getCurrentActiveLevel().lock();
+        //            if (level == nullptr)
+        //                return;
 
-                    // 新しいオブジェクトのインデックスをインクリメントする
-                    const unsigned int new_object_index = ++m_new_object_index_map[dropped_node->m_file_name];
+        //            // 新しいオブジェクトのインデックスをインクリメントする
+        //            const unsigned int new_object_index = ++m_new_object_index_map[dropped_node->m_file_name];
 
-                    // 新しいオブジェクトインスタンスリソースを作成する
-                    ObjectInstanceRes new_object_instance_res;
-                    new_object_instance_res.m_name =
-                        "New_" + Path::getFilePureName(dropped_node->m_file_name) + "_" + std::to_string(new_object_index);
-                    new_object_instance_res.m_definition =
-                        g_runtime_global_context.m_asset_manager->getFullPath(dropped_node->m_file_path).generic_string();
+        //            // 新しいオブジェクトインスタンスリソースを作成する
+        //            ObjectInstanceRes new_object_instance_res;
+        //            new_object_instance_res.m_name =
+        //                "New_" + Path::getFilePureName(dropped_node->m_file_name) + "_" + std::to_string(new_object_index);
+        //            new_object_instance_res.m_definition =
+        //                g_runtime_global_context.m_asset_manager->getFullPath(dropped_node->m_file_path).generic_string();
 
-                    // 新しいGameObjectを作成し、シーンに追加する
-                    size_t new_gobject_id = level->createObject(new_object_instance_res);
-                    if (new_gobject_id != k_invalid_gobject_id)
-                    {
-                        // 新しいGameObjectが正常に作成された場合、それを選択する
-                        g_editor_global_context.m_scene_manager->onGObjectSelected(new_gobject_id);
-                    }
-                }
-            }
-            ImGui::EndDragDropTarget();
-        }
+        //            // 新しいGameObjectを作成し、シーンに追加する
+        //            size_t new_gobject_id = level->createObject(new_object_instance_res);
+        //            if (new_gobject_id != k_invalid_gobject_id)
+        //            {
+        //                // 新しいGameObjectが正常に作成された場合、それを選択する
+        //                g_editor_global_context.m_scene_manager->onGObjectSelected(new_gobject_id);
+        //            }
+        //        }
+        //    }
+        //    ImGui::EndDragDropTarget();
+        //}
 
         ImGui::End();
     }
@@ -1163,30 +1219,29 @@ namespace LunarYue
         }
     }
 
-    void EditorUI::initialize(WindowUIInitInfo init_info)
+    void EditorUI::initialize()
     {
-        std::shared_ptr<ConfigManager> config_manager = g_runtime_global_context.m_config_manager;
-        ASSERT(config_manager);
-
-        m_ui_manager = std::make_shared<UI::Core::UIManager>();
-        m_ui_manager->initialize(init_info, UI::Core::EditorStyle::DUNE_DARK);
-
-        m_panels_manager = std::make_shared<PanelsManager>(m_canvas);
+        // g_editor_global_context.m_panels_manager = std::make_shared<PanelsManager>(m_canvas);
 
         m_iconTextureMap["folder"]   = "resource/icon/folder.png";
         m_iconTextureMap["object"]   = "resource/icon/object.png";
         m_iconTextureMap["question"] = "resource/icon/question.png";
 
-        setupUI();
+        // setupUI();
 
         // initialize imgui vulkan render backend
-        init_info.render_system->initializeUIRenderBackend(this);
+        g_editor_global_context.m_render_system->initializeUIRenderBackend(this);
     }
 
     void EditorUI::preRender()
     {
-        // showEditorUI();
-        m_ui_manager->Render();
+        // g_editor_global_context.m_ui_manager->Render();
+
+        // auto& sceneView = g_editor_global_context.m_panels_manager->GetPanelAs<SceneView>("Scene View");
+
+        // if (sceneView.IsOpened())
+        //     sceneView._Render_Impl();
+        showEditorUI();
     }
 
     void DrawVecControl(const std::string& label, LunarYue::Vector3& values, float resetValue, float columnWidth)

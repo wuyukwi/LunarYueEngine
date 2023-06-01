@@ -36,7 +36,7 @@ namespace LunarYue
         Reflection::TypeMetaRegister::metaUnregister();
     }
 
-    void LunarYueEngine::initialize() {}
+    void LunarYueEngine::initialize() { g_runtime_global_context.initSystems(); }
     void LunarYueEngine::clear() {}
 
     void LunarYueEngine::run()

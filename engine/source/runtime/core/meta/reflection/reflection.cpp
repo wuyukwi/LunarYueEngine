@@ -14,15 +14,15 @@ namespace LunarYue
         static std::multimap<std::string, MethodFunctionTuple*> m_method_map;
         static std::map<std::string, ArrayFunctionTuple*>       m_array_map;
 
-        void TypeMetaRegisterinterface::registerToFieldMap(const char* name, FieldFunctionTuple* value)
+        void TypeMetaRegisterInterface::registerToFieldMap(const char* name, FieldFunctionTuple* value)
         {
             m_field_map.insert(std::make_pair(name, value));
         }
-        void TypeMetaRegisterinterface::registerToMethodMap(const char* name, MethodFunctionTuple* value)
+        void TypeMetaRegisterInterface::registerToMethodMap(const char* name, MethodFunctionTuple* value)
         {
             m_method_map.insert(std::make_pair(name, value));
         }
-        void TypeMetaRegisterinterface::registerToArrayMap(const char* name, ArrayFunctionTuple* value)
+        void TypeMetaRegisterInterface::registerToArrayMap(const char* name, ArrayFunctionTuple* value)
         {
             if (m_array_map.find(name) == m_array_map.end())
             {
@@ -34,7 +34,7 @@ namespace LunarYue
             }
         }
 
-        void TypeMetaRegisterinterface::registerToClassMap(const char* name, ClassFunctionTuple* value)
+        void TypeMetaRegisterInterface::registerToClassMap(const char* name, ClassFunctionTuple* value)
         {
             if (m_class_map.find(name) == m_class_map.end())
             {
@@ -46,7 +46,7 @@ namespace LunarYue
             }
         }
 
-        void TypeMetaRegisterinterface::unregisterAll()
+        void TypeMetaRegisterInterface::unRegisterAll()
         {
             for (const auto& itr : m_field_map)
             {
@@ -65,42 +65,46 @@ namespace LunarYue
             m_array_map.clear();
         }
 
-        TypeMeta::TypeMeta(std::string type_name) : m_type_name(type_name)
+        TypeMeta::TypeMeta(const std::string& type_name) : m_type_name(type_name)
         {
             m_is_valid = false;
             m_fields.clear();
             m_methods.clear();
 
-            auto fileds_iter = m_field_map.equal_range(type_name);
-            while (fileds_iter.first != fileds_iter.second)
+            auto [field_fst, field_snd] = m_field_map.equal_range(type_name);
+            while (field_fst != field_snd)
             {
-                FieldAccessor f_field(fileds_iter.first->second);
+                FieldAccessor f_field(field_fst->second);
                 m_fields.emplace_back(f_field);
                 m_is_valid = true;
 
-                ++fileds_iter.first;
+                ++field_fst;
             }
 
-            auto methods_iter = m_method_map.equal_range(type_name);
-            while (methods_iter.first != methods_iter.second)
+            auto [method_fst, method_snd] = m_method_map.equal_range(type_name);
+            while (method_fst != method_snd)
             {
-                MethodAccessor f_method(methods_iter.first->second);
+                MethodAccessor f_method(method_fst->second);
                 m_methods.emplace_back(f_method);
                 m_is_valid = true;
 
-                ++methods_iter.first;
+                ++method_fst;
             }
         }
 
-        TypeMeta::TypeMeta() : m_type_name(k_unknown_type), m_is_valid(false) { m_fields.clear(); m_methods.clear(); }
+        TypeMeta::TypeMeta() : m_type_name(k_unknown_type), m_is_valid(false)
+        {
+            m_fields.clear();
+            m_methods.clear();
+        }
 
-        TypeMeta TypeMeta::newMetaFromName(std::string type_name)
+        TypeMeta TypeMeta::newMetaFromName(const std::string& type_name)
         {
             TypeMeta f_type(type_name);
             return f_type;
         }
 
-        bool TypeMeta::newArrayAccessorFromName(std::string array_type_name, ArrayAccessor& accessor)
+        bool TypeMeta::newArrayAccessorFromName(const std::string& array_type_name, ArrayAccessor& accessor)
         {
             auto iter = m_array_map.find(array_type_name);
 
@@ -114,18 +118,18 @@ namespace LunarYue
             return false;
         }
 
-        ReflectionInstance TypeMeta::newFromNameAndJson(std::string type_name, const Json& json_context)
+        ReflectionInstance TypeMeta::newFromNameAndJson(const std::string& type_name, const Json& json_context)
         {
             auto iter = m_class_map.find(type_name);
 
             if (iter != m_class_map.end())
             {
-                return ReflectionInstance(TypeMeta(type_name), (std::get<1>(*iter->second)(json_context)));
+                return {TypeMeta(type_name), (std::get<1>(*iter->second)(json_context))};
             }
-            return ReflectionInstance();
+            return {};
         }
 
-        Json TypeMeta::writeByName(std::string type_name, void* instance)
+        Json TypeMeta::writeByName(const std::string& type_name, void* instance)
         {
             auto iter = m_class_map.find(type_name);
 
@@ -133,15 +137,15 @@ namespace LunarYue
             {
                 return std::get<2>(*iter->second)(instance);
             }
-            return Json();
+            return {};
         }
 
         std::string TypeMeta::getTypeName() { return m_type_name; }
 
-        int TypeMeta::getFieldsList(FieldAccessor*& out_list)
+        int TypeMeta::getFieldsList(FieldAccessor*& out_list) const
         {
-            int count = m_fields.size();
-            out_list  = new FieldAccessor[count];
+            const int count = m_fields.size();
+            out_list        = new FieldAccessor[count];
             for (int i = 0; i < count; ++i)
             {
                 out_list[i] = m_fields[i];
@@ -149,10 +153,10 @@ namespace LunarYue
             return count;
         }
 
-        int TypeMeta::getMethodsList(MethodAccessor*& out_list)
+        int TypeMeta::getMethodsList(MethodAccessor*& out_list) const
         {
-            int count = m_methods.size();
-            out_list  = new MethodAccessor[count];
+            const int count = m_methods.size();
+            out_list        = new MethodAccessor[count];
             for (int i = 0; i < count; ++i)
             {
                 out_list[i] = m_methods[i];
@@ -160,13 +164,11 @@ namespace LunarYue
             return count;
         }
 
-        int TypeMeta::getBaseClassReflectionInstanceList(ReflectionInstance*& out_list, void* instance)
+        int TypeMeta::getBaseClassReflectionInstanceList(ReflectionInstance*& out_list, void* instance) const
         {
-            auto iter = m_class_map.find(m_type_name);
-
-            if (iter != m_class_map.end())
+            if (const auto iterate = m_class_map.find(m_type_name); iterate != m_class_map.end())
             {
-                return (std::get<0>(*iter->second))(out_list, instance);
+                return (std::get<0>(*iterate->second))(out_list, instance);
             }
 
             return 0;
@@ -174,22 +176,19 @@ namespace LunarYue
 
         FieldAccessor TypeMeta::getFieldByName(const char* name)
         {
-            const auto it = std::find_if(m_fields.begin(), m_fields.end(), [&](const auto& i) {
-                return std::strcmp(i.getFieldName(), name) == 0;
-            });
+            const auto it = std::find_if(m_fields.begin(), m_fields.end(), [&](const auto& i) { return std::strcmp(i.getFieldName(), name) == 0; });
             if (it != m_fields.end())
                 return *it;
-            return FieldAccessor(nullptr);
+            return {nullptr};
         }
 
         MethodAccessor TypeMeta::getMethodByName(const char* name)
         {
-            const auto it = std::find_if(m_methods.begin(), m_methods.end(), [&](const auto& i) {
-                return std::strcmp(i.getMethodName(), name) == 0;
-            });
+            const auto it =
+                std::find_if(m_methods.begin(), m_methods.end(), [&](const auto& i) { return std::strcmp(i.getMethodName(), name) == 0; });
             if (it != m_methods.end())
                 return *it;
-            return MethodAccessor(nullptr);
+            return {nullptr};
         }
 
         TypeMeta& TypeMeta::operator=(const TypeMeta& dest)
@@ -201,7 +200,6 @@ namespace LunarYue
             m_fields.clear();
             m_fields = dest.m_fields;
 
-            
             m_methods.clear();
             m_methods = dest.m_methods;
 
@@ -233,13 +231,13 @@ namespace LunarYue
         void* FieldAccessor::get(void* instance)
         {
             // todo: should check validation
-            return static_cast<void*>((std::get<1>(*m_functions))(instance));
+            return std::get<1>(*m_functions)(instance);
         }
 
         void FieldAccessor::set(void* instance, void* value)
         {
             // todo: should check validation
-            (std::get<0>(*m_functions))(instance, value);
+            std::get<0> (*m_functions)(instance, value);
         }
 
         TypeMeta FieldAccessor::getOwnerTypeMeta()
@@ -259,7 +257,7 @@ namespace LunarYue
         const char* FieldAccessor::getFieldName() const { return m_field_name; }
         const char* FieldAccessor::getFieldTypeName() { return m_field_type_name; }
 
-        bool FieldAccessor::isArrayType()
+        bool FieldAccessor::isArrayType() const
         {
             // todo: should check validation
             return (std::get<5>(*m_functions))();
@@ -285,31 +283,27 @@ namespace LunarYue
 
         MethodAccessor::MethodAccessor(MethodFunctionTuple* functions) : m_functions(functions)
         {
-            m_method_name      = k_unknown;
+            m_method_name = k_unknown;
             if (m_functions == nullptr)
             {
                 return;
             }
 
-            m_method_name      = (std::get<0>(*m_functions))();
+            m_method_name = (std::get<0>(*m_functions))();
         }
-        const char* MethodAccessor::getMethodName() const{
-            return (std::get<0>(*m_functions))();
-        }
+        const char*     MethodAccessor::getMethodName() const { return (std::get<0>(*m_functions))(); }
         MethodAccessor& MethodAccessor::operator=(const MethodAccessor& dest)
         {
             if (this == &dest)
             {
                 return *this;
             }
-            m_functions       = dest.m_functions;
-            m_method_name      = dest.m_method_name;
+            m_functions   = dest.m_functions;
+            m_method_name = dest.m_method_name;
             return *this;
         }
-        void MethodAccessor::invoke(void* instance) { (std::get<1>(*m_functions))(instance); }
-        ArrayAccessor::ArrayAccessor() :
-            m_func(nullptr), m_array_type_name("UnKnownType"), m_element_type_name("UnKnownType")
-        {}
+        void MethodAccessor::invoke(void* instance) const { (std::get<1>(*m_functions))(instance); }
+        ArrayAccessor::ArrayAccessor() : m_func(nullptr), m_array_type_name("UnKnownType"), m_element_type_name("UnKnownType") {}
 
         ArrayAccessor::ArrayAccessor(ArrayFunctionTuple* array_func) : m_func(array_func)
         {
@@ -323,31 +317,41 @@ namespace LunarYue
             m_array_type_name   = std::get<3>(*m_func)();
             m_element_type_name = std::get<4>(*m_func)();
         }
-        const char* ArrayAccessor::getArrayTypeName() { return m_array_type_name; }
-        const char* ArrayAccessor::getElementTypeName() { return m_element_type_name; }
-        void        ArrayAccessor::set(int index, void* instance, void* element_value)
+        const char* ArrayAccessor::getArrayTypeName() const { return m_array_type_name; }
+        const char* ArrayAccessor::getElementTypeName() const { return m_element_type_name; }
+        void        ArrayAccessor::set(int index, void* instance, void* element_value) const
         {
-            // todo: should check validation
-            size_t count = getSize(instance);
-            // todo: should check validation(index < count)
+            const int count = getSize(instance);
+            if (index < 0 || index >= count)
+            {
+                return;
+            }
+
             std::get<0> (*m_func)(index, instance, element_value);
         }
 
-        void* ArrayAccessor::get(int index, void* instance)
+        void* ArrayAccessor::get(int index, void* instance) const
         {
-            // todo: should check validation
-            size_t count = getSize(instance);
-            // todo: should check validation(index < count)
+            const int count = getSize(instance);
+            if (index < 0 || index >= count)
+            {
+                return nullptr;
+            }
+
             return std::get<1>(*m_func)(index, instance);
         }
 
-        int ArrayAccessor::getSize(void* instance)
+        int ArrayAccessor::getSize(void* instance) const
         {
-            // todo: should check validation
+            if (instance == nullptr)
+            {
+                return -1;
+            }
+
             return std::get<2>(*m_func)(instance);
         }
 
-        ArrayAccessor& ArrayAccessor::operator=(ArrayAccessor& dest)
+        ArrayAccessor& ArrayAccessor::operator=(const ArrayAccessor& dest)
         {
             if (this == &dest)
             {
@@ -359,7 +363,7 @@ namespace LunarYue
             return *this;
         }
 
-        ReflectionInstance& ReflectionInstance::operator=(ReflectionInstance& dest)
+        ReflectionInstance& ReflectionInstance::operator=(const ReflectionInstance& dest)
         {
             if (this == &dest)
             {

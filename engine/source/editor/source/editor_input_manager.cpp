@@ -7,7 +7,6 @@
 #include "runtime/engine.h"
 #include "runtime/function/framework/level/level.h"
 #include "runtime/function/framework/world/world_manager.h"
-#include "runtime/function/global/global_context.h"
 #include "runtime/function/input/input_system.h"
 
 #include "runtime/function/render/render_camera.h"
@@ -31,14 +30,9 @@ namespace LunarYue
             std::bind(&EditorInputManager::onScroll, this, std::placeholders::_1, std::placeholders::_2));
         g_editor_global_context.m_window_system->registerOnMouseButtonFunc(
             std::bind(&EditorInputManager::onMouseButtonClicked, this, std::placeholders::_1, std::placeholders::_2));
-        g_editor_global_context.m_window_system->registerOnWindowCloseFunc(
-            std::bind(&EditorInputManager::onWindowClosed, this));
-        g_editor_global_context.m_window_system->registerOnKeyFunc(std::bind(&EditorInputManager::onKey,
-                                                                             this,
-                                                                             std::placeholders::_1,
-                                                                             std::placeholders::_2,
-                                                                             std::placeholders::_3,
-                                                                             std::placeholders::_4));
+        g_editor_global_context.m_window_system->registerOnWindowCloseFunc(std::bind(&EditorInputManager::onWindowClosed, this));
+        g_editor_global_context.m_window_system->registerOnKeyFunc(
+            std::bind(&EditorInputManager::onKey, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
     }
 
     void EditorInputManager::updateCursorOnAxis(Vector2 cursor_uv)
@@ -190,28 +184,24 @@ namespace LunarYue
         if (!g_is_editor_mode)
             return;
 
-        float angularVelocity =
-            180.0f / Math::max(m_engine_window_size.x, m_engine_window_size.y); // 180 degrees while moving full screen
+        float angularVelocity = 180.0f / Math::max(m_engine_window_size.x, m_engine_window_size.y); // 180 degrees while moving full screen
         if (m_mouse_x >= 0.0f && m_mouse_y >= 0.0f)
         {
             if (g_editor_global_context.m_window_system->isMouseButtonDown(GLFW_MOUSE_BUTTON_RIGHT))
             {
-                glfwSetInputMode(
-                    g_editor_global_context.m_window_system->getWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-                g_editor_global_context.m_scene_manager->getEditorCamera()->rotate(
-                    Vector2(ypos - m_mouse_y, xpos - m_mouse_x) * angularVelocity);
+                glfwSetInputMode(g_editor_global_context.m_window_system->getWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+                g_editor_global_context.m_scene_manager->getEditorCamera()->rotate(Vector2(ypos - m_mouse_y, xpos - m_mouse_x) * angularVelocity);
             }
             else if (g_editor_global_context.m_window_system->isMouseButtonDown(GLFW_MOUSE_BUTTON_LEFT))
             {
-                g_editor_global_context.m_scene_manager->moveEntity(
-                    xpos,
-                    ypos,
-                    m_mouse_x,
-                    m_mouse_y,
-                    m_engine_window_pos,
-                    m_engine_window_size,
-                    m_cursor_on_axis,
-                    g_editor_global_context.m_scene_manager->getSelectedObjectMatrix());
+                g_editor_global_context.m_scene_manager->moveEntity(xpos,
+                                                                    ypos,
+                                                                    m_mouse_x,
+                                                                    m_mouse_y,
+                                                                    m_engine_window_pos,
+                                                                    m_engine_window_size,
+                                                                    m_cursor_on_axis,
+                                                                    g_editor_global_context.m_scene_manager->getSelectedObjectMatrix());
                 glfwSetInputMode(g_editor_global_context.m_window_system->getWindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
             }
             else
@@ -260,8 +250,8 @@ namespace LunarYue
             }
             else
             {
-                g_editor_global_context.m_scene_manager->getEditorCamera()->zoom(
-                    (float)yoffset * 2.0f); // wheel scrolled up = zoom in by 2 extra degrees
+                g_editor_global_context.m_scene_manager->getEditorCamera()->zoom((float)yoffset *
+                                                                                 2.0f); // wheel scrolled up = zoom in by 2 extra degrees
             }
         }
     }
@@ -273,7 +263,7 @@ namespace LunarYue
         if (m_cursor_on_axis != 3)
             return;
 
-        std::shared_ptr<Level> current_active_level = g_runtime_global_context.m_world_manager->getCurrentActiveLevel().lock();
+        std::shared_ptr<Level> current_active_level = g_editor_global_context.m_world_manager->getCurrentActiveLevel().lock();
         if (current_active_level == nullptr)
             return;
 

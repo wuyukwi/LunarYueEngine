@@ -4,8 +4,6 @@
 
 namespace LunarYue
 {
-    struct EngineInitParams;
-
     class ConfigManager
     {
     public:

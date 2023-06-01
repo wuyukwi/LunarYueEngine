@@ -17,7 +17,6 @@ namespace LunarYue
     public:
         /**
          * Constructor
-         * @param p_canvas
          */
         PanelsManager(UI::Modules::Canvas& p_canvas) : m_canvas(p_canvas) {}
 

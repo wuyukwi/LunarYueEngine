@@ -1,9 +1,3 @@
-/**
- * @project: Overload
- * @author: Overload Tech.
- * @licence: MIT
- */
-
 #pragma once
 
 #include <string>
@@ -43,25 +37,20 @@ namespace LunarYue::UI::Core
          */
         ~UIManager();
 
-        void initialize(WindowUIInitInfo init_info, EditorStyle p_style = EditorStyle::IM_DARK_STYLE);
+        void initialize(EditorStyle p_style = EditorStyle::IM_DARK_STYLE);
 
         /**
          * Apply a new style to the UI elements
-         * @param p_style
          */
         void ApplyStyle(EditorStyle p_style);
 
         /**
          * Load a font (Returns true on success)
-         * @param p_id
-         * @param p_path
-         * @param p_fontSize
          */
         bool LoadFont(const std::string& p_id, const std::string& p_path, float p_fontSize);
 
         /**
          * Unload a font (Returns true on success)
-         * @param p_id
          */
         bool UnloadFont(const std::string& p_id);
 
@@ -77,7 +66,6 @@ namespace LunarYue::UI::Core
 
         /**
          * Allow the user to enable/disable .ini generation to save his editor layout
-         * @param p_value
          */
         void EnableEditorLayoutSave(bool p_value);
 
@@ -93,7 +81,6 @@ namespace LunarYue::UI::Core
 
         /**
          * Defines a frequency (in seconds) for the auto saving system of the editor layout
-         * @param p_frequency
          */
         void SetEditorLayoutAutosaveFrequency(float p_frequency);
 
@@ -104,13 +91,11 @@ namespace LunarYue::UI::Core
 
         /**
          * Enable the docking system
-         * @param p_value
          */
         void EnableDocking(bool p_value);
 
         /**
          * Reset the UI layout to the given configuration file
-         * @param p_config
          */
         void ResetLayout(const std::string& p_config) const;
 
@@ -121,7 +106,6 @@ namespace LunarYue::UI::Core
 
         /**
          * Defines the canvas to use
-         * @param p_canvas
          */
         void SetCanvas(Modules::Canvas& p_canvas);
 
@@ -141,7 +125,7 @@ namespace LunarYue::UI::Core
         void PopCurrentFont();
 
     private:
-        bool                                     m_dockingState;
+        bool                                     m_dockingState {};
         Modules::Canvas*                         m_currentCanvas = nullptr;
         std::unordered_map<std::string, ImFont*> m_fonts;
         std::string                              m_layoutSaveFilename = "imgui.ini";
