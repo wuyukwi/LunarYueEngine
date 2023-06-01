@@ -1,7 +1,3 @@
-#include "editor/include/editor_global_context.h"
-
-#include "editor/include/editor_input_manager.h"
-#include "editor/include/editor_scene_manager.h"
 
 #include "runtime/function/render/render_system.h"
 #include "runtime/function/render/window_system.h"
