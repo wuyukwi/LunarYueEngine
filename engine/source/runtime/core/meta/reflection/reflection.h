@@ -267,7 +267,7 @@ namespace LunarYue
 
             ReflectionInstance& operator=(const ReflectionInstance& dest);
 
-            ReflectionInstance& operator=(ReflectionInstance&& dest);
+            ReflectionInstance& operator=(ReflectionInstance&& dest) noexcept;
 
         public:
             TypeMeta m_meta;

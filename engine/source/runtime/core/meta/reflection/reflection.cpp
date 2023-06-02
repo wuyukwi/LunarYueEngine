@@ -110,7 +110,7 @@ namespace LunarYue
 
             if (iter != m_array_map.end())
             {
-                ArrayAccessor new_accessor(iter->second);
+                const ArrayAccessor new_accessor(iter->second);
                 accessor = new_accessor;
                 return true;
             }
@@ -375,7 +375,7 @@ namespace LunarYue
             return *this;
         }
 
-        ReflectionInstance& ReflectionInstance::operator=(ReflectionInstance&& dest)
+        ReflectionInstance& ReflectionInstance::operator=(ReflectionInstance&& dest) noexcept
         {
             if (this == &dest)
             {
