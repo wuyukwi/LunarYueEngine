@@ -6,6 +6,7 @@
 #include "runtime/function/render/render_object.h"
 
 #include <memory>
+#include <utility>
 
 namespace LunarYue
 {
@@ -55,7 +56,7 @@ namespace LunarYue
                         Matrix4x4 model_matrix);
 
         // エディタカメラを設定する関数
-        void setEditorCamera(std::shared_ptr<RenderCamera> camera) { m_camera = camera; }
+        void setEditorCamera(std::shared_ptr<RenderCamera> camera) { m_camera = std::move(camera); }
         // 軸リソースをアップロードする関数
         void uploadAxisResource();
         // ピックされたメッシュのGUIDを取得する関数

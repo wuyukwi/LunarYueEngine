@@ -48,7 +48,7 @@ namespace LunarYue
         delete (value).operator->(); \
         (value).getPtrReference() = nullptr; \
     }
-#define LunarYue_REFLECTION_DEEP_COPY(type, dst_ptr, src_ptr) *static_cast<(type)*>(dst_ptr) = *static_cast<(type)*>((src_ptr).getPtr());
+#define LunarYue_REFLECTION_DEEP_COPY(type, dst_ptr, src_ptr) *static_cast<type*>(dst_ptr) = *static_cast<type*>((src_ptr).getPtr());
 
 #define TypeMetaDef(class_name, ptr) \
     LunarYue::Reflection::ReflectionInstance(LunarYue::Reflection::TypeMeta::newMetaFromName(#class_name), (class_name*)(ptr))
@@ -83,55 +83,52 @@ namespace LunarYue
 
     typedef std::function<void*(const Json&)>                           ConstructorWithJson;
     typedef std::function<Json(void*)>                                  WriteJsonByName;
+    typedef std::function<void*()>                                      constructorEmpty;
     typedef std::function<int(Reflection::ReflectionInstance*&, void*)> GetBaseClassReflectionInstanceListFunc;
 
     struct FieldFunctionStruct
     {
-        SetFunction     setFunc;
-        GetFunction     getFunc;
-        GetNameFunction getOwnerTypeNameFunc;
-        GetNameFunction getFieldNameFunc;
-        GetNameFunction getFieldTypeFunc;
-        GetBoolFunc     isArrayTypeFunc;
+        SetFunction     set;
+        GetFunction     get;
+        GetNameFunction getClassName;
+        GetNameFunction getFieldName;
+        GetNameFunction getFieldTypeName;
+        GetBoolFunc     isArray;
     };
 
     struct MethodFunctionStruct
     {
-        GetNameFunction getMethodNameFunc;
-        InvokeFunction  invokeMethodFunc;
+        GetNameFunction getMethodName;
+        InvokeFunction  invoke;
     };
 
     struct ClassFunctionStruct
     {
-        GetBaseClassReflectionInstanceListFunc getBaseClassReflectionInstanceListFunc;
+        GetBaseClassReflectionInstanceListFunc getBaseClassReflectionInstanceList;
         ConstructorWithJson                    constructorWithJson;
+        constructorEmpty                       constructorEmpty;
         WriteJsonByName                        writeJsonByName;
     };
 
     struct ArrayFunctionStruct
     {
-        SetArrayFunc    setArrayFunc;
-        GetArrayFunc    getArrayFunc;
-        GetSizeFunc     getSizeFunc;
-        GetNameFunction getArrayOwnerTypeNameFunc;
-        GetNameFunction getArrayNameFunc;
+        SetArrayFunc    set;
+        GetArrayFunc    get;
+        GetSizeFunc     getSize;
+        GetNameFunction getArrayTypeName;
+        GetNameFunction getElementTypeName;
     };
-
-    typedef std::tuple<SetFunction, GetFunction, GetNameFunction, GetNameFunction, GetNameFunction, GetBoolFunc> FieldFunctionTuple;
-    typedef std::tuple<GetNameFunction, InvokeFunction>                                                          MethodFunctionTuple;
-    typedef std::tuple<GetBaseClassReflectionInstanceListFunc, ConstructorWithJson, WriteJsonByName>             ClassFunctionTuple;
-    typedef std::tuple<SetArrayFunc, GetArrayFunc, GetSizeFunc, GetNameFunction, GetNameFunction>                ArrayFunctionTuple;
 
     namespace Reflection
     {
         class TypeMetaRegisterInterface
         {
         public:
-            static void registerToClassMap(const char* name, ClassFunctionTuple* value);
-            static void registerToFieldMap(const char* name, FieldFunctionTuple* value);
+            static void registerToClassMap(const char* name, ClassFunctionStruct* value);
+            static void registerToFieldMap(const char* name, FieldFunctionStruct* value);
 
-            static void registerToMethodMap(const char* name, MethodFunctionTuple* value);
-            static void registerToArrayMap(const char* name, ArrayFunctionTuple* value);
+            static void registerToMethodMap(const char* name, MethodFunctionStruct* value);
+            static void registerToArrayMap(const char* name, ArrayFunctionStruct* value);
 
             static void unRegisterAll();
         };
@@ -150,6 +147,7 @@ namespace LunarYue
 
             static bool               newArrayAccessorFromName(const std::string& array_type_name, ArrayAccessor& accessor);
             static ReflectionInstance newFromNameAndJson(const std::string& type_name, const Json& json_context);
+            static ReflectionInstance newFromName(const std::string& type_name);
             static Json               writeByName(const std::string& type_name, void* instance);
 
             std::string getTypeName();
@@ -184,10 +182,10 @@ namespace LunarYue
         public:
             FieldAccessor();
 
-            void* get(void* instance);
-            void  set(void* instance, void* value);
+            void* get(void* instance) const;
+            void  set(void* instance, void* value) const;
 
-            TypeMeta getOwnerTypeMeta();
+            TypeMeta getOwnerTypeMeta() const;
 
             /**
              * param: TypeMeta out_type
@@ -197,20 +195,20 @@ namespace LunarYue
              *        true: it's a reflection type
              *        false: it's not a reflection type
              */
-            bool        getTypeMeta(TypeMeta& field_type);
+            bool        getTypeMeta(TypeMeta& field_type) const;
             const char* getFieldName() const;
-            const char* getFieldTypeName();
+            const char* getFieldTypeName() const;
             bool        isArrayType() const;
 
             FieldAccessor& operator=(const FieldAccessor& dest);
 
         private:
-            FieldAccessor(FieldFunctionTuple* functions);
+            FieldAccessor(FieldFunctionStruct* functions);
 
         private:
-            FieldFunctionTuple* m_functions;
-            const char*         m_field_name;
-            const char*         m_field_type_name;
+            FieldFunctionStruct* m_functions;
+            const char*          m_field_name;
+            const char*          m_field_type_name;
         };
         class MethodAccessor
         {
@@ -226,11 +224,11 @@ namespace LunarYue
             MethodAccessor& operator=(const MethodAccessor& dest);
 
         private:
-            MethodAccessor(MethodFunctionTuple* functions);
+            MethodAccessor(MethodFunctionStruct* functions);
 
         private:
-            MethodFunctionTuple* m_functions;
-            const char*          m_method_name;
+            MethodFunctionStruct* m_functions;
+            const char*           m_method_name;
         };
         /**
          *  Function reflection is not implemented, so use this as an std::vector accessor
@@ -251,12 +249,12 @@ namespace LunarYue
             ArrayAccessor& operator=(const ArrayAccessor& dest);
 
         private:
-            ArrayAccessor(ArrayFunctionTuple* array_func);
+            ArrayAccessor(ArrayFunctionStruct* array_func);
 
         private:
-            ArrayFunctionTuple* m_func;
-            const char*         m_array_type_name;
-            const char*         m_element_type_name;
+            ArrayFunctionStruct* m_func;
+            const char*          m_array_type_name;
+            const char*          m_element_type_name;
         };
 
         class ReflectionInstance

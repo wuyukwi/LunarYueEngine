@@ -9,20 +9,20 @@ namespace LunarYue
         const char* k_unknown_type = "UnknownType";
         const char* k_unknown      = "Unknown";
 
-        static std::map<std::string, ClassFunctionTuple*>       m_class_map;
-        static std::multimap<std::string, FieldFunctionTuple*>  m_field_map;
-        static std::multimap<std::string, MethodFunctionTuple*> m_method_map;
-        static std::map<std::string, ArrayFunctionTuple*>       m_array_map;
+        static std::map<std::string, ClassFunctionStruct*>       m_class_map;
+        static std::multimap<std::string, FieldFunctionStruct*>  m_field_map;
+        static std::multimap<std::string, MethodFunctionStruct*> m_method_map;
+        static std::map<std::string, ArrayFunctionStruct*>       m_array_map;
 
-        void TypeMetaRegisterInterface::registerToFieldMap(const char* name, FieldFunctionTuple* value)
+        void TypeMetaRegisterInterface::registerToFieldMap(const char* name, FieldFunctionStruct* value)
         {
             m_field_map.insert(std::make_pair(name, value));
         }
-        void TypeMetaRegisterInterface::registerToMethodMap(const char* name, MethodFunctionTuple* value)
+        void TypeMetaRegisterInterface::registerToMethodMap(const char* name, MethodFunctionStruct* value)
         {
             m_method_map.insert(std::make_pair(name, value));
         }
-        void TypeMetaRegisterInterface::registerToArrayMap(const char* name, ArrayFunctionTuple* value)
+        void TypeMetaRegisterInterface::registerToArrayMap(const char* name, ArrayFunctionStruct* value)
         {
             if (m_array_map.find(name) == m_array_map.end())
             {
@@ -34,7 +34,7 @@ namespace LunarYue
             }
         }
 
-        void TypeMetaRegisterInterface::registerToClassMap(const char* name, ClassFunctionTuple* value)
+        void TypeMetaRegisterInterface::registerToClassMap(const char* name, ClassFunctionStruct* value)
         {
             if (m_class_map.find(name) == m_class_map.end())
             {
@@ -124,7 +124,18 @@ namespace LunarYue
 
             if (iter != m_class_map.end())
             {
-                return {TypeMeta(type_name), (std::get<1>(*iter->second)(json_context))};
+                return {TypeMeta(type_name), (*iter->second).constructorWithJson(json_context)};
+            }
+            return {};
+        }
+
+        ReflectionInstance TypeMeta::newFromName(const std::string& type_name)
+        {
+            auto iter = m_class_map.find(type_name);
+
+            if (iter != m_class_map.end())
+            {
+                return {TypeMeta(type_name), (*iter->second).constructorEmpty()};
             }
             return {};
         }
@@ -135,7 +146,7 @@ namespace LunarYue
 
             if (iter != m_class_map.end())
             {
-                return std::get<2>(*iter->second)(instance);
+                return (*iter->second).writeJsonByName(instance);
             }
             return {};
         }
@@ -168,7 +179,7 @@ namespace LunarYue
         {
             if (const auto iterate = m_class_map.find(m_type_name); iterate != m_class_map.end())
             {
-                return (std::get<0>(*iterate->second))(out_list, instance);
+                return (*iterate->second).getBaseClassReflectionInstanceList(out_list, instance);
             }
 
             return 0;
@@ -215,7 +226,7 @@ namespace LunarYue
             m_functions       = nullptr;
         }
 
-        FieldAccessor::FieldAccessor(FieldFunctionTuple* functions) : m_functions(functions)
+        FieldAccessor::FieldAccessor(FieldFunctionStruct* functions) : m_functions(functions)
         {
             m_field_type_name = k_unknown_type;
             m_field_name      = k_unknown;
@@ -224,43 +235,43 @@ namespace LunarYue
                 return;
             }
 
-            m_field_type_name = (std::get<4>(*m_functions))();
-            m_field_name      = (std::get<3>(*m_functions))();
+            m_field_type_name = (*m_functions).getClassName();
+            m_field_name      = (*m_functions).getFieldName();
         }
 
-        void* FieldAccessor::get(void* instance)
+        void* FieldAccessor::get(void* instance) const
         {
             // todo: should check validation
-            return std::get<1>(*m_functions)(instance);
+            return (*m_functions).get(instance);
         }
 
-        void FieldAccessor::set(void* instance, void* value)
+        void FieldAccessor::set(void* instance, void* value) const
         {
             // todo: should check validation
-            std::get<0> (*m_functions)(instance, value);
+            (*m_functions).set(instance, value);
         }
 
-        TypeMeta FieldAccessor::getOwnerTypeMeta()
+        TypeMeta FieldAccessor::getOwnerTypeMeta() const
         {
             // todo: should check validation
-            TypeMeta f_type((std::get<2>(*m_functions))());
+            TypeMeta f_type((*m_functions).getClassName());
             return f_type;
         }
 
-        bool FieldAccessor::getTypeMeta(TypeMeta& field_type)
+        bool FieldAccessor::getTypeMeta(TypeMeta& field_type) const
         {
-            TypeMeta f_type(m_field_type_name);
+            const TypeMeta f_type(m_field_type_name);
             field_type = f_type;
             return f_type.m_is_valid;
         }
 
         const char* FieldAccessor::getFieldName() const { return m_field_name; }
-        const char* FieldAccessor::getFieldTypeName() { return m_field_type_name; }
+        const char* FieldAccessor::getFieldTypeName() const { return m_field_type_name; }
 
         bool FieldAccessor::isArrayType() const
         {
             // todo: should check validation
-            return (std::get<5>(*m_functions))();
+            return (*m_functions).isArray();
         }
 
         FieldAccessor& FieldAccessor::operator=(const FieldAccessor& dest)
@@ -281,7 +292,7 @@ namespace LunarYue
             m_functions   = nullptr;
         }
 
-        MethodAccessor::MethodAccessor(MethodFunctionTuple* functions) : m_functions(functions)
+        MethodAccessor::MethodAccessor(MethodFunctionStruct* functions) : m_functions(functions)
         {
             m_method_name = k_unknown;
             if (m_functions == nullptr)
@@ -289,9 +300,9 @@ namespace LunarYue
                 return;
             }
 
-            m_method_name = (std::get<0>(*m_functions))();
+            m_method_name = (*m_functions).getMethodName();
         }
-        const char*     MethodAccessor::getMethodName() const { return (std::get<0>(*m_functions))(); }
+        const char*     MethodAccessor::getMethodName() const { return (*m_functions).getMethodName(); }
         MethodAccessor& MethodAccessor::operator=(const MethodAccessor& dest)
         {
             if (this == &dest)
@@ -302,10 +313,10 @@ namespace LunarYue
             m_method_name = dest.m_method_name;
             return *this;
         }
-        void MethodAccessor::invoke(void* instance) const { (std::get<1>(*m_functions))(instance); }
+        void MethodAccessor::invoke(void* instance) const { (*m_functions).invoke(instance); }
         ArrayAccessor::ArrayAccessor() : m_func(nullptr), m_array_type_name("UnKnownType"), m_element_type_name("UnKnownType") {}
 
-        ArrayAccessor::ArrayAccessor(ArrayFunctionTuple* array_func) : m_func(array_func)
+        ArrayAccessor::ArrayAccessor(ArrayFunctionStruct* array_func) : m_func(array_func)
         {
             m_array_type_name   = k_unknown_type;
             m_element_type_name = k_unknown_type;
@@ -314,8 +325,8 @@ namespace LunarYue
                 return;
             }
 
-            m_array_type_name   = std::get<3>(*m_func)();
-            m_element_type_name = std::get<4>(*m_func)();
+            m_array_type_name   = (*m_func).getArrayTypeName();
+            m_element_type_name = (*m_func).getElementTypeName();
         }
         const char* ArrayAccessor::getArrayTypeName() const { return m_array_type_name; }
         const char* ArrayAccessor::getElementTypeName() const { return m_element_type_name; }
@@ -327,7 +338,7 @@ namespace LunarYue
                 return;
             }
 
-            std::get<0> (*m_func)(index, instance, element_value);
+            (*m_func).set(index, instance, element_value);
         }
 
         void* ArrayAccessor::get(int index, void* instance) const
@@ -338,7 +349,7 @@ namespace LunarYue
                 return nullptr;
             }
 
-            return std::get<1>(*m_func)(index, instance);
+            return (*m_func).get(index, instance);
         }
 
         int ArrayAccessor::getSize(void* instance) const
@@ -348,7 +359,7 @@ namespace LunarYue
                 return -1;
             }
 
-            return std::get<2>(*m_func)(instance);
+            return (*m_func).getSize(instance);
         }
 
         ArrayAccessor& ArrayAccessor::operator=(const ArrayAccessor& dest)

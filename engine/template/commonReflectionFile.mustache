@@ -16,6 +16,10 @@ namespace Reflection{
             Serializer::read(json_context, *ret_instance);
             return ret_instance;
         }
+        static void* constructorEmpty(){
+            {{class_name}}* ret_instance= new {{class_name}};
+            return ret_instance;
+        }
         static Json writeByName(void* instance){
             return Serializer::write(*({{class_name}}*)instance);
         }
@@ -69,37 +73,38 @@ namespace Reflection{
     {{/vector_defines}}
     }//namespace ArrayReflectionOperator{{/vector_exist}}
 
-    void TypeWrapperRegister_{{class_name}}(){
+void TypeWrapperRegister_{{class_name}}(){
     {{#class_field_defines}}FieldFunctionStruct* field_function_struct_{{class_field_name}}=new FieldFunctionStruct{
-        .setFunc = &TypeFieldReflectionOparator::Type{{class_name}}Operator::set_{{class_field_name}},
-        .getFunc = &TypeFieldReflectionOparator::Type{{class_name}}Operator::get_{{class_field_name}},
-        .getClassNameFunc = &TypeFieldReflectionOparator::Type{{class_name}}Operator::getClassName,
-        .getFieldNameFunc = &TypeFieldReflectionOparator::Type{{class_name}}Operator::getFieldName_{{class_field_name}},
-        .getFieldTypeNameFunc = &TypeFieldReflectionOparator::Type{{class_name}}Operator::getFieldTypeName_{{class_field_name}},
-        .isArrayFunc = &TypeFieldReflectionOparator::Type{{class_name}}Operator::isArray_{{class_field_name}}};
+        &TypeFieldReflectionOparator::Type{{class_name}}Operator::set_{{class_field_name}},
+        &TypeFieldReflectionOparator::Type{{class_name}}Operator::get_{{class_field_name}},
+        &TypeFieldReflectionOparator::Type{{class_name}}Operator::getClassName,
+        &TypeFieldReflectionOparator::Type{{class_name}}Operator::getFieldName_{{class_field_name}},
+        &TypeFieldReflectionOparator::Type{{class_name}}Operator::getFieldTypeName_{{class_field_name}},
+        &TypeFieldReflectionOparator::Type{{class_name}}Operator::isArray_{{class_field_name}}};
     REGISTER_FIELD_TO_MAP("{{class_name}}", field_function_struct_{{class_field_name}});
     {{/class_field_defines}}
 
     {{#class_method_defines}}
     MethodFunctionStruct* method_function_struct_{{class_method_name}}=new MethodFunctionStruct{
-        .getMethodNameFunc = &TypeFieldReflectionOparator::Type{{class_name}}Operator::getMethodName_{{class_method_name}},
-        .invokeFunc = &TypeFieldReflectionOparator::Type{{class_name}}Operator::invoke_{{class_method_name}}};
+        &TypeFieldReflectionOparator::Type{{class_name}}Operator::getMethodName_{{class_method_name}},
+        &TypeFieldReflectionOparator::Type{{class_name}}Operator::invoke_{{class_method_name}}};
     REGISTER_Method_TO_MAP("{{class_name}}", method_function_struct_{{class_method_name}});
     {{/class_method_defines}}
 
     {{#vector_exist}}{{#vector_defines}}ArrayFunctionStruct* array_struct_{{vector_useful_name}} = new ArrayFunctionStruct{
-        .setFunc = &ArrayReflectionOperator::Array{{vector_useful_name}}Operator::set,
-        .getFunc = &ArrayReflectionOperator::Array{{vector_useful_name}}Operator::get,
-        .getSizeFunc = &ArrayReflectionOperator::Array{{vector_useful_name}}Operator::getSize,
-        .getArrayTypeNameFunc = &ArrayReflectionOperator::Array{{vector_useful_name}}Operator::getArrayTypeName,
-        .getElementTypeNameFunc = &ArrayReflectionOperator::Array{{vector_useful_name}}Operator::getElementTypeName};
+        &ArrayReflectionOperator::Array{{vector_useful_name}}Operator::set,
+        &ArrayReflectionOperator::Array{{vector_useful_name}}Operator::get,
+        &ArrayReflectionOperator::Array{{vector_useful_name}}Operator::getSize,
+        &ArrayReflectionOperator::Array{{vector_useful_name}}Operator::getArrayTypeName,
+        &ArrayReflectionOperator::Array{{vector_useful_name}}Operator::getElementTypeName};
     REGISTER_ARRAY_TO_MAP("{{{vector_type_name}}}", array_struct_{{vector_useful_name}});
 
     {{/vector_defines}}{{/vector_exist}}
     {{#class_need_register}}ClassFunctionStruct* class_function_struct_{{class_name}}=new ClassFunctionStruct{
-        .getBaseClassReflectionInstanceListFunc = &TypeFieldReflectionOparator::Type{{class_name}}Operator::get{{class_name}}BaseClassReflectionInstanceList,
-        .constructorWithJsonFunc = &TypeFieldReflectionOparator::Type{{class_name}}Operator::constructorWithJson,
-        .writeByNameFunc = &TypeFieldReflectionOparator::Type{{class_name}}Operator::writeByName};
+        &TypeFieldReflectionOparator::Type{{class_name}}Operator::get{{class_name}}BaseClassReflectionInstanceList,
+        &TypeFieldReflectionOparator::Type{{class_name}}Operator::constructorWithJson,
+        &TypeFieldReflectionOparator::Type{{class_name}}Operator::constructorEmpty,
+        &TypeFieldReflectionOparator::Type{{class_name}}Operator::writeByName};
     REGISTER_BASE_CLASS_TO_MAP("{{class_name}}", class_function_struct_{{class_name}});
         {{/class_need_register}}
     }{{/class_defines}}

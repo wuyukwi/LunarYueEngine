@@ -5,7 +5,8 @@
 namespace LunarYue{
     {{#class_defines}}
     template<>
-    Json Serializer::write(const {{class_name}}& instance){
+    Json Serializer::write(const {{class_name}}& instance)
+    {
         Json::object  ret_context;
         {{#class_base_class_defines}}auto&&  json_context_{{class_base_class_index}} = Serializer::write(*({{class_base_class_name}}*)&instance);
         assert(json_context_{{class_base_class_index}}.is_object());
@@ -21,7 +22,8 @@ namespace LunarYue{
         return  Json(ret_context);
     }
     template<>
-    {{class_name}}& Serializer::read(const Json& json_context, {{class_name}}& instance){
+    {{class_name}}& Serializer::read(const Json& json_context, {{class_name}}& instance)
+    {
         assert(json_context.is_object());
         {{#class_base_class_defines}}Serializer::read(json_context,*({{class_base_class_name}}*)&instance);{{/class_base_class_defines}}
         {{#class_field_defines}}
@@ -34,6 +36,7 @@ namespace LunarYue{
             }{{/class_field_is_vector}}{{^class_field_is_vector}}Serializer::read(json_context["{{class_field_display_name}}"], instance.{{class_field_name}});{{/class_field_is_vector}}
         }{{/class_field_defines}}
         return instance;
-    }{{/class_defines}}
+    }
+    {{/class_defines}}
 
 }
