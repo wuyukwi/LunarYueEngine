@@ -9,11 +9,11 @@
 namespace LunarYue
 {
     class Character;
-    class GObject;
+    class Object;
     class ObjectInstanceRes;
     class PhysicsScene;
 
-    using ObjectsMap = std::unordered_map<GObjectID, std::shared_ptr<GObject>>;
+    using ObjectsMap = std::unordered_map<GObjectID, std::shared_ptr<Object>>;
 
     /// The main class to manage all game objects
     class Level
@@ -33,11 +33,11 @@ namespace LunarYue
 
         const LevelObjectsMap& getAllGObjects() const { return m_gobjects; }
 
-        std::weak_ptr<GObject>   getGObjectByID(GObjectID go_id) const;
+        std::weak_ptr<Object>   getGObjectByID(GObjectID go_id) const;
         std::weak_ptr<Character> getCurrentActiveCharacter() const { return m_current_active_character; }
 
         GObjectID createObject(const ObjectInstanceRes& object_instance_res);
-        GObjectID createEmptyObject(const std::string& object_res_url);
+        GObjectID createEmptyObject(const std::string& path, const std::string& name);
         void      deleteGObjectByID(GObjectID go_id);
 
         std::weak_ptr<PhysicsScene> getPhysicsScene() const { return m_physics_scene; }

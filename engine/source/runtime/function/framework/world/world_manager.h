@@ -22,7 +22,7 @@ namespace LunarYue
         void clear();
 
         void reloadCurrentLevel();
-        void saveCurrentLevel();
+        void saveCurrentLevel() const;
 
         void createNewLevel(const std::string& level_res_url);
 

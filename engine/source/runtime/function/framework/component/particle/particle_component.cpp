@@ -11,7 +11,7 @@
 
 namespace LunarYue
 {
-    void ParticleComponent::postLoadResource(std::weak_ptr<GObject> parent_object)
+    void ParticleComponent::postLoadResource(std::weak_ptr<Object> parent_object)
     {
         m_parent_object = parent_object;
 

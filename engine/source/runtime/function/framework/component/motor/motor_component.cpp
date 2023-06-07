@@ -16,16 +16,15 @@
 
 namespace LunarYue
 {
-    void MotorComponent::postLoadResource(std::weak_ptr<GObject> parent_object)
+    void MotorComponent::postLoadResource(std::weak_ptr<Object> parent_object)
     {
         m_parent_object = parent_object;
 
         if (m_motor_res.m_controller_config.getTypeName() == "PhysicsControllerConfig")
         {
-            m_controller_type = ControllerType::physics;
-            PhysicsControllerConfig* controller_config =
-                static_cast<PhysicsControllerConfig*>(m_motor_res.m_controller_config);
-            m_controller = new CharacterController(controller_config->m_capsule_shape);
+            m_controller_type                          = ControllerType::physics;
+            PhysicsControllerConfig* controller_config = static_cast<PhysicsControllerConfig*>(m_motor_res.m_controller_config);
+            m_controller                               = new CharacterController(controller_config->m_capsule_shape);
         }
         else if (m_motor_res.m_controller_config != nullptr)
         {
@@ -55,7 +54,7 @@ namespace LunarYue
         if (!m_parent_object.lock())
             return;
 
-        std::shared_ptr<Level> current_level = g_runtime_global_context.m_world_manager->getCurrentActiveLevel().lock();
+        std::shared_ptr<Level>     current_level     = g_runtime_global_context.m_world_manager->getCurrentActiveLevel().lock();
         std::shared_ptr<Character> current_character = current_level->getCurrentActiveCharacter().lock();
         if (current_character == nullptr)
             return;
@@ -63,8 +62,7 @@ namespace LunarYue
         if (current_character->getObjectID() != m_parent_object.lock()->getID())
             return;
 
-        TransformComponent* transform_component =
-            m_parent_object.lock()->tryGetComponent<TransformComponent>("TransformComponent");
+        TransformComponent* transform_component = m_parent_object.lock()->tryGetComponent<TransformComponent>("TransformComponent");
 
         Radian turn_angle_yaw = g_runtime_global_context.m_input_system->m_cursor_delta_yaw;
 
@@ -84,8 +82,8 @@ namespace LunarYue
 
     void MotorComponent::calculatedDesiredHorizontalMoveSpeed(unsigned int command, float delta_time)
     {
-        bool has_move_command = ((unsigned int)GameCommand::forward | (unsigned int)GameCommand::backward |
-                                 (unsigned int)GameCommand::left | (unsigned int)GameCommand::right) &
+        bool has_move_command = ((unsigned int)GameCommand::forward | (unsigned int)GameCommand::backward | (unsigned int)GameCommand::left |
+                                 (unsigned int)GameCommand::right) &
                                 command;
         has_move_command &= ((unsigned int)GameCommand::free_carema & command) == 0;
         bool has_sprint_command = (unsigned int)GameCommand::sprint & command;
@@ -119,8 +117,7 @@ namespace LunarYue
 
     void MotorComponent::calculatedDesiredVerticalMoveSpeed(unsigned int command, float delta_time)
     {
-        std::shared_ptr<PhysicsScene> physics_scene =
-            g_runtime_global_context.m_world_manager->getCurrentActivePhysicsScene().lock();
+        std::shared_ptr<PhysicsScene> physics_scene = g_runtime_global_context.m_world_manager->getCurrentActivePhysicsScene().lock();
         ASSERT(physics_scene);
 
         if (m_motor_res.m_jump_height == 0.f)
@@ -189,11 +186,9 @@ namespace LunarYue
 
     void MotorComponent::calculateDesiredDisplacement(float delta_time)
     {
-        float horizontal_speed_ratio =
-            m_jump_state == JumpState::idle ? m_move_speed_ratio : m_jump_horizontal_speed_ratio;
-        m_desired_displacement =
-            m_desired_horizontal_move_direction * m_motor_res.m_move_speed * horizontal_speed_ratio * delta_time +
-            Vector3::UNIT_Z * m_vertical_move_speed * delta_time;
+        float horizontal_speed_ratio = m_jump_state == JumpState::idle ? m_move_speed_ratio : m_jump_horizontal_speed_ratio;
+        m_desired_displacement       = m_desired_horizontal_move_direction * m_motor_res.m_move_speed * horizontal_speed_ratio * delta_time +
+                                 Vector3::UNIT_Z * m_vertical_move_speed * delta_time;
     }
 
     void MotorComponent::calculateTargetPosition(const Vector3&& current_position)

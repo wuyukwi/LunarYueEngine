@@ -38,7 +38,7 @@ namespace LunarYue
         // 選択されたエンティティの軸を描画する関数
         void drawSelectedEntityAxis();
         // 選択されたGObjectを取得する関数
-        std::weak_ptr<GObject> getSelectedGObject() const;
+        std::weak_ptr<Object> getSelectedGObject() const;
         // 軸モードに応じた軸メッシュを取得する関数
         RenderEntity* getAxisMeshByType(EditorAxisMode axis_mode);
         // GObjectが選択された際の処理を行う関数

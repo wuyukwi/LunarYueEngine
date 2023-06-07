@@ -25,9 +25,9 @@ namespace LunarYue
         void showCameraInfo(std::shared_ptr<Level> level) const;
 
     private:
-        void drawBones(std::shared_ptr<GObject> object) const;
-        void drawBonesName(std::shared_ptr<GObject> object) const;
-        void drawBoundingBox(std::shared_ptr<GObject> object) const;
-        void drawCameraInfo(std::shared_ptr<GObject> object) const;
+        void drawBones(std::shared_ptr<Object> object) const;
+        void drawBonesName(std::shared_ptr<Object> object) const;
+        void drawBoundingBox(std::shared_ptr<Object> object) const;
+        void drawCameraInfo(std::shared_ptr<Object> object) const;
     };
 } // namespace LunarYue

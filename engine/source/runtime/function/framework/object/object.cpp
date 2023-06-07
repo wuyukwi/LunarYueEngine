@@ -17,7 +17,7 @@
 
 namespace LunarYue
 {
-    bool shouldComponentTick(std::string component_type_name)
+    bool shouldComponentTick(const std::string& component_type_name)
     {
         if (g_is_editor_mode)
         {
@@ -29,7 +29,7 @@ namespace LunarYue
         }
     }
 
-    GObject::~GObject()
+    Object::~Object()
     {
         for (auto& component : m_components)
         {
@@ -38,7 +38,7 @@ namespace LunarYue
         m_components.clear();
     }
 
-    void GObject::tick(float delta_time)
+    void Object::tick(float delta_time)
     {
         for (auto& component : m_components)
         {
@@ -49,7 +49,19 @@ namespace LunarYue
         }
     }
 
-    bool GObject::hasComponent(const std::string& component_type_name) const
+    bool Object::addComponent(Reflection::ReflectionPtr<Component> component)
+    {
+        if (component)
+        {
+            component->postLoadResource(weak_from_this());
+
+            m_components.push_back(component);
+        }
+
+        return false;
+    }
+
+    bool Object::hasComponent(const std::string& component_type_name) const
     {
         for (const auto& component : m_components)
         {
@@ -60,7 +72,7 @@ namespace LunarYue
         return false;
     }
 
-    bool GObject::load(const ObjectInstanceRes& object_instance_res)
+    bool Object::load(const ObjectInstanceRes& object_instance_res)
     {
         // clear old components
         m_components.clear();
@@ -78,11 +90,11 @@ namespace LunarYue
         }
 
         // load object definition components
-        m_definition_url = object_instance_res.m_definition;
+        m_definition_path = object_instance_res.m_definition;
 
         ObjectDefinitionRes definition_res;
 
-        const bool is_loaded_success = g_runtime_global_context.m_asset_manager->loadAsset(m_definition_url, definition_res);
+        const bool is_loaded_success = g_runtime_global_context.m_asset_manager->loadAsset(m_definition_path, definition_res);
         if (!is_loaded_success)
             return false;
 
@@ -101,7 +113,7 @@ namespace LunarYue
         return true;
     }
 
-    void GObject::create(const ObjectInstanceRes& object_instance_res)
+    bool Object::Create(const ObjectInstanceRes& object_instance_res)
     {
         // clear old components
         m_components.clear();
@@ -117,14 +129,57 @@ namespace LunarYue
                 component->postLoadResource(weak_from_this());
             }
         }
+
+        // load object definition components
+        m_definition_path = object_instance_res.m_definition;
+
+        ObjectDefinitionRes definition_res;
+
+        const bool is_loaded_success = g_runtime_global_context.m_asset_manager->loadAsset(m_definition_path, definition_res);
+        if (!is_loaded_success)
+            return false;
+
+        for (auto loaded_component : definition_res.m_components)
+        {
+            const std::string type_name = loaded_component.getTypeName();
+            // don't create component if it has been instanced
+            if (hasComponent(type_name))
+                continue;
+
+            loaded_component->postLoadResource(weak_from_this());
+
+            m_components.push_back(loaded_component);
+        }
+
+        return true;
     }
 
-    void GObject::save(ObjectInstanceRes& out_object_instance_res)
+    void Object::getInstanceRes(ObjectInstanceRes& out_object_instance_res) const
     {
         out_object_instance_res.m_name       = m_name;
-        out_object_instance_res.m_definition = m_definition_url;
+        out_object_instance_res.m_definition = m_definition_path;
 
         out_object_instance_res.m_instanced_components = m_components;
     }
 
+    void Object::save(const std::string& path, const std::string& name)
+    {
+        ObjectDefinitionRes res;
+        res.m_components = m_components;
+
+        const auto save_path = path + "/" + name + ".object.json";
+
+        const bool is_save_success = g_runtime_global_context.m_asset_manager->saveAsset(res, save_path);
+
+        if (is_save_success == false)
+        {
+            LOG_ERROR("failed to save {}", path);
+        }
+        else
+        {
+            LOG_INFO("level save succeed");
+            m_definition_path = save_path;
+            m_name            = name;
+        }
+    }
 } // namespace LunarYue

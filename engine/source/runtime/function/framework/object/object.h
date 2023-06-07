@@ -8,29 +8,35 @@
 #include <memory>
 #include <string>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 namespace LunarYue
 {
-    /// GObject : Game Object base class
-    class GObject : public std::enable_shared_from_this<GObject>
+    /// Object : Game Object base class
+    class Object : public std::enable_shared_from_this<Object>
     {
         typedef std::unordered_set<std::string> TypeNameSet;
 
     public:
-        GObject(GObjectID id) : m_id {id} {}
-        virtual ~GObject();
+        Object(const GObjectID id) : m_id {id} {}
+        virtual ~Object();
 
         virtual void tick(float delta_time);
 
         bool load(const ObjectInstanceRes& object_instance_res);
-        void create(const ObjectInstanceRes& object_instance_res);
-        void save(ObjectInstanceRes& out_object_instance_res);
+        bool Create(const ObjectInstanceRes& object_instance_res);
+        void getInstanceRes(ObjectInstanceRes& out_object_instance_res) const;
+        void save(const std::string& path, const std::string& name);
 
         GObjectID getID() const { return m_id; }
 
-        void               setName(std::string name) { m_name = name; }
+        void               setName(std::string name) { m_name = std::move(name); }
         const std::string& getName() const { return m_name; }
+        void               setPath(std::string path) { m_definition_path = std::move(path); }
+        const std::string& getPath() const { return m_definition_path; }
+
+        bool addComponent(Reflection::ReflectionPtr<Component> component);
 
         bool hasComponent(const std::string& component_type_name) const;
 
@@ -69,7 +75,7 @@ namespace LunarYue
     protected:
         GObjectID   m_id {k_invalid_gobject_id};
         std::string m_name;
-        std::string m_definition_url;
+        std::string m_definition_path;
 
         // we have to use the ReflectionPtr due to that the components need to be reflected
         // in editor, and it's polymorphism

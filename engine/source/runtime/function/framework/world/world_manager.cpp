@@ -147,9 +147,9 @@ namespace LunarYue
         LOG_INFO("reload current evel succeed");
     }
 
-    void WorldManager::saveCurrentLevel()
+    void WorldManager::saveCurrentLevel() const
     {
-        auto active_level = m_current_active_level.lock();
+        const auto active_level = m_current_active_level.lock();
 
         if (active_level == nullptr)
         {

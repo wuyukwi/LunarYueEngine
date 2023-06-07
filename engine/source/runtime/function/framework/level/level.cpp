@@ -30,7 +30,7 @@ namespace LunarYue
         GObjectID object_id = ObjectIDAllocator::alloc();
         ASSERT(object_id != k_invalid_gobject_id);
 
-        auto object = std::make_shared<GObject>(object_id);
+        auto object = std::make_shared<Object>(object_id);
 
         bool is_loaded = object->load(object_instance_res);
         if (is_loaded)
@@ -45,25 +45,34 @@ namespace LunarYue
         return object_id;
     }
 
-    GObjectID Level::createEmptyObject(const std::string& object_res_url)
+    GObjectID Level::createEmptyObject(const std::string& path, const std::string& name)
     {
         GObjectID object_id = ObjectIDAllocator::alloc();
         ASSERT(object_id != k_invalid_gobject_id);
 
-        auto object = std::make_shared<GObject>(object_id);
+        auto object = std::make_shared<Object>(object_id);
 
-        ObjectInstanceRes res {};
+        object->setName("new object");
 
-        res.m_name       = Path::getFilePureName(object_res_url);
-        res.m_definition = g_runtime_global_context.m_asset_manager->getFullPath(object_res_url).generic_string();
+        auto component = LunarYue_REFLECTION_NEW(TransformComponent);
+        object->addComponent(component);
 
-        // res.m_instanced_components.push_back(Reflection::TypeMeta::newMetaFromName(""));
+        object->save(path, name);
 
-        object->create(res);
+        // const bool is_save_success = g_runtime_global_context.m_asset_manager->saveAsset(output_level_res, path);
+
+        //  if (is_save_success == false)
+        //  {
+        //      LOG_ERROR("failed to save {}", m_level_res_url);
+        //  }
+        //  else
+        //  {
+        //      LOG_INFO("level save succeed");
+        //  }*/
 
         m_gobjects.emplace(object_id, object);
 
-        LOG_ERROR("create object " + res.m_name);
+        LOG_INFO("create object " + name);
 
         return object_id;
     }
@@ -93,7 +102,7 @@ namespace LunarYue
         // create active character
         for (const auto& object_pair : m_gobjects)
         {
-            std::shared_ptr<GObject> object = object_pair.second;
+            std::shared_ptr<Object> object = object_pair.second;
             if (object == nullptr)
                 continue;
 
@@ -149,7 +158,7 @@ namespace LunarYue
         {
             if (id_object_pair.second)
             {
-                id_object_pair.second->save(output_objects[object_index]);
+                id_object_pair.second->getInstanceRes(output_objects[object_index]);
                 ++object_index;
             }
         }
@@ -195,7 +204,7 @@ namespace LunarYue
         }
     }
 
-    std::weak_ptr<GObject> Level::getGObjectByID(GObjectID go_id) const
+    std::weak_ptr<Object> Level::getGObjectByID(GObjectID go_id) const
     {
         auto iter = m_gobjects.find(go_id);
         if (iter != m_gobjects.end())
@@ -203,7 +212,7 @@ namespace LunarYue
             return iter->second;
         }
 
-        return std::weak_ptr<GObject>();
+        return std::weak_ptr<Object>();
     }
 
     void Level::deleteGObjectByID(GObjectID go_id)
@@ -211,7 +220,7 @@ namespace LunarYue
         auto iter = m_gobjects.find(go_id);
         if (iter != m_gobjects.end())
         {
-            std::shared_ptr<GObject> object = iter->second;
+            std::shared_ptr<Object> object = iter->second;
             if (object)
             {
                 if (m_current_active_character && m_current_active_character->getObjectID() == object->getID())

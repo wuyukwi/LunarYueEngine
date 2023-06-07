@@ -14,11 +14,11 @@ namespace LunarYue
         inline static const float s_camera_blend_time {0.3f};
 
     public:
-        Character(std::shared_ptr<GObject> character_object);
+        Character(std::shared_ptr<Object> character_object);
 
         GObjectID getObjectID() const;
-        void      setObject(std::shared_ptr<GObject> gobject);
-        std::weak_ptr<GObject> getObject() const { return m_character_object; }
+        void      setObject(std::shared_ptr<Object> gobject);
+        std::weak_ptr<Object> getObject() const { return m_character_object; }
 
         void setPosition(const Vector3& position) { m_position = position; }
         void setRotation(const Quaternion& rotation) { m_rotation = rotation; }
@@ -34,7 +34,7 @@ namespace LunarYue
         Vector3    m_position;
         Quaternion m_rotation;
 
-        std::shared_ptr<GObject> m_character_object;
+        std::shared_ptr<Object> m_character_object;
 
         // hack for setting rotation frame buffer
         Quaternion m_rotation_buffer;

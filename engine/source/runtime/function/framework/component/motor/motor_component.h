@@ -21,13 +21,13 @@ namespace LunarYue
     };
 
     REFLECTION_TYPE(MotorComponent)
-    CLASS(MotorComponent : public Component, WhiteListFields,WhiteListMethods)
+    CLASS(MotorComponent : public Component, WhiteListFields, WhiteListMethods)
     {
         REFLECTION_BODY(MotorComponent)
     public:
         MotorComponent() = default;
 
-        void postLoadResource(std::weak_ptr<GObject> parent_object) override;
+        void postLoadResource(std::weak_ptr<Object> parent_object) override;
 
         ~MotorComponent() override;
 

@@ -4,7 +4,7 @@
 namespace LunarYue
 {
 
-    bool find_component_field(std::weak_ptr<GObject>     game_object,
+    bool find_component_field(std::weak_ptr<Object>     game_object,
                               const char*                field_name,
                               Reflection::FieldAccessor& field_accessor,
                               void*&                     target_instance)
@@ -53,7 +53,7 @@ namespace LunarYue
     }
 
     template<typename T>
-    void LuaComponent::set(std::weak_ptr<GObject> game_object, const char* name, T value)
+    void LuaComponent::set(std::weak_ptr<Object> game_object, const char* name, T value)
     {
         LOG_INFO(name);
         Reflection::FieldAccessor field_accessor;
@@ -69,7 +69,7 @@ namespace LunarYue
     }
 
     template<typename T>
-    T LuaComponent::get(std::weak_ptr<GObject> game_object, const char* name)
+    T LuaComponent::get(std::weak_ptr<Object> game_object, const char* name)
     {
 
         LOG_INFO(name);
@@ -85,7 +85,7 @@ namespace LunarYue
         return {};
     }
 
-    void LuaComponent::invoke(std::weak_ptr<GObject> game_object, const char* name)
+    void LuaComponent::invoke(std::weak_ptr<Object> game_object, const char* name)
     {
         LOG_INFO(name);
 
@@ -147,7 +147,7 @@ namespace LunarYue
         delete[] methods;
     }
 
-    void LuaComponent::postLoadResource(std::weak_ptr<GObject> parent_object)
+    void LuaComponent::postLoadResource(std::weak_ptr<Object> parent_object)
     {
         // 弱いポインタで保持する親オブジェクトを設定
         m_parent_object = parent_object;

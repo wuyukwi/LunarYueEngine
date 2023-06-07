@@ -14,7 +14,7 @@ namespace LunarYue
         RigidBodyComponent() = default;
         ~RigidBodyComponent() override;
 
-        void postLoadResource(std::weak_ptr<GObject> parent_object) override;
+        void postLoadResource(std::weak_ptr<Object> parent_object) override;
 
         void tick(float delta_time) override {}
         void updateGlobalTransform(const Transform& transform, bool is_scale_dirty);

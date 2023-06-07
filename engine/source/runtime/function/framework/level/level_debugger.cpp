@@ -50,7 +50,7 @@ namespace LunarYue
 
     void LevelDebugger::showBones(std::shared_ptr<Level> level, GObjectID go_id) const
     {
-        std::shared_ptr<GObject> gobject = level->getGObjectByID(go_id).lock();
+        std::shared_ptr<Object> gobject = level->getGObjectByID(go_id).lock();
         drawBones(gobject);
     }
 
@@ -65,7 +65,7 @@ namespace LunarYue
 
     void LevelDebugger::showBonesName(std::shared_ptr<Level> level, GObjectID go_id) const
     {
-        std::shared_ptr<GObject> gobject = level->getGObjectByID(go_id).lock();
+        std::shared_ptr<Object> gobject = level->getGObjectByID(go_id).lock();
         drawBonesName(gobject);
     }
 
@@ -80,32 +80,27 @@ namespace LunarYue
 
     void LevelDebugger::showBoundingBox(std::shared_ptr<Level> level, GObjectID go_id) const
     {
-        std::shared_ptr<GObject> gobject = level->getGObjectByID(go_id).lock();
+        std::shared_ptr<Object> gobject = level->getGObjectByID(go_id).lock();
         drawBoundingBox(gobject);
     }
 
     void LevelDebugger::showCameraInfo(std::shared_ptr<Level> level) const
     {
-        std::shared_ptr<GObject> gobject = level->getCurrentActiveCharacter().lock()->getObject().lock();
+        std::shared_ptr<Object> gobject = level->getCurrentActiveCharacter().lock()->getObject().lock();
         drawCameraInfo(gobject);
     }
-    void LevelDebugger::drawBones(std::shared_ptr<GObject> object) const
+    void LevelDebugger::drawBones(std::shared_ptr<Object> object) const
     {
-        const TransformComponent* transform_component =
-            object->tryGetComponentConst<TransformComponent>("TransformComponent");
-        const AnimationComponent* animation_component =
-            object->tryGetComponentConst<AnimationComponent>("AnimationComponent");
+        const TransformComponent* transform_component = object->tryGetComponentConst<TransformComponent>("TransformComponent");
+        const AnimationComponent* animation_component = object->tryGetComponentConst<AnimationComponent>("AnimationComponent");
 
         if (transform_component == nullptr || animation_component == nullptr)
             return;
 
-        DebugDrawGroup* debug_draw_group =
-            g_runtime_global_context.m_debugdraw_manager->tryGetOrCreateDebugDrawGroup("bone");
+        DebugDrawGroup* debug_draw_group = g_runtime_global_context.m_debugdraw_manager->tryGetOrCreateDebugDrawGroup("bone");
 
-        Matrix4x4 object_matrix = Transform(transform_component->getPosition(),
-                                            transform_component->getRotation(),
-                                            transform_component->getScale())
-                                      .getMatrix();
+        Matrix4x4 object_matrix =
+            Transform(transform_component->getPosition(), transform_component->getRotation(), transform_component->getScale()).getMatrix();
 
         const Skeleton& skeleton    = animation_component->getSkeleton();
         const Bone*     bones       = skeleton.getBones();
@@ -115,19 +110,16 @@ namespace LunarYue
             if (bones[bone_index].getParent() == nullptr || bone_index == 1)
                 continue;
 
-            Matrix4x4 bone_matrix = Transform(bones[bone_index]._getDerivedPosition(),
-                                              bones[bone_index]._getDerivedOrientation(),
-                                              bones[bone_index]._getDerivedScale())
-                                        .getMatrix();
+            Matrix4x4 bone_matrix =
+                Transform(bones[bone_index]._getDerivedPosition(), bones[bone_index]._getDerivedOrientation(), bones[bone_index]._getDerivedScale())
+                    .getMatrix();
             Vector4 bone_position(0.0f, 0.0f, 0.0f, 1.0f);
             bone_position = object_matrix * bone_matrix * bone_position;
             bone_position /= bone_position[3];
 
-            Node*     parent_bone        = bones[bone_index].getParent();
-            Matrix4x4 parent_bone_matrix = Transform(parent_bone->_getDerivedPosition(),
-                                                     parent_bone->_getDerivedOrientation(),
-                                                     parent_bone->_getDerivedScale())
-                                               .getMatrix();
+            Node*     parent_bone = bones[bone_index].getParent();
+            Matrix4x4 parent_bone_matrix =
+                Transform(parent_bone->_getDerivedPosition(), parent_bone->_getDerivedOrientation(), parent_bone->_getDerivedScale()).getMatrix();
             Vector4 parent_bone_position(0.0f, 0.0f, 0.0f, 1.0f);
             parent_bone_position = object_matrix * parent_bone_matrix * parent_bone_position;
             parent_bone_position /= parent_bone_position[3];
@@ -138,31 +130,23 @@ namespace LunarYue
                                       Vector4(1.0f, 0.0f, 0.0f, 1.0f),
                                       0.0f,
                                       true);
-            debug_draw_group->addSphere(Vector3(bone_position.x, bone_position.y, bone_position.z),
-                                        0.015f,
-                                        Vector4(0.0f, 0.0f, 1.0f, 1.0f),
-                                        0.0f,
-                                        true);
+            debug_draw_group->addSphere(
+                Vector3(bone_position.x, bone_position.y, bone_position.z), 0.015f, Vector4(0.0f, 0.0f, 1.0f, 1.0f), 0.0f, true);
         }
     }
 
-    void LevelDebugger::drawBonesName(std::shared_ptr<GObject> object) const
+    void LevelDebugger::drawBonesName(std::shared_ptr<Object> object) const
     {
-        const TransformComponent* transform_component =
-            object->tryGetComponentConst<TransformComponent>("TransformComponent");
-        const AnimationComponent* animation_component =
-            object->tryGetComponentConst<AnimationComponent>("AnimationComponent");
+        const TransformComponent* transform_component = object->tryGetComponentConst<TransformComponent>("TransformComponent");
+        const AnimationComponent* animation_component = object->tryGetComponentConst<AnimationComponent>("AnimationComponent");
 
         if (transform_component == nullptr || animation_component == nullptr)
             return;
 
-        DebugDrawGroup* debug_draw_group =
-            g_runtime_global_context.m_debugdraw_manager->tryGetOrCreateDebugDrawGroup("bone name");
+        DebugDrawGroup* debug_draw_group = g_runtime_global_context.m_debugdraw_manager->tryGetOrCreateDebugDrawGroup("bone name");
 
-        Matrix4x4 object_matrix = Transform(transform_component->getPosition(),
-                                            transform_component->getRotation(),
-                                            transform_component->getScale())
-                                      .getMatrix();
+        Matrix4x4 object_matrix =
+            Transform(transform_component->getPosition(), transform_component->getRotation(), transform_component->getScale()).getMatrix();
 
         const Skeleton& skeleton    = animation_component->getSkeleton();
         const Bone*     bones       = skeleton.getBones();
@@ -172,26 +156,21 @@ namespace LunarYue
             if (bones[bone_index].getParent() == nullptr || bone_index == 1)
                 continue;
 
-            Matrix4x4 bone_matrix = Transform(bones[bone_index]._getDerivedPosition(),
-                                              bones[bone_index]._getDerivedOrientation(),
-                                              bones[bone_index]._getDerivedScale())
-                                        .getMatrix();
+            Matrix4x4 bone_matrix =
+                Transform(bones[bone_index]._getDerivedPosition(), bones[bone_index]._getDerivedOrientation(), bones[bone_index]._getDerivedScale())
+                    .getMatrix();
             Vector4 bone_position(0.0f, 0.0f, 0.0f, 1.0f);
             bone_position = object_matrix * bone_matrix * bone_position;
             bone_position /= bone_position[3];
 
-            debug_draw_group->addText(bones[bone_index].getName(),
-                                      Vector4(1.0f, 0.0f, 0.0f, 1.0f),
-                                      Vector3(bone_position.x, bone_position.y, bone_position.z),
-                                      8,
-                                      false);
+            debug_draw_group->addText(
+                bones[bone_index].getName(), Vector4(1.0f, 0.0f, 0.0f, 1.0f), Vector3(bone_position.x, bone_position.y, bone_position.z), 8, false);
         }
     }
 
-    void LevelDebugger::drawBoundingBox(std::shared_ptr<GObject> object) const
+    void LevelDebugger::drawBoundingBox(std::shared_ptr<Object> object) const
     {
-        const RigidBodyComponent* rigidbody_component =
-            object->tryGetComponentConst<RigidBodyComponent>("RigidBodyComponent");
+        const RigidBodyComponent* rigidbody_component = object->tryGetComponentConst<RigidBodyComponent>("RigidBodyComponent");
         if (rigidbody_component == nullptr)
             return;
 
@@ -199,27 +178,22 @@ namespace LunarYue
         rigidbody_component->getShapeBoundingBoxes(bounding_boxes);
         for (size_t bounding_box_index = 0; bounding_box_index < bounding_boxes.size(); bounding_box_index++)
         {
-            AxisAlignedBox  bounding_box = bounding_boxes[bounding_box_index];
-            DebugDrawGroup* debug_draw_group =
-                g_runtime_global_context.m_debugdraw_manager->tryGetOrCreateDebugDrawGroup("bounding box");
-            Vector3 center =
-                Vector3(bounding_box.getCenter().x, bounding_box.getCenter().y, bounding_box.getCenter().z);
-            Vector3 halfExtent =
-                Vector3(bounding_box.getHalfExtent().x, bounding_box.getHalfExtent().y, bounding_box.getHalfExtent().z);
+            AxisAlignedBox  bounding_box     = bounding_boxes[bounding_box_index];
+            DebugDrawGroup* debug_draw_group = g_runtime_global_context.m_debugdraw_manager->tryGetOrCreateDebugDrawGroup("bounding box");
+            Vector3         center           = Vector3(bounding_box.getCenter().x, bounding_box.getCenter().y, bounding_box.getCenter().z);
+            Vector3         halfExtent = Vector3(bounding_box.getHalfExtent().x, bounding_box.getHalfExtent().y, bounding_box.getHalfExtent().z);
 
-            debug_draw_group->addBox(
-                center, halfExtent, Vector4(1.0f, 0.0f, 0.0f, 0.0f), Vector4(0.0f, 1.0f, 0.0f, 1.0f));
+            debug_draw_group->addBox(center, halfExtent, Vector4(1.0f, 0.0f, 0.0f, 0.0f), Vector4(0.0f, 1.0f, 0.0f, 1.0f));
         }
     }
 
-    void LevelDebugger::drawCameraInfo(std::shared_ptr<GObject> object) const
+    void LevelDebugger::drawCameraInfo(std::shared_ptr<Object> object) const
     {
         const CameraComponent* camera_component = object->tryGetComponentConst<CameraComponent>("CameraComponent");
         if (camera_component == nullptr)
             return;
 
-        DebugDrawGroup* debug_draw_group =
-            g_runtime_global_context.m_debugdraw_manager->tryGetOrCreateDebugDrawGroup("show camera info");
+        DebugDrawGroup* debug_draw_group = g_runtime_global_context.m_debugdraw_manager->tryGetOrCreateDebugDrawGroup("show camera info");
 
         std::ostringstream buffer;
         buffer << "camera mode: ";

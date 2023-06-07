@@ -120,7 +120,7 @@ namespace LunarYue
 
         ReflectionInstance TypeMeta::newFromNameAndJson(const std::string& type_name, const Json& json_context)
         {
-            auto iter = m_class_map.find(type_name);
+            const auto iter = m_class_map.find(type_name);
 
             if (iter != m_class_map.end())
             {
@@ -131,7 +131,7 @@ namespace LunarYue
 
         ReflectionInstance TypeMeta::newFromName(const std::string& type_name)
         {
-            auto iter = m_class_map.find(type_name);
+            const auto iter = m_class_map.find(type_name);
 
             if (iter != m_class_map.end())
             {
@@ -142,7 +142,7 @@ namespace LunarYue
 
         Json TypeMeta::writeByName(const std::string& type_name, void* instance)
         {
-            auto iter = m_class_map.find(type_name);
+            const auto iter = m_class_map.find(type_name);
 
             if (iter != m_class_map.end())
             {

@@ -418,25 +418,25 @@ namespace LunarYue
 
                 if (ImGui::MenuItem("Create"))
                 {
-                    //// 現在のアクティブなレベルを取得する
-                    // std::shared_ptr<Level> level = g_runtime_global_context.m_world_manager->getCurrentActiveLevel().lock();
-                    // if (level == nullptr)
-                    //     return;
+                    // 現在のアクティブなレベルを取得する
+                    std::shared_ptr<Level> level = g_runtime_global_context.m_world_manager->getCurrentActiveLevel().lock();
+                    if (level == nullptr)
+                        return;
 
-                    //// 新しいGameObjectを作成し、シーンに追加する
-                    // const size_t new_gobject_id = level->createEmptyObject("asset/objects", "test.object.json");
-                    // if (new_gobject_id != k_invalid_gobject_id)
-                    //{
-                    //     // 新しいGameObjectが正常に作成された場合、それを選択する
-                    //     g_editor_global_context.m_scene_manager->onGObjectSelected(new_gobject_id);
-                    // }
+                    // 新しいGameObjectを作成し、シーンに追加する
+                    const size_t new_gobject_id = level->createEmptyObject("asset/objects", "test");
+                    if (new_gobject_id != k_invalid_gobject_id)
+                    {
+                        // 新しいGameObjectが正常に作成された場合、それを選択する
+                        g_editor_global_context.m_scene_manager->onGObjectSelected(new_gobject_id);
+                    }
                 }
                 ImGui::EndMenu();
             }
             if (ImGui::BeginMenu("add component"))
             {
                 // 選択されたオブジェクトを取得
-                std::shared_ptr<GObject> selected_object = g_editor_global_context.m_scene_manager->getSelectedGObject().lock();
+                std::shared_ptr<Object> selected_object = g_editor_global_context.m_scene_manager->getSelectedGObject().lock();
                 if (selected_object != nullptr)
                 {
                     auto&& selected_object_components = selected_object->getComponents();
@@ -502,9 +502,9 @@ namespace LunarYue
         // ゲームオブジェクトをループ処理
         for (const auto& id_object_pair : all_gobjects)
         {
-            const GObjectID          object_id = id_object_pair.first;
-            std::shared_ptr<GObject> object    = id_object_pair.second;
-            const std::string        name      = object->getName();
+            const GObjectID         object_id = id_object_pair.first;
+            std::shared_ptr<Object> object    = id_object_pair.second;
+            const std::string       name      = object->getName();
 
             // オブジェクト名が空でない場合、選択可能なアイテムを表示
             if (!name.empty())
@@ -552,13 +552,10 @@ namespace LunarYue
         for (size_t index = 0; index < fields_count; index++)
         {
             auto field = fields[index];
-            LOG_DEBUG("field index :" + std::to_string(index) + " fields_count:" + std::to_string(fields_count));
-            LOG_DEBUG("field type: " + field.getFieldTypeName() + " name :" + field.getFieldName());
 
             // フィールドが配列タイプの場合
             if (field.isArrayType())
             {
-                LOG_DEBUG("-field isArrayType");
 
                 Reflection::ArrayAccessor array_accessor;
                 if (Reflection::TypeMeta::newArrayAccessorFromName(field.getFieldTypeName(), array_accessor))
@@ -576,11 +573,9 @@ namespace LunarYue
                     // 配列の各要素についてUIを作成
                     for (int val = 0; val < array_count; val++)
                     {
-                        LOG_DEBUG("--array index :" + std::to_string(val) + " array_count:" + std::to_string(val));
 
                         if (item_ui_creator_iterator == m_editor_ui_creator.end())
                         {
-                            LOG_DEBUG(std::to_string(val) + "--- No ui type: " + item_type_meta_item.getTypeName());
 
                             m_editor_ui_creator["TreeNodePush"]("[" + std::to_string(val) + "]", nullptr);
 
@@ -588,7 +583,6 @@ namespace LunarYue
                             auto object_instance =
                                 Reflection::ReflectionInstance(LunarYue::Reflection::TypeMeta::newMetaFromName(item_type_meta_item.getTypeName()),
                                                                array_accessor.get(val, field_instance));
-                            LOG_DEBUG(std::to_string(val) + "---- createClassUI meta type: " + object_instance.m_meta.getTypeName());
                             createClassUI(object_instance);
 
                             m_editor_ui_creator["TreeNodePop"]("[" + std::to_string(val) + "]", nullptr);
@@ -598,7 +592,6 @@ namespace LunarYue
                             // 既存のUIクリエータがある場合、それを使用してUIを作成
                             m_editor_ui_creator[item_type_meta_item.getTypeName()]("[" + std::to_string(val) + "]",
                                                                                    array_accessor.get(val, field_instance));
-                            LOG_DEBUG(std::to_string(val) + "--- creator ui type: " + item_type_meta_item.getTypeName());
                         }
                     }
 
@@ -606,20 +599,17 @@ namespace LunarYue
                     m_editor_ui_creator["TreeNodePop"](field.getFieldName(), nullptr);
                 }
             }
-            LOG_DEBUG("-- field noArrayType");
             // フィールドの型に対応するUIクリエータを検索
             auto ui_creator_iterator = m_editor_ui_creator.find(field.getFieldTypeName());
 
             // 既存のUIクリエータがない場合、
             if (ui_creator_iterator == m_editor_ui_creator.end())
             {
-                LOG_DEBUG("--- No UI type: " + field.getFieldTypeName() + " name :" + field.getFieldName());
 
                 // フィールドの型情報を取得し、型に対応するUIを作成
                 Reflection::TypeMeta field_meta = Reflection::TypeMeta::newMetaFromName(field.getFieldTypeName());
                 if (field.getTypeMeta(field_meta))
                 {
-                    LOG_DEBUG("---- field.getTypeMeta ture");
                     // 子クラスのインスタンスを作成し、対応するUIを生成
                     auto child_instance = Reflection::ReflectionInstance(field_meta, field.get(instance.m_instance));
 
@@ -627,30 +617,25 @@ namespace LunarYue
                     m_editor_ui_creator["TreeNodePush"](field_meta.getTypeName(), nullptr);
 
                     createClassUI(child_instance);
-                    LOG_DEBUG(std::to_string(index) + "----- createClassUI type: " + child_instance.m_meta.getTypeName());
 
                     // 子クラスのUIノードを閉じる
                     m_editor_ui_creator["TreeNodePop"](field_meta.getTypeName(), nullptr);
                 }
                 else
                 {
-                    LOG_DEBUG("---- field.getTypeMeta false");
                     // 既存のUIクリエータがない場合、処理をスキップ
                     if (ui_creator_iterator == m_editor_ui_creator.end())
                     {
-                        LOG_DEBUG("----- No UI type: " + field.getFieldTypeName() + " name :" + field.getFieldName());
                         continue;
                     }
                     // 既存のUIクリエータがある場合、それを使用してUIを作成
                     m_editor_ui_creator[field.getFieldTypeName()](field.getFieldName(), field.get(instance.m_instance));
-                    LOG_DEBUG("----- creator UI  type: " + field.getFieldTypeName() + " name :" + field.getFieldName());
                 }
             }
             else
             {
                 // 既存のUIクリエータがある場合、それを使用してUIを作成
                 m_editor_ui_creator[field.getFieldTypeName()](field.getFieldName(), field.get(instance.m_instance));
-                LOG_DEBUG("--- creator UI  type: " + field.getFieldTypeName() + " name :" + field.getFieldName());
             }
         }
 
@@ -672,7 +657,7 @@ namespace LunarYue
         }
 
         // 選択されたオブジェクトを取得
-        std::shared_ptr<GObject> selected_object = g_editor_global_context.m_scene_manager->getSelectedGObject().lock();
+        std::shared_ptr<Object> selected_object = g_editor_global_context.m_scene_manager->getSelectedGObject().lock();
         if (selected_object == nullptr)
         {
             ImGui::End();

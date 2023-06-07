@@ -13,7 +13,7 @@
 
 namespace LunarYue
 {
-    void MeshComponent::postLoadResource(std::weak_ptr<GObject> parent_object)
+    void MeshComponent::postLoadResource(std::weak_ptr<Object> parent_object)
     {
         m_parent_object = parent_object;
 

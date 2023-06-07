@@ -260,7 +260,7 @@ namespace LunarYue
         class ReflectionInstance
         {
         public:
-            ReflectionInstance(TypeMeta meta, void* instance) : m_meta(meta), m_instance(instance) {}
+            ReflectionInstance(const TypeMeta& meta, void* instance) : m_meta(meta), m_instance(instance) {}
             ReflectionInstance() : m_instance(nullptr) {}
 
             ReflectionInstance& operator=(const ReflectionInstance& dest);
