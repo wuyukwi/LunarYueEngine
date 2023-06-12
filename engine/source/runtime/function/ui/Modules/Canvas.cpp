@@ -13,7 +13,7 @@ void LunarYue::UI::Modules::Canvas::Draw()
 
         if (m_isDockspace)
         {
-            ImGuiViewport* viewport = ImGui::GetMainViewport();
+            const ImGuiViewport* viewport = ImGui::GetMainViewport();
             ImGui::SetNextWindowPos(viewport->Pos);
             ImGui::SetNextWindowSize(viewport->Size);
             ImGui::SetNextWindowViewport(viewport->ID);
@@ -26,8 +26,8 @@ void LunarYue::UI::Modules::Canvas::Draw()
                          ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
                              ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking |
                              ImGuiWindowFlags_NoBackground);
-            ImGuiID dockspace_id = ImGui::GetID("MyDockspace");
-            ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_PassthruCentralNode);
+            const ImGuiID dock_space_id = ImGui::GetID("MyDockspace");
+            ImGui::DockSpace(dock_space_id, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_PassthruCentralNode);
             ImGui::SetWindowPos({0.f, 0.f});
             ImVec2 displaySize = ImGui::GetIO().DisplaySize;
             ImGui::SetWindowSize({displaySize.x, displaySize.y});

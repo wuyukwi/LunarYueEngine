@@ -68,6 +68,8 @@ namespace LunarYue
         m_render_system->initialize(render_init_info);
 
         m_debugdraw_manager->initialize();
+
+        m_file_system->initializer();
     }
 
     void RuntimeGlobalContext::shutdownSystems()

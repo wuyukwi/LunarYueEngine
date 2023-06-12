@@ -48,7 +48,7 @@ namespace LunarYue
         }
     }
 
-    void LevelDebugger::showBones(std::shared_ptr<Level> level, GObjectID go_id) const
+    void LevelDebugger::showBones(std::shared_ptr<Level> level, ObjectID go_id) const
     {
         std::shared_ptr<Object> gobject = level->getGObjectByID(go_id).lock();
         drawBones(gobject);
@@ -63,7 +63,7 @@ namespace LunarYue
         }
     }
 
-    void LevelDebugger::showBonesName(std::shared_ptr<Level> level, GObjectID go_id) const
+    void LevelDebugger::showBonesName(std::shared_ptr<Level> level, ObjectID go_id) const
     {
         std::shared_ptr<Object> gobject = level->getGObjectByID(go_id).lock();
         drawBonesName(gobject);
@@ -78,7 +78,7 @@ namespace LunarYue
         }
     }
 
-    void LevelDebugger::showBoundingBox(std::shared_ptr<Level> level, GObjectID go_id) const
+    void LevelDebugger::showBoundingBox(std::shared_ptr<Level> level, ObjectID go_id) const
     {
         std::shared_ptr<Object> gobject = level->getGObjectByID(go_id).lock();
         drawBoundingBox(gobject);

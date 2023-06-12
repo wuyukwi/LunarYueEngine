@@ -26,6 +26,8 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 
+#include "editor/include/editor_asset_browser.h"
+#include "editor/include/editor_object_window.h"
 #include "editor/include/editor_scene_view.h"
 #include "function/ui/Settings/PanelWindowSettings.h"
 
@@ -309,7 +311,7 @@ namespace LunarYue
 
         const ImGuiViewport* main_viewport = ImGui::GetMainViewport();                                    // メインビューポートの取得
         ImGui::SetNextWindowPos(main_viewport->WorkPos, ImGuiCond_Always);                                // ウィンドウの位置を設定
-        std::array<int, 2> window_size = g_editor_global_context.m_window_system->getWindowSize();        // ウィンドウサイズの取得
+        std::array<int, 2> window_size = g_runtime_global_context.m_window_system->getWindowSize();       // ウィンドウサイズの取得
         ImGui::SetNextWindowSize(ImVec2((float)window_size[0], (float)window_size[1]), ImGuiCond_Always); // ウィンドウサイズを設定
 
         ImGui::SetNextWindowViewport(main_viewport->ID); // メインビューポートを設定
@@ -390,7 +392,7 @@ namespace LunarYue
                 if (ImGui::MenuItem("Exit"))
                 {
                     g_editor_global_context.m_engine_runtime->shutdownEngine();
-                    g_editor_global_context.m_window_system->setShouldClose(true);
+                    g_runtime_global_context.m_window_system->setShouldClose(true);
                 }
                 ImGui::EndMenu();
             }
@@ -409,7 +411,7 @@ namespace LunarYue
             {
                 if (ImGui::MenuItem("Create"))
                 {
-                    g_editor_global_context.m_world_manager->createNewLevel("asset/level/test.json");
+                    g_runtime_global_context.m_world_manager->createNewLevel("asset/level/test.json");
                 }
                 ImGui::EndMenu();
             }
@@ -425,7 +427,7 @@ namespace LunarYue
 
                     // 新しいGameObjectを作成し、シーンに追加する
                     const size_t new_gobject_id = level->createEmptyObject("asset/objects", "test");
-                    if (new_gobject_id != k_invalid_gobject_id)
+                    if (new_gobject_id != k_invalid_object_id)
                     {
                         // 新しいGameObjectが正常に作成された場合、それを選択する
                         g_editor_global_context.m_scene_manager->onGObjectSelected(new_gobject_id);
@@ -502,7 +504,7 @@ namespace LunarYue
         // ゲームオブジェクトをループ処理
         for (const auto& id_object_pair : all_gobjects)
         {
-            const GObjectID         object_id = id_object_pair.first;
+            const ObjectID          object_id = id_object_pair.first;
             std::shared_ptr<Object> object    = id_object_pair.second;
             const std::string       name      = object->getName();
 
@@ -513,7 +515,7 @@ namespace LunarYue
                 if (ImGui::Selectable(name.c_str(), is_selected))
                 {
                     // 選択されたオブジェクトのIDを切り替え
-                    GObjectID new_selected_id = is_selected ? k_invalid_gobject_id : object_id;
+                    ObjectID new_selected_id = is_selected ? k_invalid_object_id : object_id;
                     g_editor_global_context.m_scene_manager->onGObjectSelected(new_selected_id);
                     break;
                 }
@@ -700,6 +702,8 @@ namespace LunarYue
 
         g_editor_global_context.m_panels_manager->CreatePanel<MenuBar>("Menu Bar");
         g_editor_global_context.m_panels_manager->CreatePanel<SceneView>("Scene View", true, settings);
+        g_editor_global_context.m_panels_manager->CreatePanel<AssetBrowser>("Asset Browser", true, settings);
+        g_editor_global_context.m_panels_manager->CreatePanel<ObjectWindow>("Object Window", true, settings);
 
         m_canvas.MakeDockspace(true);
         g_editor_global_context.m_ui_manager->SetCanvas(m_canvas);
@@ -833,7 +837,7 @@ namespace LunarYue
                 ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
             }
 
-            ImGui::ImageButton(g_editor_global_context.m_render_system->getIconId(icon), ImVec2(thumbnailSize, thumbnailSize));
+            ImGui::ImageButton(g_runtime_global_context.m_render_system->getIconId(icon), ImVec2(thumbnailSize, thumbnailSize));
 
             if (ImGui::BeginDragDropSource())
             {
@@ -977,7 +981,7 @@ namespace LunarYue
 
         // 新しいGameObjectを作成し、シーンに追加する
         size_t new_gobject_id = level->createObject(new_object_instance_res);
-        if (new_gobject_id != k_invalid_gobject_id)
+        if (new_gobject_id != k_invalid_object_id)
         {
             // 新しいGameObjectが正常に作成された場合、それを選択する
             g_editor_global_context.m_scene_manager->onGObjectSelected(new_gobject_id);
@@ -1047,7 +1051,7 @@ namespace LunarYue
             float indent_scale = 1.0f;
 #else // Not tested on Linux
             float x_scale, y_scale;
-            glfwGetWindowContentScale(g_editor_global_context.m_window_system->getWindow(), &x_scale, &y_scale);
+            glfwGetWindowContentScale(g_runtime_global_context.m_window_system->getWindow(), &x_scale, &y_scale);
             float indent_scale = fmaxf(1.0f, fmaxf(x_scale, y_scale));
 #endif
             indent_val = g_editor_global_context.m_input_manager->getEngineWindowSize().x - 100.0f * indent_scale;
@@ -1062,7 +1066,7 @@ namespace LunarYue
                     g_is_editor_mode = false;
                     g_editor_global_context.m_scene_manager->drawSelectedEntityAxis();
                     g_editor_global_context.m_input_manager->resetEditorCommand();
-                    g_editor_global_context.m_window_system->setFocusMode(true);
+                    g_runtime_global_context.m_window_system->setFocusMode(true);
                 }
                 ImGui::PopStyleColor();
                 ImGui::PopID();
@@ -1075,7 +1079,7 @@ namespace LunarYue
                     g_is_editor_mode = true;
                     g_editor_global_context.m_scene_manager->drawSelectedEntityAxis();
                     g_runtime_global_context.m_input_system->resetGameCommand();
-                    g_editor_global_context.m_render_system->getRenderCamera()->setMainViewMatrix(
+                    g_runtime_global_context.m_render_system->getRenderCamera()->setMainViewMatrix(
                         g_editor_global_context.m_scene_manager->getEditorCamera()->getViewMatrix());
                 }
                 ImGui::PopStyleColor();
@@ -1176,7 +1180,7 @@ namespace LunarYue
 
                     // 新しいGameObjectを作成し、シーンに追加する
                     size_t new_gobject_id = level->createObject(new_object_instance_res);
-                    if (new_gobject_id != k_invalid_gobject_id)
+                    if (new_gobject_id != k_invalid_object_id)
                     {
                         // 新しいGameObjectが正常に作成された場合、それを選択する
                         g_editor_global_context.m_scene_manager->onGObjectSelected(new_gobject_id);
@@ -1215,27 +1219,28 @@ namespace LunarYue
 
     void EditorUI::initialize()
     {
-        // g_editor_global_context.m_panels_manager = std::make_shared<PanelsManager>(m_canvas);
+        g_editor_global_context.m_panels_manager = std::make_shared<PanelsManager>(m_canvas);
 
         m_iconTextureMap["folder"]   = "resource/icon/folder.png";
         m_iconTextureMap["object"]   = "resource/icon/object.png";
         m_iconTextureMap["question"] = "resource/icon/question.png";
 
-        // setupUI();
+        setupUI();
 
         // initialize imgui vulkan render backend
-        g_editor_global_context.m_render_system->initializeUIRenderBackend(this);
+        g_runtime_global_context.m_render_system->initializeUIRenderBackend(this);
     }
 
     void EditorUI::preRender()
     {
-        // g_editor_global_context.m_ui_manager->Render();
+        g_editor_global_context.m_ui_manager->Render();
 
-        // auto& sceneView = g_editor_global_context.m_panels_manager->GetPanelAs<SceneView>("Scene View");
+        auto& sceneView = g_editor_global_context.m_panels_manager->GetPanelAs<SceneView>("Scene View");
 
-        // if (sceneView.IsOpened())
-        //     sceneView._Render_Impl();
-        showEditorUI();
+        if (sceneView.IsOpened())
+            sceneView._Render_Impl();
+
+        // showEditorUI();
     }
 
     void DrawVecControl(const std::string& label, LunarYue::Vector3& values, float resetValue, float columnWidth)

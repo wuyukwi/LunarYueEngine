@@ -57,7 +57,7 @@ namespace LunarYue::UI::Panels
 
     bool PanelWindow::IsAppearing() const
     {
-        if (auto window = ImGui::FindWindowByName((name + GetPanelID()).c_str()); window)
+        if (const auto window = ImGui::FindWindowByName((name + GetPanelID()).c_str()); window)
             return window->Appearing;
         return false;
     }

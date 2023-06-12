@@ -68,7 +68,7 @@ namespace LunarYue
         // 選択されたメッシュのGUIDを取得
         uint32_t getGuidOfPickedMesh(const Vector2& picked_uv);
         // メッシュIDによるGObjectIDの取得
-        GObjectID getGObjectIDByMeshID(uint32_t mesh_id) const;
+        ObjectID getGObjectIDByMeshID(uint32_t mesh_id) const;
 
         // エンジンコンテンツビューポートの取得
         EngineContentViewport getEngineContentViewport() const;

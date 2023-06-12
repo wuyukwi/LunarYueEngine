@@ -2,7 +2,6 @@
 
 #include "runtime/resource/res_type/common/world.h"
 
-#include <filesystem>
 #include <string>
 
 namespace LunarYue
@@ -30,6 +29,8 @@ namespace LunarYue
         std::weak_ptr<Level> getCurrentActiveLevel() const { return m_current_active_level; }
 
         std::weak_ptr<PhysicsScene> getCurrentActivePhysicsScene() const;
+
+        std::string getWorldName() const;
 
     private:
         bool loadWorld(const std::string& world_url);

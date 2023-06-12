@@ -36,22 +36,22 @@ namespace LunarYue
         return m_material_asset_id_allocator;
     }
 
-    void RenderScene::addInstanceIdToMap(uint32_t instance_id, GObjectID go_id)
+    void RenderScene::addInstanceIdToMap(uint32_t instance_id, ObjectID go_id)
     {
         m_mesh_object_id_map[instance_id] = go_id;
     }
 
-    GObjectID RenderScene::getGObjectIDByMeshID(uint32_t mesh_id) const
+    ObjectID RenderScene::getGObjectIDByMeshID(uint32_t mesh_id) const
     {
         auto find_it = m_mesh_object_id_map.find(mesh_id);
         if (find_it != m_mesh_object_id_map.end())
         {
             return find_it->second;
         }
-        return GObjectID();
+        return ObjectID();
     }
 
-    void RenderScene::deleteEntityByGObjectID(GObjectID go_id)
+    void RenderScene::deleteEntityByGObjectID(ObjectID go_id)
     {
         for (auto it = m_mesh_object_id_map.begin(); it != m_mesh_object_id_map.end(); it++)
         {

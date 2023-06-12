@@ -1,12 +1,4 @@
-/**
-* @project: Overload
-* @author: Overload Tech.
-* @licence: MIT
-*/
-
 #pragma once
-
-#include <vector>
 
 #include "function/ui/Event/Event.h"
 

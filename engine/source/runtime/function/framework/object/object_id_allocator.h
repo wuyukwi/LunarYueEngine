@@ -5,16 +5,16 @@
 
 namespace LunarYue
 {
-    using GObjectID = std::size_t;
+    using ObjectID = std::size_t;
 
-    constexpr GObjectID k_invalid_gobject_id = std::numeric_limits<std::size_t>::max();
+    constexpr ObjectID k_invalid_object_id = std::numeric_limits<std::size_t>::max();
 
     class ObjectIDAllocator
     {
     public:
-        static GObjectID alloc();
+        static ObjectID alloc();
 
     private:
-        static std::atomic<GObjectID> m_next_id;
+        static std::atomic<ObjectID> m_next_id;
     };
 } // namespace LunarYue

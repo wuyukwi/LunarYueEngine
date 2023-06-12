@@ -35,7 +35,7 @@ namespace LunarYue
     }
 
     //-----------------------------------------------------------------------
-    Matrix4x4 Matrix4x4::inverseAffine(void) const
+    Matrix4x4 Matrix4x4::inverseAffine() const
     {
         assert(isAffine());
 
@@ -182,9 +182,9 @@ namespace LunarYue
 
     Vector4 operator*(const Vector4& v, const Matrix4x4& mat)
     {
-        return Vector4(v.x * mat[0][0] + v.y * mat[1][0] + v.z * mat[2][0] + v.w * mat[3][0],
-                       v.x * mat[0][1] + v.y * mat[1][1] + v.z * mat[2][1] + v.w * mat[3][1],
-                       v.x * mat[0][2] + v.y * mat[1][2] + v.z * mat[2][2] + v.w * mat[3][2],
-                       v.x * mat[0][3] + v.y * mat[1][3] + v.z * mat[2][3] + v.w * mat[3][3]);
+        return {v.x * mat[0][0] + v.y * mat[1][0] + v.z * mat[2][0] + v.w * mat[3][0],
+                v.x * mat[0][1] + v.y * mat[1][1] + v.z * mat[2][1] + v.w * mat[3][1],
+                v.x * mat[0][2] + v.y * mat[1][2] + v.z * mat[2][2] + v.w * mat[3][2],
+                v.x * mat[0][3] + v.y * mat[1][3] + v.z * mat[2][3] + v.w * mat[3][3]};
     }
 } // namespace LunarYue

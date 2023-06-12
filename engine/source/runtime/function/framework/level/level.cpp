@@ -19,36 +19,36 @@ namespace LunarYue
     void Level::clear()
     {
         m_current_active_character.reset();
-        m_gobjects.clear();
+        m_objects.clear();
 
         ASSERT(g_runtime_global_context.m_physics_manager);
         g_runtime_global_context.m_physics_manager->deletePhysicsScene(m_physics_scene);
     }
 
-    GObjectID Level::createObject(const ObjectInstanceRes& object_instance_res)
+    ObjectID Level::createObject(const ObjectInstanceRes& object_instance_res)
     {
-        GObjectID object_id = ObjectIDAllocator::alloc();
-        ASSERT(object_id != k_invalid_gobject_id);
+        ObjectID object_id = ObjectIDAllocator::alloc();
+        ASSERT(object_id != k_invalid_object_id);
 
         auto object = std::make_shared<Object>(object_id);
 
         bool is_loaded = object->load(object_instance_res);
         if (is_loaded)
         {
-            m_gobjects.emplace(object_id, object);
+            m_objects.emplace(object_id, object);
         }
         else
         {
             LOG_ERROR("loading object " + object_instance_res.m_name + " failed");
-            return k_invalid_gobject_id;
+            return k_invalid_object_id;
         }
         return object_id;
     }
 
-    GObjectID Level::createEmptyObject(const std::string& path, const std::string& name)
+    ObjectID Level::createEmptyObject(const std::string& path, const std::string& name)
     {
-        GObjectID object_id = ObjectIDAllocator::alloc();
-        ASSERT(object_id != k_invalid_gobject_id);
+        ObjectID object_id = ObjectIDAllocator::alloc();
+        ASSERT(object_id != k_invalid_object_id);
 
         auto object = std::make_shared<Object>(object_id);
 
@@ -70,7 +70,7 @@ namespace LunarYue
         //      LOG_INFO("level save succeed");
         //  }*/
 
-        m_gobjects.emplace(object_id, object);
+        m_objects.emplace(object_id, object);
 
         LOG_INFO("create object " + name);
 
@@ -100,7 +100,7 @@ namespace LunarYue
         }
 
         // create active character
-        for (const auto& object_pair : m_gobjects)
+        for (const auto& object_pair : m_objects)
         {
             std::shared_ptr<Object> object = object_pair.second;
             if (object == nullptr)
@@ -149,12 +149,12 @@ namespace LunarYue
 
         LevelRes output_level_res;
 
-        const size_t                    object_cout    = m_gobjects.size();
+        const size_t                    object_cout    = m_objects.size();
         std::vector<ObjectInstanceRes>& output_objects = output_level_res.m_objects;
         output_objects.resize(object_cout);
 
         size_t object_index = 0;
-        for (const auto& id_object_pair : m_gobjects)
+        for (const auto& id_object_pair : m_objects)
         {
             if (id_object_pair.second)
             {
@@ -184,17 +184,27 @@ namespace LunarYue
             return;
         }
 
-        for (const auto& id_object_pair : m_gobjects)
+        std::vector<ObjectID> objectsToRelease;
+
+        for (const auto& id_object_pair : m_objects)
         {
             assert(id_object_pair.second);
             if (id_object_pair.second)
             {
-                id_object_pair.second->tick(delta_time);
+                if (!id_object_pair.second->isAlive())
+                {
+                    objectsToRelease.emplace_back(id_object_pair.first);
+                }
+                else
+                {
+                    id_object_pair.second->tick(delta_time);
+                }
             }
         }
-        if (m_current_active_character && g_is_editor_mode == false)
+
+        for (const ObjectID& id : objectsToRelease)
         {
-            m_current_active_character->tick(delta_time);
+            deleteGObjectByID(id);
         }
 
         std::shared_ptr<PhysicsScene> physics_scene = m_physics_scene.lock();
@@ -204,21 +214,21 @@ namespace LunarYue
         }
     }
 
-    std::weak_ptr<Object> Level::getGObjectByID(GObjectID go_id) const
+    std::weak_ptr<Object> Level::getGObjectByID(ObjectID id) const
     {
-        auto iter = m_gobjects.find(go_id);
-        if (iter != m_gobjects.end())
+        const auto iter = m_objects.find(id);
+        if (iter != m_objects.end())
         {
             return iter->second;
         }
 
-        return std::weak_ptr<Object>();
+        return {};
     }
 
-    void Level::deleteGObjectByID(GObjectID go_id)
+    void Level::deleteGObjectByID(ObjectID go_id)
     {
-        auto iter = m_gobjects.find(go_id);
-        if (iter != m_gobjects.end())
+        const auto iter = m_objects.find(go_id);
+        if (iter != m_objects.end())
         {
             std::shared_ptr<Object> object = iter->second;
             if (object)
@@ -227,10 +237,12 @@ namespace LunarYue
                 {
                     m_current_active_character->setObject(nullptr);
                 }
+
+                object->detachFromParent();
             }
         }
 
-        m_gobjects.erase(go_id);
+        m_objects.erase(go_id);
     }
 
 } // namespace LunarYue

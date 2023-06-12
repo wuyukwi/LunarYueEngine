@@ -12,7 +12,7 @@ namespace LunarYue
         m_cameraPosition = {-10.0f, 3.0f, 10.0f};
         m_cameraRotation = Quaternion(0.0f, 135.0f, 0.0f, 1.0f);
 
-        //  m_image = &createWidget<UI::Widgets::Visual::Image>(m_fbo.GetTextureID(), Vector2 {0.f, 0.f});
+        //  m_image = &CreateWidget<UI::Widgets::Visual::Image>(m_fbo.GetTextureID(), Vector2 {0.f, 0.f});
 
         scrollable = false;
     }

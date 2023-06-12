@@ -4,13 +4,13 @@
 
 namespace LunarYue
 {
-    std::atomic<GObjectID> ObjectIDAllocator::m_next_id {0};
+    std::atomic<ObjectID> ObjectIDAllocator::m_next_id {0};
 
-    GObjectID ObjectIDAllocator::alloc()
+    ObjectID ObjectIDAllocator::alloc()
     {
-        std::atomic<GObjectID> new_object_ret = m_next_id.load();
+        std::atomic<ObjectID> new_object_ret = m_next_id.load();
         ++m_next_id;
-        if (m_next_id >= k_invalid_gobject_id)
+        if (m_next_id >= k_invalid_object_id)
         {
             LOG_FATAL("gobject id overflow");
         }

@@ -39,10 +39,11 @@ namespace LunarYue
         void drawSelectedEntityAxis();
         // 選択されたGObjectを取得する関数
         std::weak_ptr<Object> getSelectedGObject() const;
+        std::weak_ptr<Object> getGObjectFormID(ObjectID id) const;
         // 軸モードに応じた軸メッシュを取得する関数
         RenderEntity* getAxisMeshByType(EditorAxisMode axis_mode);
         // GObjectが選択された際の処理を行う関数
-        void onGObjectSelected(GObjectID selected_gobject_id);
+        void onGObjectSelected(ObjectID selected_gobject_id);
         // 選択されたGObjectを削除する関数
         void onDeleteSelectedGObject();
         // エンティティの移動を行う関数
@@ -67,14 +68,14 @@ namespace LunarYue
         std::shared_ptr<RenderCamera> getEditorCamera() { return m_camera; };
 
         // 選択されたオブジェクトのIDを取得する関数
-        GObjectID getSelectedObjectID() { return m_selected_gobject_id; };
+        ObjectID getSelectedObjectID() { return m_selected_gobject_id; };
         // 選択されたオブジェクトの行列を取得する関数
         Matrix4x4 getSelectedObjectMatrix() { return m_selected_object_matrix; }
         // エディタ軸モードを取得する関数
         EditorAxisMode getEditorAxisMode() { return m_axis_mode; }
 
         // 選択されたオブジェクトのIDを設定する関数
-        void setSelectedObjectID(GObjectID selected_gobject_id) { m_selected_gobject_id = selected_gobject_id; };
+        void setSelectedObjectID(ObjectID selected_gobject_id) { m_selected_gobject_id = selected_gobject_id; };
         // 選択されたオブジェクトの行列を設定する関数
         void setSelectedObjectMatrix(Matrix4x4 new_object_matrix) { m_selected_object_matrix = new_object_matrix; }
         // エディタ軸モードを設定する関数
@@ -89,7 +90,7 @@ namespace LunarYue
         EditorScaleAxis m_scale_aixs;
 
         // 選択されたGObjectのID
-        GObjectID m_selected_gobject_id {k_invalid_gobject_id};
+        ObjectID m_selected_gobject_id {k_invalid_object_id};
         // 選択されたオブジェクトの行列
         Matrix4x4 m_selected_object_matrix {Matrix4x4::IDENTITY};
 

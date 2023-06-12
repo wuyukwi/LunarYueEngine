@@ -41,13 +41,6 @@ namespace LunarYue
         g_is_editor_mode = true;
         m_engine_runtime = engine_runtime;
 
-        g_editor_global_context.m_render_system       = g_runtime_global_context.m_render_system;
-        g_editor_global_context.m_window_system       = g_runtime_global_context.m_window_system;
-        g_editor_global_context.m_config_manager      = g_runtime_global_context.m_config_manager;
-        g_editor_global_context.m_asset_manager       = g_runtime_global_context.m_asset_manager;
-        g_editor_global_context.m_render_debug_config = g_runtime_global_context.m_render_debug_config;
-        g_editor_global_context.m_world_manager       = g_runtime_global_context.m_world_manager;
-
         g_editor_global_context.m_scene_manager = std::make_shared<EditorSceneManager>();
         g_editor_global_context.m_input_manager = std::make_shared<EditorInputManager>();
         g_editor_global_context.m_scene_manager->initialize();

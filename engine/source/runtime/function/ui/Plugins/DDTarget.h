@@ -1,87 +1,78 @@
-/**
-* @project: Overload
-* @author: Overload Tech.
-* @licence: MIT
-*/
-
 #pragma once
 
 #include <string>
 
 #include "function/ui/Event/Event.h"
 
-#include "runtime/function/ui/ImGui/imgui.h"
+#include "imgui.h"
 
 #include "runtime/function/ui/Plugins/IPlugin.h"
 
 namespace LunarYue::UI::Plugins
 {
-	/**
-	* Represents a drag and drop target
-	*/
-	template<typename T>
-	class DDTarget : public IPlugin
-	{
-	public:
-		/**
-		* Create the drag and drop target
-		* @param p_identifier
-		*/
-		DDTarget(const std::string& p_identifier) : identifier(p_identifier)
-		{}
+    /**
+     * Represents a drag and drop target
+     */
+    template<typename T>
+    class DDTarget : public IPlugin
+    {
+    public:
+        /**
+         * Create the drag and drop target
+         * @param p_identifier
+         */
+        DDTarget(const std::string& p_identifier) : identifier(p_identifier) {}
 
-		/**
-		* Execute the drag and drop target behaviour
-		* @param p_identifier
-		*/
-		virtual void Execute() override
-		{
-			if (ImGui::BeginDragDropTarget())
-			{
-				if (!m_isHovered)
-					HoverStartEvent.Invoke();
+        /**
+         * Execute the drag and drop target behaviour
+         * @param p_identifier
+         */
+        virtual void Execute() override
+        {
+            if (ImGui::BeginDragDropTarget())
+            {
+                if (!m_isHovered)
+                    HoverStartEvent.Invoke();
 
-				m_isHovered = true;
+                m_isHovered = true;
 
-				ImGuiDragDropFlags target_flags = 0;
-				// target_flags |= ImGuiDragDropFlags_AcceptBeforeDelivery;    // Don't wait until the delivery (release mouse button on a target) to do something
-				
-				if (!showYellowRect)
-					target_flags |= ImGuiDragDropFlags_AcceptNoDrawDefaultRect; // Don't display the yellow rectangle
+                ImGuiDragDropFlags target_flags = 0;
+                // target_flags |= ImGuiDragDropFlags_AcceptBeforeDelivery;    // Don't wait until the delivery (release mouse button on a target) to
+                // do something
 
-				if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(identifier.c_str(), target_flags))
-				{
-					T data = *(T*)payload->Data;
-					DataReceivedEvent.Invoke(data);
-				}
-				ImGui::EndDragDropTarget();
-			}
-			else
-			{
-				if (m_isHovered)
-					HoverEndEvent.Invoke();
+                if (!showYellowRect)
+                    target_flags |= ImGuiDragDropFlags_AcceptNoDrawDefaultRect; // Don't display the yellow rectangle
 
-				m_isHovered = false;
-			}
-		}
+                if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(identifier.c_str(), target_flags))
+                {
+                    T data = *(T*)payload->Data;
+                    DataReceivedEvent.Invoke(data);
+                }
+                ImGui::EndDragDropTarget();
+            }
+            else
+            {
+                if (m_isHovered)
+                    HoverEndEvent.Invoke();
 
-		/**
-		* Returns true if the drag and drop target is hovered by a drag and drop source
-		*/
-		bool IsHovered() const
-		{
-			return m_isHovered;
-		}
+                m_isHovered = false;
+            }
+        }
 
-	public:
-		std::string identifier;
-		LunarYue::Eventing::Event<T> DataReceivedEvent;
-		LunarYue::Eventing::Event<> HoverStartEvent;
-		LunarYue::Eventing::Event<> HoverEndEvent;
+        /**
+         * Returns true if the drag and drop target is hovered by a drag and drop source
+         */
+        bool IsHovered() const { return m_isHovered; }
 
-		bool showYellowRect = true;
+    public:
+        std::string        identifier;
+        Eventing::Event<T> DataReceivedEvent;
+        Eventing::Event<>  HoverStartEvent;
+        Eventing::Event<>  HoverEndEvent;
 
-	private:
-		bool m_isHovered;
-	};
-}
+        bool showYellowRect = true;
+
+    private:
+        bool m_isHovered;
+    };
+} // namespace LunarYue::UI::Plugins

@@ -1,9 +1,3 @@
-/**
- * @project: Overload
- * @author: Overload Tech.
- * @licence: MIT
- */
-
 #include "function/ui/Widgets/Layout/TreeNode.h"
 
 LunarYue::UI::Widgets::Layout::TreeNode::TreeNode(const std::string& p_name, bool p_arrowClickToOpen) :
@@ -28,7 +22,7 @@ bool LunarYue::UI::Widgets::Layout::TreeNode::IsOpened() const { return m_opened
 
 void LunarYue::UI::Widgets::Layout::TreeNode::_Draw_Impl()
 {
-    bool prevOpened = m_opened;
+    const bool prevOpened = m_opened;
 
     if (m_shouldOpen)
     {
@@ -49,7 +43,7 @@ void LunarYue::UI::Widgets::Layout::TreeNode::_Draw_Impl()
     if (leaf)
         flags |= ImGuiTreeNodeFlags_Leaf;
 
-    bool opened = ImGui::TreeNodeEx((name + m_widgetID).c_str(), flags);
+    const bool opened = ImGui::TreeNodeEx((name + m_widgetID).c_str(), flags);
 
     if (ImGui::IsItemClicked() && (ImGui::GetMousePos().x - ImGui::GetItemRectMin().x) > ImGui::GetTreeNodeToLabelSpacing())
     {

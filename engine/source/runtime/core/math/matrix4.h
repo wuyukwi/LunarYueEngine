@@ -195,10 +195,7 @@ namespace LunarYue
             m_mat[3][3] = row3.w;
         }
 
-        Matrix4x4(const Vector3& position, const Vector3& scale, const Quaternion& rotation)
-        {
-            makeTransform(position, scale, rotation);
-        }
+        Matrix4x4(const Vector3& position, const Vector3& scale, const Quaternion& rotation) { makeTransform(position, scale, rotation); }
 
         void fromData(const float (&float_array)[16])
         {
@@ -289,41 +286,25 @@ namespace LunarYue
         Matrix4x4 concatenate(const Matrix4x4& m2) const
         {
             Matrix4x4 r;
-            r.m_mat[0][0] = m_mat[0][0] * m2.m_mat[0][0] + m_mat[0][1] * m2.m_mat[1][0] + m_mat[0][2] * m2.m_mat[2][0] +
-                            m_mat[0][3] * m2.m_mat[3][0];
-            r.m_mat[0][1] = m_mat[0][0] * m2.m_mat[0][1] + m_mat[0][1] * m2.m_mat[1][1] + m_mat[0][2] * m2.m_mat[2][1] +
-                            m_mat[0][3] * m2.m_mat[3][1];
-            r.m_mat[0][2] = m_mat[0][0] * m2.m_mat[0][2] + m_mat[0][1] * m2.m_mat[1][2] + m_mat[0][2] * m2.m_mat[2][2] +
-                            m_mat[0][3] * m2.m_mat[3][2];
-            r.m_mat[0][3] = m_mat[0][0] * m2.m_mat[0][3] + m_mat[0][1] * m2.m_mat[1][3] + m_mat[0][2] * m2.m_mat[2][3] +
-                            m_mat[0][3] * m2.m_mat[3][3];
+            r.m_mat[0][0] = m_mat[0][0] * m2.m_mat[0][0] + m_mat[0][1] * m2.m_mat[1][0] + m_mat[0][2] * m2.m_mat[2][0] + m_mat[0][3] * m2.m_mat[3][0];
+            r.m_mat[0][1] = m_mat[0][0] * m2.m_mat[0][1] + m_mat[0][1] * m2.m_mat[1][1] + m_mat[0][2] * m2.m_mat[2][1] + m_mat[0][3] * m2.m_mat[3][1];
+            r.m_mat[0][2] = m_mat[0][0] * m2.m_mat[0][2] + m_mat[0][1] * m2.m_mat[1][2] + m_mat[0][2] * m2.m_mat[2][2] + m_mat[0][3] * m2.m_mat[3][2];
+            r.m_mat[0][3] = m_mat[0][0] * m2.m_mat[0][3] + m_mat[0][1] * m2.m_mat[1][3] + m_mat[0][2] * m2.m_mat[2][3] + m_mat[0][3] * m2.m_mat[3][3];
 
-            r.m_mat[1][0] = m_mat[1][0] * m2.m_mat[0][0] + m_mat[1][1] * m2.m_mat[1][0] + m_mat[1][2] * m2.m_mat[2][0] +
-                            m_mat[1][3] * m2.m_mat[3][0];
-            r.m_mat[1][1] = m_mat[1][0] * m2.m_mat[0][1] + m_mat[1][1] * m2.m_mat[1][1] + m_mat[1][2] * m2.m_mat[2][1] +
-                            m_mat[1][3] * m2.m_mat[3][1];
-            r.m_mat[1][2] = m_mat[1][0] * m2.m_mat[0][2] + m_mat[1][1] * m2.m_mat[1][2] + m_mat[1][2] * m2.m_mat[2][2] +
-                            m_mat[1][3] * m2.m_mat[3][2];
-            r.m_mat[1][3] = m_mat[1][0] * m2.m_mat[0][3] + m_mat[1][1] * m2.m_mat[1][3] + m_mat[1][2] * m2.m_mat[2][3] +
-                            m_mat[1][3] * m2.m_mat[3][3];
+            r.m_mat[1][0] = m_mat[1][0] * m2.m_mat[0][0] + m_mat[1][1] * m2.m_mat[1][0] + m_mat[1][2] * m2.m_mat[2][0] + m_mat[1][3] * m2.m_mat[3][0];
+            r.m_mat[1][1] = m_mat[1][0] * m2.m_mat[0][1] + m_mat[1][1] * m2.m_mat[1][1] + m_mat[1][2] * m2.m_mat[2][1] + m_mat[1][3] * m2.m_mat[3][1];
+            r.m_mat[1][2] = m_mat[1][0] * m2.m_mat[0][2] + m_mat[1][1] * m2.m_mat[1][2] + m_mat[1][2] * m2.m_mat[2][2] + m_mat[1][3] * m2.m_mat[3][2];
+            r.m_mat[1][3] = m_mat[1][0] * m2.m_mat[0][3] + m_mat[1][1] * m2.m_mat[1][3] + m_mat[1][2] * m2.m_mat[2][3] + m_mat[1][3] * m2.m_mat[3][3];
 
-            r.m_mat[2][0] = m_mat[2][0] * m2.m_mat[0][0] + m_mat[2][1] * m2.m_mat[1][0] + m_mat[2][2] * m2.m_mat[2][0] +
-                            m_mat[2][3] * m2.m_mat[3][0];
-            r.m_mat[2][1] = m_mat[2][0] * m2.m_mat[0][1] + m_mat[2][1] * m2.m_mat[1][1] + m_mat[2][2] * m2.m_mat[2][1] +
-                            m_mat[2][3] * m2.m_mat[3][1];
-            r.m_mat[2][2] = m_mat[2][0] * m2.m_mat[0][2] + m_mat[2][1] * m2.m_mat[1][2] + m_mat[2][2] * m2.m_mat[2][2] +
-                            m_mat[2][3] * m2.m_mat[3][2];
-            r.m_mat[2][3] = m_mat[2][0] * m2.m_mat[0][3] + m_mat[2][1] * m2.m_mat[1][3] + m_mat[2][2] * m2.m_mat[2][3] +
-                            m_mat[2][3] * m2.m_mat[3][3];
+            r.m_mat[2][0] = m_mat[2][0] * m2.m_mat[0][0] + m_mat[2][1] * m2.m_mat[1][0] + m_mat[2][2] * m2.m_mat[2][0] + m_mat[2][3] * m2.m_mat[3][0];
+            r.m_mat[2][1] = m_mat[2][0] * m2.m_mat[0][1] + m_mat[2][1] * m2.m_mat[1][1] + m_mat[2][2] * m2.m_mat[2][1] + m_mat[2][3] * m2.m_mat[3][1];
+            r.m_mat[2][2] = m_mat[2][0] * m2.m_mat[0][2] + m_mat[2][1] * m2.m_mat[1][2] + m_mat[2][2] * m2.m_mat[2][2] + m_mat[2][3] * m2.m_mat[3][2];
+            r.m_mat[2][3] = m_mat[2][0] * m2.m_mat[0][3] + m_mat[2][1] * m2.m_mat[1][3] + m_mat[2][2] * m2.m_mat[2][3] + m_mat[2][3] * m2.m_mat[3][3];
 
-            r.m_mat[3][0] = m_mat[3][0] * m2.m_mat[0][0] + m_mat[3][1] * m2.m_mat[1][0] + m_mat[3][2] * m2.m_mat[2][0] +
-                            m_mat[3][3] * m2.m_mat[3][0];
-            r.m_mat[3][1] = m_mat[3][0] * m2.m_mat[0][1] + m_mat[3][1] * m2.m_mat[1][1] + m_mat[3][2] * m2.m_mat[2][1] +
-                            m_mat[3][3] * m2.m_mat[3][1];
-            r.m_mat[3][2] = m_mat[3][0] * m2.m_mat[0][2] + m_mat[3][1] * m2.m_mat[1][2] + m_mat[3][2] * m2.m_mat[2][2] +
-                            m_mat[3][3] * m2.m_mat[3][2];
-            r.m_mat[3][3] = m_mat[3][0] * m2.m_mat[0][3] + m_mat[3][1] * m2.m_mat[1][3] + m_mat[3][2] * m2.m_mat[2][3] +
-                            m_mat[3][3] * m2.m_mat[3][3];
+            r.m_mat[3][0] = m_mat[3][0] * m2.m_mat[0][0] + m_mat[3][1] * m2.m_mat[1][0] + m_mat[3][2] * m2.m_mat[2][0] + m_mat[3][3] * m2.m_mat[3][0];
+            r.m_mat[3][1] = m_mat[3][0] * m2.m_mat[0][1] + m_mat[3][1] * m2.m_mat[1][1] + m_mat[3][2] * m2.m_mat[2][1] + m_mat[3][3] * m2.m_mat[3][1];
+            r.m_mat[3][2] = m_mat[3][0] * m2.m_mat[0][2] + m_mat[3][1] * m2.m_mat[1][2] + m_mat[3][2] * m2.m_mat[2][2] + m_mat[3][3] * m2.m_mat[3][2];
+            r.m_mat[3][3] = m_mat[3][0] * m2.m_mat[0][3] + m_mat[3][1] * m2.m_mat[1][3] + m_mat[3][2] * m2.m_mat[2][3] + m_mat[3][3] * m2.m_mat[3][3];
 
             return r;
         }
@@ -443,24 +424,21 @@ namespace LunarYue
          */
         bool operator==(const Matrix4x4& m2) const
         {
-            return !(m_mat[0][0] != m2.m_mat[0][0] || m_mat[0][1] != m2.m_mat[0][1] || m_mat[0][2] != m2.m_mat[0][2] ||
-                m_mat[0][3] != m2.m_mat[0][3] || m_mat[1][0] != m2.m_mat[1][0] || m_mat[1][1] != m2.m_mat[1][1] ||
-                m_mat[1][2] != m2.m_mat[1][2] || m_mat[1][3] != m2.m_mat[1][3] || m_mat[2][0] != m2.m_mat[2][0] ||
-                m_mat[2][1] != m2.m_mat[2][1] || m_mat[2][2] != m2.m_mat[2][2] || m_mat[2][3] != m2.m_mat[2][3] ||
-                m_mat[3][0] != m2.m_mat[3][0] || m_mat[3][1] != m2.m_mat[3][1] || m_mat[3][2] != m2.m_mat[3][2] ||
-                m_mat[3][3] != m2.m_mat[3][3]);
+            return !(
+                m_mat[0][0] != m2.m_mat[0][0] || m_mat[0][1] != m2.m_mat[0][1] || m_mat[0][2] != m2.m_mat[0][2] || m_mat[0][3] != m2.m_mat[0][3] ||
+                m_mat[1][0] != m2.m_mat[1][0] || m_mat[1][1] != m2.m_mat[1][1] || m_mat[1][2] != m2.m_mat[1][2] || m_mat[1][3] != m2.m_mat[1][3] ||
+                m_mat[2][0] != m2.m_mat[2][0] || m_mat[2][1] != m2.m_mat[2][1] || m_mat[2][2] != m2.m_mat[2][2] || m_mat[2][3] != m2.m_mat[2][3] ||
+                m_mat[3][0] != m2.m_mat[3][0] || m_mat[3][1] != m2.m_mat[3][1] || m_mat[3][2] != m2.m_mat[3][2] || m_mat[3][3] != m2.m_mat[3][3]);
         }
 
         /** Tests 2 matrices for inequality.
          */
         bool operator!=(const Matrix4x4& m2) const
         {
-            return m_mat[0][0] != m2.m_mat[0][0] || m_mat[0][1] != m2.m_mat[0][1] || m_mat[0][2] != m2.m_mat[0][2] ||
-                m_mat[0][3] != m2.m_mat[0][3] || m_mat[1][0] != m2.m_mat[1][0] || m_mat[1][1] != m2.m_mat[1][1] ||
-                m_mat[1][2] != m2.m_mat[1][2] || m_mat[1][3] != m2.m_mat[1][3] || m_mat[2][0] != m2.m_mat[2][0] ||
-                m_mat[2][1] != m2.m_mat[2][1] || m_mat[2][2] != m2.m_mat[2][2] || m_mat[2][3] != m2.m_mat[2][3] ||
-                m_mat[3][0] != m2.m_mat[3][0] || m_mat[3][1] != m2.m_mat[3][1] || m_mat[3][2] != m2.m_mat[3][2] ||
-                m_mat[3][3] != m2.m_mat[3][3];
+            return m_mat[0][0] != m2.m_mat[0][0] || m_mat[0][1] != m2.m_mat[0][1] || m_mat[0][2] != m2.m_mat[0][2] || m_mat[0][3] != m2.m_mat[0][3] ||
+                   m_mat[1][0] != m2.m_mat[1][0] || m_mat[1][1] != m2.m_mat[1][1] || m_mat[1][2] != m2.m_mat[1][2] || m_mat[1][3] != m2.m_mat[1][3] ||
+                   m_mat[2][0] != m2.m_mat[2][0] || m_mat[2][1] != m2.m_mat[2][1] || m_mat[2][2] != m2.m_mat[2][2] || m_mat[2][3] != m2.m_mat[2][3] ||
+                   m_mat[3][0] != m2.m_mat[3][0] || m_mat[3][1] != m2.m_mat[3][1] || m_mat[3][2] != m2.m_mat[3][2] || m_mat[3][3] != m2.m_mat[3][3];
         }
 
         Matrix4x4 transpose() const
@@ -789,8 +767,8 @@ namespace LunarYue
 
         float determinant() const
         {
-            return m_mat[0][0] * getMinor(1, 2, 3, 1, 2, 3) - m_mat[0][1] * getMinor(1, 2, 3, 0, 2, 3) +
-                   m_mat[0][2] * getMinor(1, 2, 3, 0, 1, 3) - m_mat[0][3] * getMinor(1, 2, 3, 0, 1, 2);
+            return m_mat[0][0] * getMinor(1, 2, 3, 1, 2, 3) - m_mat[0][1] * getMinor(1, 2, 3, 0, 2, 3) + m_mat[0][2] * getMinor(1, 2, 3, 0, 1, 3) -
+                   m_mat[0][3] * getMinor(1, 2, 3, 0, 1, 2);
         }
 
         /** Building a Matrix4 from orientation / scale / position.
@@ -819,10 +797,7 @@ namespace LunarYue
         An affine matrix is a 4x4 matrix with row 3 equal to (0, 0, 0, 1),
         e.g. no projective coefficients.
         */
-        bool isAffine(void) const
-        {
-            return m_mat[3][0] == 0 && m_mat[3][1] == 0 && m_mat[3][2] == 0 && m_mat[3][3] == 1;
-        }
+        bool isAffine(void) const { return m_mat[3][0] == 0 && m_mat[3][1] == 0 && m_mat[3][2] == 0 && m_mat[3][3] == 1; }
 
         /** Returns the inverse of the affine matrix.
         @note
@@ -841,20 +816,17 @@ namespace LunarYue
             return Matrix4x4(m_mat[0][0] * m2.m_mat[0][0] + m_mat[0][1] * m2.m_mat[1][0] + m_mat[0][2] * m2.m_mat[2][0],
                              m_mat[0][0] * m2.m_mat[0][1] + m_mat[0][1] * m2.m_mat[1][1] + m_mat[0][2] * m2.m_mat[2][1],
                              m_mat[0][0] * m2.m_mat[0][2] + m_mat[0][1] * m2.m_mat[1][2] + m_mat[0][2] * m2.m_mat[2][2],
-                             m_mat[0][0] * m2.m_mat[0][3] + m_mat[0][1] * m2.m_mat[1][3] +
-                                 m_mat[0][2] * m2.m_mat[2][3] + m_mat[0][3],
+                             m_mat[0][0] * m2.m_mat[0][3] + m_mat[0][1] * m2.m_mat[1][3] + m_mat[0][2] * m2.m_mat[2][3] + m_mat[0][3],
 
                              m_mat[1][0] * m2.m_mat[0][0] + m_mat[1][1] * m2.m_mat[1][0] + m_mat[1][2] * m2.m_mat[2][0],
                              m_mat[1][0] * m2.m_mat[0][1] + m_mat[1][1] * m2.m_mat[1][1] + m_mat[1][2] * m2.m_mat[2][1],
                              m_mat[1][0] * m2.m_mat[0][2] + m_mat[1][1] * m2.m_mat[1][2] + m_mat[1][2] * m2.m_mat[2][2],
-                             m_mat[1][0] * m2.m_mat[0][3] + m_mat[1][1] * m2.m_mat[1][3] +
-                                 m_mat[1][2] * m2.m_mat[2][3] + m_mat[1][3],
+                             m_mat[1][0] * m2.m_mat[0][3] + m_mat[1][1] * m2.m_mat[1][3] + m_mat[1][2] * m2.m_mat[2][3] + m_mat[1][3],
 
                              m_mat[2][0] * m2.m_mat[0][0] + m_mat[2][1] * m2.m_mat[1][0] + m_mat[2][2] * m2.m_mat[2][0],
                              m_mat[2][0] * m2.m_mat[0][1] + m_mat[2][1] * m2.m_mat[1][1] + m_mat[2][2] * m2.m_mat[2][1],
                              m_mat[2][0] * m2.m_mat[0][2] + m_mat[2][1] * m2.m_mat[1][2] + m_mat[2][2] * m2.m_mat[2][2],
-                             m_mat[2][0] * m2.m_mat[0][3] + m_mat[2][1] * m2.m_mat[1][3] +
-                                 m_mat[2][2] * m2.m_mat[2][3] + m_mat[2][3],
+                             m_mat[2][0] * m2.m_mat[0][3] + m_mat[2][1] * m2.m_mat[1][3] + m_mat[2][2] * m2.m_mat[2][3] + m_mat[2][3],
                              0,
                              0,
                              0,
@@ -946,7 +918,7 @@ namespace LunarYue
             float d23 = -(v4 * m00 - v2 * m01 + v0 * m03) * invDet;
             float d33 = +(v3 * m00 - v1 * m01 + v0 * m02) * invDet;
 
-            return Matrix4x4(d00, d01, d02, d03, d10, d11, d12, d13, d20, d21, d22, d23, d30, d31, d32, d33);
+            return {d00, d01, d02, d03, d10, d11, d12, d13, d20, d21, d22, d23, d30, d31, d32, d33};
         }
 
         Vector3 transformCoord(const Vector3& v)

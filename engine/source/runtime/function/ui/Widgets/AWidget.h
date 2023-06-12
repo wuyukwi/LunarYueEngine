@@ -1,9 +1,3 @@
-/**
- * @project: Overload
- * @author: Overload Tech.
- * @licence: MIT
- */
-
 #pragma once
 
 #include <string>
@@ -79,7 +73,7 @@ namespace LunarYue::UI::Widgets
         bool lineBreak = true;
 
     protected:
-        Internal::WidgetContainer* m_parent;
+        Internal::WidgetContainer* m_parent {};
         std::string                m_widgetID           = "?";
         bool                       m_autoExecutePlugins = true;
 

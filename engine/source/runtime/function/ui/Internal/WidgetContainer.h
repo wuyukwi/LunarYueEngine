@@ -52,7 +52,7 @@ namespace LunarYue::UI::Internal
          * Create a widget
          */
         template<typename T, typename... Args>
-        T& createWidget(Args&&... p_args)
+        T& CreateWidget(Args&&... p_args)
         {
             m_widgets.emplace_back(new T(p_args...), EMemoryMode::INTERNAL_MANAGMENT);
             T& instance = *reinterpret_cast<T*>(m_widgets.back().first);

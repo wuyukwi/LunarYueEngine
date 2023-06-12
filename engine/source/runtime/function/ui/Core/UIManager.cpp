@@ -5,6 +5,7 @@
 #include "editor/include/editor_global_context.h"
 #include "function/render/window_system.h"
 #include "resource/config_manager/config_manager.h"
+#include "runtime/core/base/macro.h"
 #include "stb_image.h"
 
 namespace LunarYue::UI::Core
@@ -32,10 +33,10 @@ namespace LunarYue::UI::Core
 
         // set ui content scale
         float x_scale, y_scale;
-        glfwGetWindowContentScale(g_editor_global_context.m_window_system->getWindow(), &x_scale, &y_scale);
+        glfwGetWindowContentScale(g_runtime_global_context.m_window_system->getWindow(), &x_scale, &y_scale);
         float content_scale = fmaxf(1.0f, fmaxf(x_scale, y_scale));
         windowContentScaleUpdate(content_scale);
-        glfwSetWindowContentScaleCallback(g_editor_global_context.m_window_system->getWindow(), windowContentScaleCallback);
+        glfwSetWindowContentScaleCallback(g_runtime_global_context.m_window_system->getWindow(), windowContentScaleCallback);
 
         ImGuiIO& io = ImGui::GetIO();
         io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
@@ -58,10 +59,10 @@ namespace LunarYue::UI::Core
 
         // デフォルトフォントをロード
         m_fonts["default"] = io.Fonts->AddFontFromFileTTF(
-            g_editor_global_context.m_config_manager->getEditorFontPath().generic_string().data(), font_size, nullptr, icon_ranges.Data);
+            g_runtime_global_context.m_config_manager->getEditorFontPath().generic_string().data(), font_size, nullptr, icon_ranges.Data);
 
         // Font Awesome フォントをロード
-        std::filesystem::path fa_font_path = g_editor_global_context.m_config_manager->getEditorFontPath().parent_path() / "fa-solid-900.ttf";
+        std::filesystem::path fa_font_path = g_runtime_global_context.m_config_manager->getEditorFontPath().parent_path() / "fa-solid-900.ttf";
         m_fonts["icon"] = io.Fonts->AddFontFromFileTTF(fa_font_path.generic_string().data(), font_size, &font_config, icon_ranges.Data);
 
         io.Fonts->Build();
@@ -71,11 +72,11 @@ namespace LunarYue::UI::Core
 
         // setup window icon
         GLFWimage   window_icon[2];
-        std::string big_icon_path_string   = g_editor_global_context.m_config_manager->getEditorBigIconPath().generic_string();
-        std::string small_icon_path_string = g_editor_global_context.m_config_manager->getEditorSmallIconPath().generic_string();
+        std::string big_icon_path_string   = g_runtime_global_context.m_config_manager->getEditorBigIconPath().generic_string();
+        std::string small_icon_path_string = g_runtime_global_context.m_config_manager->getEditorSmallIconPath().generic_string();
         window_icon[0].pixels              = stbi_load(big_icon_path_string.data(), &window_icon[0].width, &window_icon[0].height, nullptr, 4);
         window_icon[1].pixels              = stbi_load(small_icon_path_string.data(), &window_icon[1].width, &window_icon[1].height, nullptr, 4);
-        glfwSetWindowIcon(g_editor_global_context.m_window_system->getWindow(), 2, window_icon);
+        glfwSetWindowIcon(g_runtime_global_context.m_window_system->getWindow(), 2, window_icon);
         stbi_image_free(window_icon[0].pixels);
         stbi_image_free(window_icon[1].pixels);
     }

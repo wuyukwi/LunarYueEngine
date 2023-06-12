@@ -52,7 +52,6 @@ namespace LunarYue
             }
         }
 
-        // 致命的なエラーが発生した場合のコールバック
         template<typename... TARGS>
         void fatalCallback(TARGS&&... args)
         {

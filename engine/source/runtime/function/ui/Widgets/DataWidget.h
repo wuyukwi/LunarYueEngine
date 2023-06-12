@@ -1,9 +1,3 @@
-/**
- * @project: Overload
- * @author: Overload Tech.
- * @licence: MIT
- */
-
 #pragma once
 
 #include "function/ui/Widgets/AWidget.h"
@@ -22,7 +16,7 @@ namespace LunarYue::UI::Widgets
          * Create a DataWidget with the data specification
          * @param p_dataHolder
          */
-        DataWidget(T& p_dataHolder) : m_data(p_dataHolder) {};
+        DataWidget(T& p_dataHolder) : m_data(p_dataHolder) {}
 
         /**
          * Draw the widget

@@ -36,6 +36,7 @@ namespace LunarYue
         void tick(float delta_time) override;
 
         void tryUpdateRigidBodyComponent();
+        void updateMatrix();
 
     protected:
         META(Enable)

@@ -1,0 +1,7 @@
+{
+  "name": "HelloWorld",
+  "level_urls": [
+    "asset/level/default.level"
+  ],
+  "default_level_url": "asset/level/default.level"
+}

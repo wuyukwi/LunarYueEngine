@@ -5,7 +5,6 @@
 
 #include <filesystem>
 #include <fstream>
-#include <functional>
 #include <sstream>
 #include <string>
 
@@ -67,5 +66,6 @@ namespace LunarYue
         }
 
         std::filesystem::path getFullPath(const std::string& relative_path) const;
+        std::string           getRelativePath(const std::filesystem::path& full_path) const;
     };
 } // namespace LunarYue

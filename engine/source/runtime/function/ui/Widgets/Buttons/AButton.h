@@ -1,8 +1,8 @@
 /**
-* @project: Overload
-* @author: Overload Tech.
-* @licence: MIT
-*/
+ * @project: Overload
+ * @author: Overload Tech.
+ * @licence: MIT
+ */
 
 #pragma once
 
@@ -14,15 +14,15 @@
 
 namespace LunarYue::UI::Widgets::Buttons
 {
-	/**
-	* Base class for any button widget
-	*/
-	class AButton : public AWidget
-	{
-	protected:
-		void _Draw_Impl() override = 0;
+    /**
+     * Base class for any button widget
+     */
+    class AButton : public AWidget
+    {
+    protected:
+        void _Draw_Impl() override = 0;
 
-	public:
-		LunarYue::Eventing::Event<> ClickedEvent;
-	};
-}
+    public:
+        Eventing::Event<> ClickedEvent;
+    };
+} // namespace LunarYue::UI::Widgets::Buttons

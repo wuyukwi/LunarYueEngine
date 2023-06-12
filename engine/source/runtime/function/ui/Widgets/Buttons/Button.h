@@ -1,9 +1,3 @@
-/**
-* @project: Overload
-* @author: Overload Tech.
-* @licence: MIT
-*/
-
 #pragma once
 
 #include <string>
@@ -15,32 +9,32 @@
 
 namespace LunarYue::UI::Widgets::Buttons
 {
-	/**
-	* Simple button widget
-	*/
-	class Button : public AButton
-	{
-	public:
-		/**
-		* Constructor
-		* @param p_label
-		* @param p_size
-		* @param p_disabled
-		*/
-		Button(const std::string& p_label = "", const Vector2& p_size = Vector2(0.f, 0.f), bool p_disabled = false);
+    /**
+     * Simple button widget
+     */
+    class Button : public AButton
+    {
+    public:
+        /**
+         * Constructor
+         * @param p_label
+         * @param p_size
+         * @param p_disabled
+         */
+        Button(const std::string& p_label = "", const Vector2& p_size = Vector2(0.f, 0.f), bool p_disabled = false);
 
-	protected:
-		void _Draw_Impl() override;
+    protected:
+        void _Draw_Impl() override;
 
-	public:
-		std::string label;
-		Vector2 size;
-		bool disabled = false;
+    public:
+        std::string label;
+        Vector2     size;
+        bool        disabled = false;
 
-		Types::Color idleBackgroundColor;
-		Types::Color hoveredBackgroundColor;
-		Types::Color clickedBackgroundColor;
+        Types::Color idleBackgroundColor;
+        Types::Color hoveredBackgroundColor;
+        Types::Color clickedBackgroundColor;
 
-		Types::Color textColor;
-	};
-}
+        Types::Color textColor;
+    };
+} // namespace LunarYue::UI::Widgets::Buttons

@@ -35,9 +35,9 @@ namespace LunarYue
     float intersectPlaneRay(Vector3 normal, float d, Vector3 origin, Vector3 dir)
     {
         float deno = normal.dotProduct(dir);
-        if (fabs(deno) < 0.0001)
+        if (fabs(deno) >= 0.0001f)
         {
-            deno = 0.0001;
+            deno = 0.0001f;
         }
 
         return -(normal.dotProduct(origin) + d) / deno;
@@ -53,7 +53,7 @@ namespace LunarYue
         Vector3 camera_right    = m_camera->right();
         Vector3 camera_position = m_camera->position();
 
-        if (m_selected_gobject_id == k_invalid_gobject_id)
+        if (m_selected_gobject_id == k_invalid_object_id)
         {
             return m_selected_axis;
         }
@@ -171,7 +171,7 @@ namespace LunarYue
             }
         }
 
-        g_editor_global_context.m_render_system->setSelectedAxis(m_selected_axis);
+        g_runtime_global_context.m_render_system->setSelectedAxis(m_selected_axis);
 
         return m_selected_axis;
     }
@@ -223,20 +223,20 @@ namespace LunarYue
                 selected_aixs->m_model_matrix = axis_model_matrix * Matrix4x4(rotation);
             }
 
-            g_editor_global_context.m_render_system->setVisibleAxis(*selected_aixs);
+            g_runtime_global_context.m_render_system->setVisibleAxis(*selected_aixs);
         }
         else
         {
-            g_editor_global_context.m_render_system->setVisibleAxis(std::nullopt);
+            g_runtime_global_context.m_render_system->setVisibleAxis(std::nullopt);
         }
     }
 
     std::weak_ptr<Object> EditorSceneManager::getSelectedGObject() const
     {
         std::weak_ptr<Object> selected_object;
-        if (m_selected_gobject_id != k_invalid_gobject_id)
+        if (m_selected_gobject_id != k_invalid_object_id)
         {
-            std::shared_ptr<Level> level = g_runtime_global_context.m_world_manager->getCurrentActiveLevel().lock();
+            const std::shared_ptr<Level> level = g_runtime_global_context.m_world_manager->getCurrentActiveLevel().lock();
             if (level != nullptr)
             {
                 selected_object = level->getGObjectByID(m_selected_gobject_id);
@@ -245,7 +245,19 @@ namespace LunarYue
         return selected_object;
     }
 
-    void EditorSceneManager::onGObjectSelected(GObjectID selected_gobject_id)
+    std::weak_ptr<Object> EditorSceneManager::getGObjectFormID(ObjectID id) const
+    {
+        std::weak_ptr<Object> object;
+
+        const std::shared_ptr<Level> level = g_runtime_global_context.m_world_manager->getCurrentActiveLevel().lock();
+        if (level)
+        {
+            object = level->getGObjectByID(m_selected_gobject_id);
+        }
+        return object;
+    }
+
+    void EditorSceneManager::onGObjectSelected(ObjectID selected_gobject_id)
     {
         if (selected_gobject_id == m_selected_gobject_id)
             return;
@@ -261,7 +273,7 @@ namespace LunarYue
 
         drawSelectedEntityAxis();
 
-        if (m_selected_gobject_id != k_invalid_gobject_id)
+        if (m_selected_gobject_id != k_invalid_object_id)
         {
             LOG_INFO("select game object " + std::to_string(m_selected_gobject_id));
         }
@@ -283,10 +295,10 @@ namespace LunarYue
 
             current_active_level->deleteGObjectByID(m_selected_gobject_id);
 
-            RenderSwapContext& swap_context = g_editor_global_context.m_render_system->getSwapContext();
+            RenderSwapContext& swap_context = g_runtime_global_context.m_render_system->getSwapContext();
             swap_context.getLogicSwapData().addDeleteGameObject(GameObjectDesc {selected_object->getID(), {}});
         }
-        onGObjectSelected(k_invalid_gobject_id);
+        onGObjectSelected(k_invalid_object_id);
     }
 
     void EditorSceneManager::moveEntity(float     new_mouse_pos_x,
@@ -404,7 +416,7 @@ namespace LunarYue
             m_rotation_axis.m_model_matrix    = axis_model_matrix;
             m_scale_aixs.m_model_matrix       = axis_model_matrix;
 
-            g_editor_global_context.m_render_system->setVisibleAxis(m_translation_axis);
+            g_runtime_global_context.m_render_system->setVisibleAxis(m_translation_axis);
 
             transform_component->setPosition(new_translation);
             transform_component->setRotation(new_rotation);
@@ -525,8 +537,8 @@ namespace LunarYue
 
     void EditorSceneManager::uploadAxisResource()
     {
-        auto& instance_id_allocator   = g_editor_global_context.m_render_system->getGOInstanceIdAllocator();
-        auto& mesh_asset_id_allocator = g_editor_global_context.m_render_system->getMeshAssetIdAllocator();
+        auto& instance_id_allocator   = g_runtime_global_context.m_render_system->getGOInstanceIdAllocator();
+        auto& mesh_asset_id_allocator = g_runtime_global_context.m_render_system->getMeshAssetIdAllocator();
 
         // assign some value that won't be used by other game objects
         {
@@ -553,12 +565,12 @@ namespace LunarYue
             m_scale_aixs.m_mesh_asset_id = mesh_asset_id_allocator.allocGuid(mesh_source_desc);
         }
 
-        g_editor_global_context.m_render_system->createAxis({m_translation_axis, m_rotation_axis, m_scale_aixs},
-                                                            {m_translation_axis.m_mesh_data, m_rotation_axis.m_mesh_data, m_scale_aixs.m_mesh_data});
+        g_runtime_global_context.m_render_system->createAxis({m_translation_axis, m_rotation_axis, m_scale_aixs},
+                                                             {m_translation_axis.m_mesh_data, m_rotation_axis.m_mesh_data, m_scale_aixs.m_mesh_data});
     }
 
     size_t EditorSceneManager::getGuidOfPickedMesh(const Vector2& picked_uv) const
     {
-        return g_editor_global_context.m_render_system->getGuidOfPickedMesh(picked_uv);
+        return g_runtime_global_context.m_render_system->getGuidOfPickedMesh(picked_uv);
     }
 } // namespace LunarYue

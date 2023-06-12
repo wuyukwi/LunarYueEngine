@@ -79,9 +79,9 @@ namespace LunarYue
 
         // descriptor set layout in main camera pass will be used when uploading resource
         std::static_pointer_cast<RenderResource>(m_render_resource)->m_mesh_descriptor_set_layout =
-            &static_cast<RenderPass*>(m_render_pipeline->m_main_camera_pass.get())->m_descriptor_infos[MainCameraPass::LayoutType::_per_mesh].layout;
+            &dynamic_cast<RenderPass*>(m_render_pipeline->m_main_camera_pass.get())->m_descriptor_infos[MainCameraPass::LayoutType::_per_mesh].layout;
         std::static_pointer_cast<RenderResource>(m_render_resource)->m_material_descriptor_set_layout =
-            &static_cast<RenderPass*>(m_render_pipeline->m_main_camera_pass.get())
+            &dynamic_cast<RenderPass*>(m_render_pipeline->m_main_camera_pass.get())
                  ->m_descriptor_infos[MainCameraPass::LayoutType::_mesh_per_material]
                  .layout;
     }
@@ -178,7 +178,7 @@ namespace LunarYue
 
     uint32_t RenderSystem::getGuidOfPickedMesh(const Vector2& picked_uv) { return m_render_pipeline->getGuidOfPickedMesh(picked_uv); }
 
-    GObjectID RenderSystem::getGObjectIDByMeshID(uint32_t mesh_id) const { return m_render_scene->getGObjectIDByMeshID(mesh_id); }
+    ObjectID RenderSystem::getGObjectIDByMeshID(uint32_t mesh_id) const { return m_render_scene->getGObjectIDByMeshID(mesh_id); }
 
     void RenderSystem::createAxis(std::array<RenderEntity, 3> axis_entities, std::array<RenderMeshData, 3> mesh_datas)
     {

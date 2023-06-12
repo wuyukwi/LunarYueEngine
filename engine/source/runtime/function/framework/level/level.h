@@ -14,7 +14,7 @@ namespace LunarYue
     // class ObjectInstanceRes;
     class PhysicsScene;
 
-    using LevelObjectsMap = std::unordered_map<GObjectID, std::shared_ptr<Object>>;
+    using LevelObjectsMap = std::unordered_map<ObjectID, std::shared_ptr<Object>>;
 
     /// The main class to manage all game objects
     class Level
@@ -32,14 +32,14 @@ namespace LunarYue
 
         const std::string& getLevelResUrl() const { return m_level_res_url; }
 
-        const LevelObjectsMap& getAllGObjects() const { return m_gobjects; }
+        const LevelObjectsMap& getAllGObjects() const { return m_objects; }
 
-        std::weak_ptr<Object>    getGObjectByID(GObjectID go_id) const;
+        std::weak_ptr<Object>    getGObjectByID(ObjectID id) const;
         std::weak_ptr<Character> getCurrentActiveCharacter() const { return m_current_active_character; }
 
-        GObjectID createObject(const ObjectInstanceRes& object_instance_res);
-        GObjectID createEmptyObject(const std::string& path, const std::string& name);
-        void      deleteGObjectByID(GObjectID go_id);
+        ObjectID createObject(const ObjectInstanceRes& object_instance_res);
+        ObjectID createEmptyObject(const std::string& path, const std::string& name);
+        void     deleteGObjectByID(ObjectID go_id);
 
         std::weak_ptr<PhysicsScene> getPhysicsScene() const { return m_physics_scene; }
 
@@ -50,7 +50,7 @@ namespace LunarYue
         std::string m_level_res_url;
 
         // all game objects in this level, key: object id, value: object instance
-        LevelObjectsMap m_gobjects;
+        LevelObjectsMap m_objects;
 
         std::shared_ptr<Character> m_current_active_character;
 

@@ -71,6 +71,8 @@ namespace LunarYue
         return active_level->getPhysicsScene();
     }
 
+    std::string WorldManager::getWorldName() const { return m_current_world_resource->m_name; }
+
     bool WorldManager::loadWorld(const std::string& world_url)
     {
         LOG_INFO("loading world: {}", world_url);

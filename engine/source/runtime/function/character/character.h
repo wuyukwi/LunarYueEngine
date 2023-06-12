@@ -16,7 +16,7 @@ namespace LunarYue
     public:
         Character(std::shared_ptr<Object> character_object);
 
-        GObjectID getObjectID() const;
+        ObjectID getObjectID() const;
         void      setObject(std::shared_ptr<Object> gobject);
         std::weak_ptr<Object> getObject() const { return m_character_object; }
 

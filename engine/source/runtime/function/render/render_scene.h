@@ -50,9 +50,9 @@ namespace LunarYue
         GuidAllocator<MeshSourceDesc>&     getMeshAssetIdAllocator();
         GuidAllocator<MaterialSourceDesc>& getMaterialAssetdAllocator();
 
-        void      addInstanceIdToMap(uint32_t instance_id, GObjectID go_id);
-        GObjectID getGObjectIDByMeshID(uint32_t mesh_id) const;
-        void      deleteEntityByGObjectID(GObjectID go_id);
+        void      addInstanceIdToMap(uint32_t instance_id, ObjectID go_id);
+        ObjectID getGObjectIDByMeshID(uint32_t mesh_id) const;
+        void      deleteEntityByGObjectID(ObjectID go_id);
 
         void clearForLevelReloading();
 
@@ -61,7 +61,7 @@ namespace LunarYue
         GuidAllocator<MeshSourceDesc>     m_mesh_asset_id_allocator;
         GuidAllocator<MaterialSourceDesc> m_material_asset_id_allocator;
 
-        std::unordered_map<uint32_t, GObjectID> m_mesh_object_id_map;
+        std::unordered_map<uint32_t, ObjectID> m_mesh_object_id_map;
 
         void updateVisibleObjectsDirectionalLight(std::shared_ptr<RenderResource> render_resource,
                                                   std::shared_ptr<RenderCamera>   camera);

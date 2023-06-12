@@ -40,6 +40,9 @@ namespace LunarYue
 
     void Object::tick(float delta_time)
     {
+        m_children.erase(std::remove_if(m_children.begin(), m_children.end(), [](const std::weak_ptr<Object>& child) { return child.expired(); }),
+                         m_children.end());
+
         for (auto& component : m_components)
         {
             if (shouldComponentTick(component.getTypeName()))
@@ -182,4 +185,63 @@ namespace LunarYue
             m_name            = name;
         }
     }
+
+    std::weak_ptr<Object> Object::getParent()
+    {
+        if (!m_parent.expired())
+            return m_parent;
+
+        return {};
+    }
+
+    ObjectID Object::getParentID() const
+    {
+        if (!m_parent.expired())
+            return m_parentID;
+
+        return k_invalid_object_id;
+    }
+
+    void Object::setParent(const std::weak_ptr<Object>& object)
+    {
+        m_parent   = object;
+        m_parentID = object.lock()->getID();
+        m_parent.lock()->addChild(shared_from_this());
+    }
+
+    bool Object::hasParent() const
+    {
+        if (m_parent.expired())
+            return false;
+
+        return true;
+    }
+
+    void Object::detachFromParent()
+    {
+        if (!m_parent.expired())
+        {
+            m_parent.lock()->removeChild(shared_from_this());
+            m_parent.reset();
+            m_parentID = k_invalid_object_id;
+        }
+    }
+
+    void Object::addChild(const std::weak_ptr<Object>& object) { m_children.emplace_back(object); }
+
+    void Object::removeChild(const std::weak_ptr<Object>& object)
+    {
+        const auto it = std::find_if(m_children.begin(), m_children.end(), [&](const std::weak_ptr<Object>& child) {
+            return !object.expired() && child.lock() == object.lock();
+        });
+
+        if (it != m_children.end())
+        {
+            m_children.erase(it);
+        }
+    }
+
+    bool Object::isAlive() const { return !m_isDestroy; }
+
+    void Object::destroy() { m_isDestroy = true; }
 } // namespace LunarYue

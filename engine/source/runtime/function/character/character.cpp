@@ -10,14 +10,14 @@ namespace LunarYue
 {
     Character::Character(std::shared_ptr<Object> character_object) { setObject(character_object); }
 
-    GObjectID Character::getObjectID() const
+    ObjectID Character::getObjectID() const
     {
         if (m_character_object)
         {
             return m_character_object->getID();
         }
 
-        return k_invalid_gobject_id;
+        return k_invalid_object_id;
     }
 
     void Character::setObject(std::shared_ptr<Object> gobject)

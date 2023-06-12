@@ -64,4 +64,21 @@ namespace LunarYue
         }
     }
 
+    void TransformComponent::updateMatrix()
+    {
+        m_transform.m_mat.makeTransform(m_transform.m_position, m_transform.m_scale, m_transform.m_rotation);
+
+        const auto parent_object = m_parent_object.lock();
+
+        if (parent_object->hasParent())
+        {
+            const TransformComponent* transform_component = m_parent_object.lock()->tryGetComponent(TransformComponent);
+            if (transform_component)
+            {
+                m_transform.m_mat = transform_component->getMatrix() * m_transform.m_mat;
+
+                m_transform.m_mat.decomposition(m_transform.m_position, m_transform.m_scale, m_transform.m_rotation);
+            }
+        }
+    }
 } // namespace LunarYue
