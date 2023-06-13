@@ -1,16 +1,4 @@
-/**
- * @project: Overload
- * @author: Overload Tech.
- * @licence: MIT
- */
-
 #pragma once
-
-#include <algorithm>
-
-#include "function/ui/Event/Event.h"
-
-#include "imgui.h"
 #include "runtime/function/ui/API/IDrawable.h"
 #include "runtime/function/ui/Panels/APanel.h"
 

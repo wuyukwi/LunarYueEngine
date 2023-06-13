@@ -24,7 +24,7 @@ namespace LunarYue
         std::shared_ptr<Object> selected_gobject = getSelectedGObject().lock();
         if (selected_gobject)
         {
-            TransformComponent* transform_component = selected_gobject->tryGetComponent(TransformComponent);
+            TransformComponent* transform_component = selected_gobject->getComponent<TransformComponent>();
             if (transform_component)
             {
                 transform_component->setDirtyFlag(true);
@@ -202,7 +202,7 @@ namespace LunarYue
 
         if (g_is_editor_mode && selected_object != nullptr)
         {
-            const TransformComponent* transform_component = selected_object->tryGetComponentConst(TransformComponent);
+            const TransformComponent* transform_component = selected_object->getComponentConst<TransformComponent>();
 
             Vector3    scale;
             Quaternion rotation;
@@ -267,7 +267,7 @@ namespace LunarYue
         std::shared_ptr<Object> selected_gobject = getSelectedGObject().lock();
         if (selected_gobject)
         {
-            const TransformComponent* transform_component = selected_gobject->tryGetComponentConst(TransformComponent);
+            const TransformComponent* transform_component = selected_gobject->getComponent<TransformComponent>();
             m_selected_object_matrix                      = transform_component->getMatrix();
         }
 
@@ -373,7 +373,7 @@ namespace LunarYue
         Vector2 axis_z_direction_uv = axis_z_clip_uv - model_origin_clip_uv;
         axis_z_direction_uv.normalise();
 
-        TransformComponent* transform_component = selected_object->tryGetComponent(TransformComponent);
+        TransformComponent* transform_component = selected_object->getComponent<TransformComponent>();
 
         Matrix4x4 new_model_matrix(Matrix4x4::IDENTITY);
         if (m_axis_mode == EditorAxisMode::TranslateMode) // translate

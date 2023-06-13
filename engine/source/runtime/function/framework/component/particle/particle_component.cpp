@@ -18,8 +18,7 @@ namespace LunarYue
         std::shared_ptr<ParticleManager> particle_manager = g_runtime_global_context.m_particle_manager;
         ASSERT(particle_manager);
 
-        m_local_transform.makeTransform(
-            m_particle_res.m_local_translation, Vector3::UNIT_SCALE, m_particle_res.m_local_rotation);
+        m_local_transform.makeTransform(m_particle_res.m_local_translation, Vector3::UNIT_SCALE, m_particle_res.m_local_rotation);
         computeGlobalTransform();
 
         particle_manager->createParticleEmitter(m_particle_res, m_transform_desc);
@@ -27,8 +26,7 @@ namespace LunarYue
 
     void ParticleComponent::computeGlobalTransform()
     {
-        TransformComponent* transform_component =
-            m_parent_object.lock()->tryGetComponent<TransformComponent>("TransformComponent");
+        TransformComponent* transform_component = m_parent_object.lock()->getComponent<TransformComponent>();
 
         Matrix4x4 global_transform_matrix = transform_component->getMatrix() * m_local_transform;
 
@@ -49,7 +47,7 @@ namespace LunarYue
 
         logic_swap_data.addTickParticleEmitter(m_transform_desc.m_id);
 
-        TransformComponent* transform_component = m_parent_object.lock()->tryGetComponent(TransformComponent);
+        const TransformComponent* transform_component = m_parent_object.lock()->getComponent<TransformComponent>();
         if (transform_component->isDirty())
         {
             computeGlobalTransform();

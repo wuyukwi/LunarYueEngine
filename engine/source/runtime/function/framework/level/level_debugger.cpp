@@ -91,8 +91,8 @@ namespace LunarYue
     }
     void LevelDebugger::drawBones(std::shared_ptr<Object> object) const
     {
-        const TransformComponent* transform_component = object->tryGetComponentConst<TransformComponent>("TransformComponent");
-        const AnimationComponent* animation_component = object->tryGetComponentConst<AnimationComponent>("AnimationComponent");
+        const TransformComponent* transform_component = object->getComponentConst<TransformComponent>();
+        const AnimationComponent* animation_component = object->getComponentConst<AnimationComponent>();
 
         if (transform_component == nullptr || animation_component == nullptr)
             return;
@@ -137,8 +137,8 @@ namespace LunarYue
 
     void LevelDebugger::drawBonesName(std::shared_ptr<Object> object) const
     {
-        const TransformComponent* transform_component = object->tryGetComponentConst<TransformComponent>("TransformComponent");
-        const AnimationComponent* animation_component = object->tryGetComponentConst<AnimationComponent>("AnimationComponent");
+        const TransformComponent* transform_component = object->getComponentConst<TransformComponent>();
+        const AnimationComponent* animation_component = object->getComponentConst<AnimationComponent>();
 
         if (transform_component == nullptr || animation_component == nullptr)
             return;
@@ -170,7 +170,7 @@ namespace LunarYue
 
     void LevelDebugger::drawBoundingBox(std::shared_ptr<Object> object) const
     {
-        const RigidBodyComponent* rigidbody_component = object->tryGetComponentConst<RigidBodyComponent>("RigidBodyComponent");
+        const RigidBodyComponent* rigidbody_component = object->getComponentConst<RigidBodyComponent>();
         if (rigidbody_component == nullptr)
             return;
 
@@ -189,7 +189,7 @@ namespace LunarYue
 
     void LevelDebugger::drawCameraInfo(std::shared_ptr<Object> object) const
     {
-        const CameraComponent* camera_component = object->tryGetComponentConst<CameraComponent>("CameraComponent");
+        const CameraComponent* camera_component = object->getComponentConst<CameraComponent>();
         if (camera_component == nullptr)
             return;
 

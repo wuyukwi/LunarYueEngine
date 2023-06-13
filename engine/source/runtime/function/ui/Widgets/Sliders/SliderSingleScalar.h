@@ -1,9 +1,3 @@
-/**
- * @project: Overload
- * @author: Overload Tech.
- * @licence: MIT
- */
-
 #pragma once
 
 #include "function/ui/Event/Event.h"
@@ -82,13 +76,13 @@ namespace LunarYue::UI::Widgets::Sliders
         }
 
     public:
-        T                           min;
-        T                           max;
-        T                           value;
-        ESliderOrientation          orientation;
-        Vector2                     verticalModeSize; /* Only applied with ESliderOrientation::VERTICAL */
-        std::string                 label;
-        std::string                 format;
+        T                            min;
+        T                            max;
+        T                            value;
+        ESliderOrientation           orientation;
+        Vector2                      verticalModeSize; /* Only applied with ESliderOrientation::VERTICAL */
+        std::string                  label;
+        std::string                  format;
         LunarYue::Eventing::Event<T> ValueChangedEvent;
 
     private:

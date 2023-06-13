@@ -16,15 +16,14 @@ namespace LunarYue
     {
         m_parent_object = parent_object;
 
-        const TransformComponent* parent_transform = m_parent_object.lock()->tryGetComponentConst(TransformComponent);
+        const TransformComponent* parent_transform = m_parent_object.lock()->getComponentConst<TransformComponent>();
         if (parent_transform == nullptr)
         {
             LOG_ERROR("No transform component in the object");
             return;
         }
 
-        std::shared_ptr<PhysicsScene> physics_scene =
-            g_runtime_global_context.m_world_manager->getCurrentActivePhysicsScene().lock();
+        std::shared_ptr<PhysicsScene> physics_scene = g_runtime_global_context.m_world_manager->getCurrentActivePhysicsScene().lock();
         ASSERT(physics_scene);
 
         m_rigidbody_id = physics_scene->createRigidBody(parent_transform->getTransformConst(), m_rigidbody_res);
@@ -32,8 +31,7 @@ namespace LunarYue
 
     RigidBodyComponent::~RigidBodyComponent()
     {
-        std::shared_ptr<PhysicsScene> physics_scene =
-            g_runtime_global_context.m_world_manager->getCurrentActivePhysicsScene().lock();
+        std::shared_ptr<PhysicsScene> physics_scene = g_runtime_global_context.m_world_manager->getCurrentActivePhysicsScene().lock();
         ASSERT(physics_scene);
 
         physics_scene->removeRigidBody(m_rigidbody_id);
@@ -41,8 +39,7 @@ namespace LunarYue
 
     void RigidBodyComponent::createRigidBody(const Transform& global_transform)
     {
-        std::shared_ptr<PhysicsScene> physics_scene =
-            g_runtime_global_context.m_world_manager->getCurrentActivePhysicsScene().lock();
+        std::shared_ptr<PhysicsScene> physics_scene = g_runtime_global_context.m_world_manager->getCurrentActivePhysicsScene().lock();
         ASSERT(physics_scene);
 
         m_rigidbody_id = physics_scene->createRigidBody(global_transform, m_rigidbody_res);
@@ -50,8 +47,7 @@ namespace LunarYue
 
     void RigidBodyComponent::removeRigidBody()
     {
-        std::shared_ptr<PhysicsScene> physics_scene =
-            g_runtime_global_context.m_world_manager->getCurrentActivePhysicsScene().lock();
+        std::shared_ptr<PhysicsScene> physics_scene = g_runtime_global_context.m_world_manager->getCurrentActivePhysicsScene().lock();
         ASSERT(physics_scene);
 
         physics_scene->removeRigidBody(m_rigidbody_id);
@@ -67,8 +63,7 @@ namespace LunarYue
         }
         else
         {
-            std::shared_ptr<PhysicsScene> physics_scene =
-                g_runtime_global_context.m_world_manager->getCurrentActivePhysicsScene().lock();
+            std::shared_ptr<PhysicsScene> physics_scene = g_runtime_global_context.m_world_manager->getCurrentActivePhysicsScene().lock();
             ASSERT(physics_scene);
 
             physics_scene->updateRigidBodyGlobalTransform(m_rigidbody_id, transform);
@@ -77,8 +72,7 @@ namespace LunarYue
 
     void RigidBodyComponent::getShapeBoundingBoxes(std::vector<AxisAlignedBox>& out_bounding_boxes) const
     {
-        std::shared_ptr<PhysicsScene> physics_scene =
-            g_runtime_global_context.m_world_manager->getCurrentActivePhysicsScene().lock();
+        std::shared_ptr<PhysicsScene> physics_scene = g_runtime_global_context.m_world_manager->getCurrentActivePhysicsScene().lock();
         ASSERT(physics_scene);
 
         physics_scene->getShapeBoundingBoxes(m_rigidbody_id, out_bounding_boxes);

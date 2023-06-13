@@ -1,11 +1,4 @@
-/**
- * @project: Overload
- * @author: Overload Tech.
- * @licence: MIT
- */
-
 #include "function/ui/Widgets/Layout/GroupCollapsable.h"
-#include "imgui_internal.h"
 
 LunarYue::UI::Widgets::Layout::GroupCollapsable::GroupCollapsable(const std::string& p_name) : name(p_name) {}
 

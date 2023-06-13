@@ -54,9 +54,6 @@ namespace LunarYue
 
         object->setName("new object");
 
-        auto component = LunarYue_REFLECTION_NEW(TransformComponent);
-        object->addComponent(component);
-
         object->save(path, name);
 
         // const bool is_save_success = g_runtime_global_context.m_asset_manager->saveAsset(output_level_res, path);

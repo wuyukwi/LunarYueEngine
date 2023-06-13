@@ -1,19 +1,13 @@
-/**
-* @project: Overload
-* @author: Overload Tech.
-* @licence: MIT
-*/
-
 #pragma once
 
 namespace LunarYue::UI::Widgets::Sliders
 {
-	/**
-	* Defines the slider orientation
-	*/
-	enum class ESliderOrientation
-	{
-		HORIZONTAL,
-		VERTICAL
-	};
-}
+    /**
+     * Defines the slider orientation
+     */
+    enum class ESliderOrientation
+    {
+        HORIZONTAL,
+        VERTICAL
+    };
+} // namespace LunarYue::UI::Widgets::Sliders

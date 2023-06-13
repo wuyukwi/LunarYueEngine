@@ -1,9 +1,3 @@
-/**
- * @project: Overload
- * @author: Overload Tech.
- * @licence: MIT
- */
-
 #include "function/ui/Widgets/Plots/PlotLines.h"
 #include "runtime/function/ui/Internal/Converter.h"
 

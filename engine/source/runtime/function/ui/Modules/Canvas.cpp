@@ -1,9 +1,3 @@
-/**
- * @project: Overload
- * @author: Overload Tech.
- * @licence: MIT
- */
-
 #include "runtime/function/ui/Modules/Canvas.h"
 
 void LunarYue::UI::Modules::Canvas::Draw()

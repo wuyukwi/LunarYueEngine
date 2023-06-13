@@ -32,7 +32,7 @@ namespace LunarYue
             LOG_ERROR("invalid controller type, not able to move");
         }
 
-        const TransformComponent* transform_component = parent_object.lock()->tryGetComponentConst(TransformComponent);
+        const TransformComponent* transform_component = parent_object.lock()->getComponent<TransformComponent>();
 
         m_target_position = transform_component->getPosition();
     }
@@ -62,7 +62,7 @@ namespace LunarYue
         if (current_character->getObjectID() != m_parent_object.lock()->getID())
             return;
 
-        TransformComponent* transform_component = m_parent_object.lock()->tryGetComponent<TransformComponent>("TransformComponent");
+        TransformComponent* transform_component = m_parent_object.lock()->getComponent<TransformComponent>();
 
         Radian turn_angle_yaw = g_runtime_global_context.m_input_system->m_cursor_delta_yaw;
 

@@ -1,38 +1,29 @@
-/**
-* @project: Overload
-* @author: Overload Tech.
-* @licence: MIT
-*/
-
 #pragma once
 
 #include "function/ui/Widgets/Sliders/SliderSingleScalar.h"
 
 namespace LunarYue::UI::Widgets::Sliders
 {
-	/**
-	* Slider widget of type double
-	*/
-	class SliderDouble : public SliderSingleScalar<double>
-	{
-	public:
-		/**
-		* Constructor
-		* @param p_min
-		* @param p_max
-		* @param p_value
-		* @param p_orientation
-		* @param p_label
-		* @param p_format
-		*/
-		SliderDouble
-		(
-			double p_min = 0.0,
-			double p_max = 1.0,
-			double p_value = 0.5,
-			ESliderOrientation p_orientation = ESliderOrientation::HORIZONTAL,
-			const std::string& p_label = "",
-			const std::string& p_format = "%.6f"
-		);
-	};
-}
+    /**
+     * Slider widget of type double
+     */
+    class SliderDouble : public SliderSingleScalar<double>
+    {
+    public:
+        /**
+         * Constructor
+         * @param p_min
+         * @param p_max
+         * @param p_value
+         * @param p_orientation
+         * @param p_label
+         * @param p_format
+         */
+        SliderDouble(double             p_min         = 0.0,
+                     double             p_max         = 1.0,
+                     double             p_value       = 0.5,
+                     ESliderOrientation p_orientation = ESliderOrientation::HORIZONTAL,
+                     const std::string& p_label       = "",
+                     const std::string& p_format      = "%.6f");
+    };
+} // namespace LunarYue::UI::Widgets::Sliders

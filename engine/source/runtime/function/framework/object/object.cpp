@@ -7,7 +7,6 @@
 #include "runtime/resource/asset_manager/asset_manager.h"
 
 #include "runtime/function/framework/component/component.h"
-#include "runtime/function/framework/component/transform/transform_component.h"
 #include "runtime/function/global/global_context.h"
 
 #include <cassert>
@@ -40,8 +39,8 @@ namespace LunarYue
 
     void Object::tick(float delta_time)
     {
-        m_children.erase(std::remove_if(m_children.begin(), m_children.end(), [](const std::weak_ptr<Object>& child) { return child.expired(); }),
-                         m_children.end());
+        // m_children.erase(std::remove_if(m_children.begin(), m_children.end(), [](const std::weak_ptr<Object>& child) { return child.expired(); }),
+        //                  m_children.end());
 
         for (auto& component : m_components)
         {
@@ -50,18 +49,6 @@ namespace LunarYue
                 component->tick(delta_time);
             }
         }
-    }
-
-    bool Object::addComponent(Reflection::ReflectionPtr<Component> component)
-    {
-        if (component)
-        {
-            component->postLoadResource(weak_from_this());
-
-            m_components.push_back(component);
-        }
-
-        return false;
     }
 
     bool Object::hasComponent(const std::string& component_type_name) const
@@ -104,6 +91,7 @@ namespace LunarYue
         for (auto loaded_component : definition_res.m_components)
         {
             const std::string type_name = loaded_component.getTypeName();
+
             // don't create component if it has been instanced
             if (hasComponent(type_name))
                 continue;
@@ -241,7 +229,23 @@ namespace LunarYue
         }
     }
 
-    bool Object::isAlive() const { return !m_isDestroy; }
+    bool Object::isAlive() const { return !m_destroy; }
 
-    void Object::destroy() { m_isDestroy = true; }
+    void Object::destroy() { m_destroy = true; }
+
+    void Object::setActive(bool active)
+    {
+        if (active != m_active)
+        {
+            m_active = active;
+        }
+    }
+
+    bool Object::isActive() const
+    {
+        if (m_parent.expired())
+            return m_active;
+
+        return m_active && m_parent.lock()->isActive();
+    }
 } // namespace LunarYue

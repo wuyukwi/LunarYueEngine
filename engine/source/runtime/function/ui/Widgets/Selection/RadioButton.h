@@ -1,9 +1,3 @@
-/**
- * @project: Overload
- * @author: Overload Tech.
- * @licence: MIT
- */
-
 #pragma once
 
 #include "function/ui/Event/Event.h"
@@ -49,7 +43,7 @@ namespace LunarYue::UI::Widgets::Selection
         void _Draw_Impl() override;
 
     public:
-        std::string                   label;
+        std::string                    label;
         LunarYue::Eventing::Event<int> ClickedEvent;
 
     private:

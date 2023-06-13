@@ -41,7 +41,6 @@ namespace LunarYue
 
         if (m_is_dirty)
         {
-            // update transform component, dirty flag will be reset in mesh component
             tryUpdateRigidBodyComponent();
         }
 
@@ -56,7 +55,7 @@ namespace LunarYue
         if (!m_parent_object.lock())
             return;
 
-        RigidBodyComponent* rigid_body_component = m_parent_object.lock()->tryGetComponent(RigidBodyComponent);
+        RigidBodyComponent* rigid_body_component = m_parent_object.lock()->getComponent<RigidBodyComponent>();
         if (rigid_body_component)
         {
             rigid_body_component->updateGlobalTransform(m_transform_buffer[m_current_index], m_is_scale_dirty);
@@ -72,7 +71,7 @@ namespace LunarYue
 
         if (parent_object->hasParent())
         {
-            const TransformComponent* transform_component = m_parent_object.lock()->tryGetComponent(TransformComponent);
+            TransformComponent* transform_component = m_parent_object.lock()->getComponent<TransformComponent>();
             if (transform_component)
             {
                 m_transform.m_mat = transform_component->getMatrix() * m_transform.m_mat;

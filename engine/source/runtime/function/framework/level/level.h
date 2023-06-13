@@ -11,7 +11,6 @@ namespace LunarYue
 {
     class Character;
     class Object;
-    // class ObjectInstanceRes;
     class PhysicsScene;
 
     using LevelObjectsMap = std::unordered_map<ObjectID, std::shared_ptr<Object>>;

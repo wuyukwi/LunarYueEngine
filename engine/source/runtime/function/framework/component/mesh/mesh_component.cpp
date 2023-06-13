@@ -25,9 +25,8 @@ namespace LunarYue
         size_t raw_mesh_count = 0;
         for (const SubMeshRes& sub_mesh : m_mesh_res.m_sub_meshes)
         {
-            GameObjectPartDesc& meshComponent = m_raw_meshes[raw_mesh_count];
-            meshComponent.m_mesh_desc.m_mesh_file =
-                asset_manager->getFullPath(sub_mesh.m_obj_file_ref).generic_string();
+            GameObjectPartDesc& meshComponent     = m_raw_meshes[raw_mesh_count];
+            meshComponent.m_mesh_desc.m_mesh_file = asset_manager->getFullPath(sub_mesh.m_obj_file_ref).generic_string();
 
             meshComponent.m_material_desc.m_with_texture = sub_mesh.m_material.empty() == false;
 
@@ -40,8 +39,7 @@ namespace LunarYue
                     asset_manager->getFullPath(material_res.m_base_colour_texture_file).generic_string();
                 meshComponent.m_material_desc.m_metallic_roughness_texture_file =
                     asset_manager->getFullPath(material_res.m_metallic_roughness_texture_file).generic_string();
-                meshComponent.m_material_desc.m_normal_texture_file =
-                    asset_manager->getFullPath(material_res.m_normal_texture_file).generic_string();
+                meshComponent.m_material_desc.m_normal_texture_file = asset_manager->getFullPath(material_res.m_normal_texture_file).generic_string();
                 meshComponent.m_material_desc.m_occlusion_texture_file =
                     asset_manager->getFullPath(material_res.m_occlusion_texture_file).generic_string();
                 meshComponent.m_material_desc.m_emissive_texture_file =
@@ -61,9 +59,8 @@ namespace LunarYue
         if (!m_parent_object.lock())
             return;
 
-        TransformComponent*       transform_component = m_parent_object.lock()->tryGetComponent(TransformComponent);
-        const AnimationComponent* animation_component =
-            m_parent_object.lock()->tryGetComponentConst(AnimationComponent);
+        TransformComponent*       transform_component = m_parent_object.lock()->getComponent<TransformComponent>();
+        const AnimationComponent* animation_component = m_parent_object.lock()->getComponentConst<AnimationComponent>();
 
         if (transform_component->isDirty())
         {
@@ -87,8 +84,7 @@ namespace LunarYue
                 }
                 Matrix4x4 object_transform_matrix = mesh_part.m_transform_desc.m_transform_matrix;
 
-                mesh_part.m_transform_desc.m_transform_matrix =
-                    transform_component->getMatrix() * object_transform_matrix;
+                mesh_part.m_transform_desc.m_transform_matrix = transform_component->getMatrix() * object_transform_matrix;
                 dirty_mesh_parts.push_back(mesh_part);
 
                 mesh_part.m_transform_desc.m_transform_matrix = object_transform_matrix;
