@@ -78,7 +78,7 @@ namespace LunarYue
         void SetGridColor(const Vector3& p_color);
 
         /**
-         * Fill the UBO using the view settings
+         * fill the UBO using the view settings
          */
         void FillEngineUBO();
 

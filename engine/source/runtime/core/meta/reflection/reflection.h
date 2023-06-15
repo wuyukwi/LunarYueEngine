@@ -351,7 +351,7 @@ namespace LunarYue
             template<typename T1 /*, typename = typename std::enable_if<std::is_safely_castTable<T*, T1*>::value>::type*/>
             operator ReflectionPtr<T1>()
             {
-                return ReflectionPtr<T1>(m_type_name, (T1*)(m_instance));
+                return ReflectionPtr<T1>(m_type_name, static_cast<T1*>(m_instance));
             }
 
             template<typename T1 /*, typename = typename std::enable_if<std::is_safely_castTable<T*, T1*>::value>::type*/>
@@ -363,7 +363,7 @@ namespace LunarYue
             template<typename T1 /*, typename = typename std::enable_if<std::is_safely_castTable<T*, T1*>::value>::type*/>
             operator const ReflectionPtr<T1>() const
             {
-                return ReflectionPtr<T1>(m_type_name, (T1*)(m_instance));
+                return ReflectionPtr<T1>(m_type_name, static_cast<T1*>(m_instance));
             }
 
             T* operator->() { return m_instance; }

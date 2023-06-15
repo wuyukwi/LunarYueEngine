@@ -18,7 +18,7 @@ namespace LunarYue
         m_framebuffer.render_pass = static_cast<const UIPassInitInfo*>(init_info)->render_pass;
     }
 
-    void UIPass::initializeUIRenderBackend(WindowUI* window_ui)
+    void UIPass::initializeUIRenderBackend(std::shared_ptr<WindowUI> window_ui)
     {
         m_window_ui = window_ui;
 
@@ -28,7 +28,7 @@ namespace LunarYue
         init_info.PhysicalDevice            = std::static_pointer_cast<VulkanRHI>(m_rhi)->m_physical_device;
         init_info.Device                    = std::static_pointer_cast<VulkanRHI>(m_rhi)->m_device;
         init_info.QueueFamily               = m_rhi->getQueueFamilyIndices().graphics_family.value();
-        init_info.Queue                     = ((VulkanQueue*)m_rhi->getGraphicsQueue())->getResource();
+        init_info.Queue                     = static_cast<VulkanQueue*>(m_rhi->getGraphicsQueue())->getResource();
         init_info.DescriptorPool            = std::static_pointer_cast<VulkanRHI>(m_rhi)->m_vk_descriptor_pool;
         init_info.Subpass                   = _main_camera_subpass_ui;
 
@@ -36,7 +36,7 @@ namespace LunarYue
         // see ImGui_ImplVulkanH_GetMinImageCountFromPresentMode
         init_info.MinImageCount = 3;
         init_info.ImageCount    = 3;
-        ImGui_ImplVulkan_Init(&init_info, ((VulkanRenderPass*)m_framebuffer.render_pass)->getResource());
+        ImGui_ImplVulkan_Init(&init_info, static_cast<VulkanRenderPass*>(m_framebuffer.render_pass)->getResource());
 
         uploadFonts();
         uploadIconTexture();
@@ -164,4 +164,6 @@ namespace LunarYue
         }
         return nullptr;
     }
+
+    void UIPass::changeUI(const std::shared_ptr<WindowUI>& window_ui) { m_window_ui = window_ui; }
 } // namespace LunarYue

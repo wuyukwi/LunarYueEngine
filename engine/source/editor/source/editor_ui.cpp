@@ -1230,7 +1230,7 @@ namespace LunarYue
         setupUI();
 
         // initialize imgui vulkan render backend
-        g_runtime_global_context.m_render_system->initializeUIRenderBackend(this);
+        //  g_runtime_global_context.m_render_system->initializeUIRenderBackend(this);
     }
 
     void EditorUI::preRender()

@@ -32,7 +32,7 @@ namespace LunarYue
             LOG_ERROR("invalid controller type, not able to move");
         }
 
-        const TransformComponent* transform_component = parent_object.lock()->getComponent<TransformComponent>();
+        const TransformComponent* transform_component = parent_object.lock()->getComponentConst<TransformComponent>();
 
         m_target_position = transform_component->getPosition();
     }

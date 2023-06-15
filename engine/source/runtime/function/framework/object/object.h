@@ -115,7 +115,7 @@ namespace LunarYue
 
             for (auto it = m_components.begin(); it != m_components.end(); ++it)
             {
-                if (std::is_same_v<T, decltype(*it->getPtr())>)
+                if (dynamic_cast<T*>(it->getPtr()))
                 {
                     m_components.erase(it);
                     return true;
@@ -132,9 +132,9 @@ namespace LunarYue
 
             for (auto& component : m_components)
             {
-                if (std::is_same_v<T, decltype(*component.getPtr())>)
+                if (T* derivedPtr = dynamic_cast<T*>(component.getPtr()))
                 {
-                    return static_cast<T*>(component.getPtr());
+                    return derivedPtr;
                 }
             }
             return nullptr;
@@ -148,11 +148,12 @@ namespace LunarYue
 
             for (const auto& component : m_components)
             {
-                if (std::is_same_v<T, decltype(*component.getPtr())>)
+                if (const T* derivedPtr = dynamic_cast<const T*>(component.getPtr()))
                 {
-                    return static_cast<const T*>(component.getPtr());
+                    return derivedPtr;
                 }
             }
+
             return nullptr;
         }
 

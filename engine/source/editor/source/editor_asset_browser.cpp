@@ -27,9 +27,7 @@ namespace LunarYue
     using namespace UI::Panels;
     using namespace UI::Widgets;
 
-#define FILENAMES_CHARS AssetBrowser::__FILENAMES_CHARS
-
-    const std::string FILENAMES_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.-_=+ 0123456789()[]";
+    const std::string AssetBrowser::FILENAMES_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.-_=+ 0123456789()[]";
 
     std::string GetAssociatedMetaFile(const std::string& p_assetPath) { return p_assetPath + ".meta"; }
 
@@ -115,11 +113,14 @@ namespace LunarYue
                         p_newName += '.' + Path::getExtension(filePath);
 
                     /* Clean the name (Remove special chars) */
-                    p_newName.erase(
-                        std::remove_if(p_newName.begin(),
-                                       p_newName.end(),
-                                       [](auto& c) { return std::find(FILENAMES_CHARS.begin(), FILENAMES_CHARS.end(), c) == FILENAMES_CHARS.end(); }),
-                        p_newName.end());
+                    p_newName.erase(std::remove_if(p_newName.begin(),
+                                                   p_newName.end(),
+                                                   [](auto& c) {
+                                                       return std::find(AssetBrowser::FILENAMES_CHARS.begin(),
+                                                                        AssetBrowser::FILENAMES_CHARS.end(),
+                                                                        c) == AssetBrowser::FILENAMES_CHARS.end();
+                                                   }),
+                                    p_newName.end());
 
                     std::string containingFolderPath = Path::getParentFolder(filePath);
                     std::string newPath              = containingFolderPath + p_newName;
@@ -318,11 +319,13 @@ namespace LunarYue
 
             nameEditor.EnterPressedEvent += [this](std::string p_newName) {
                 /* Clean the name (Remove special chars) */
-                p_newName.erase(
-                    std::remove_if(p_newName.begin(),
-                                   p_newName.end(),
-                                   [](auto& c) { return std::find(FILENAMES_CHARS.begin(), FILENAMES_CHARS.end(), c) == FILENAMES_CHARS.end(); }),
-                    p_newName.end());
+                p_newName.erase(std::remove_if(p_newName.begin(),
+                                               p_newName.end(),
+                                               [](auto& c) {
+                                                   return std::find(AssetBrowser::FILENAMES_CHARS.begin(), AssetBrowser::FILENAMES_CHARS.end(), c) ==
+                                                          AssetBrowser::FILENAMES_CHARS.end();
+                                               }),
+                                p_newName.end());
 
                 const std::string newPath = filePath + p_newName + ".lua";
 
@@ -673,8 +676,8 @@ namespace LunarYue
           }
       };*/
 
-    AssetBrowser::AssetBrowser(const std::string& p_title, bool p_opened, const UI::Settings::PanelWindowSettings& p_windowSettings) :
-        PanelWindow(p_title, p_opened, p_windowSettings)
+    AssetBrowser::AssetBrowser(const std::string& title, bool opened, const UI::Settings::PanelWindowSettings& windowSettings) :
+        PanelWindow(title, opened, windowSettings)
     {
         m_engineAssetFolder   = g_runtime_global_context.m_config_manager->getAssetFolder();
         m_projectAssetFolder  = g_runtime_global_context.m_config_manager->getAssetFolder() / "project";
@@ -688,7 +691,7 @@ namespace LunarYue
         }
 
         auto& refreshButton = CreateWidget<Buttons::Button>("Rescan assets");
-        refreshButton.ClickedEvent += [this] { Refresh(); };
+        refreshButton.ClickedEvent += [this] { refresh(); };
         refreshButton.lineBreak           = false;
         refreshButton.idleBackgroundColor = {0.f, 0.5f, 0.0f};
 
@@ -698,55 +701,54 @@ namespace LunarYue
 
         m_assetList = &CreateWidget<Layout::Group>();
 
-        Fill();
+        fill();
     }
 
-    void AssetBrowser::Fill()
+    void AssetBrowser::fill()
     {
         m_assetList->CreateWidget<Visual::Separator>();
-        ConsiderItem(nullptr, std::filesystem::directory_entry(m_engineAssetFolder), true);
+        considerItem(nullptr, std::filesystem::directory_entry(m_engineAssetFolder), true);
         m_assetList->CreateWidget<UI::Widgets::Visual::Separator>();
-        ConsiderItem(nullptr, std::filesystem::directory_entry(m_projectAssetFolder), false);
+        considerItem(nullptr, std::filesystem::directory_entry(m_projectAssetFolder), false);
         m_assetList->CreateWidget<UI::Widgets::Visual::Separator>();
-        ConsiderItem(nullptr, std::filesystem::directory_entry(m_projectScriptFolder), false, false, true);
+        considerItem(nullptr, std::filesystem::directory_entry(m_projectScriptFolder), false, false, true);
     }
 
-    void AssetBrowser::Clear() { m_assetList->RemoveAllWidgets(); }
+    void AssetBrowser::clear() const { m_assetList->RemoveAllWidgets(); }
 
-    void AssetBrowser::Refresh()
+    void AssetBrowser::refresh()
     {
-        Clear();
-        Fill();
+        clear();
+        fill();
     }
 
-    void
-    AssetBrowser::ParseFolder(Layout::TreeNode& p_root, const std::filesystem::directory_entry& p_directory, bool p_isEngineItem, bool p_scriptFolder)
+    void AssetBrowser::parseFolder(Layout::TreeNode& root, const std::filesystem::directory_entry& directory, bool isEngineItem, bool scriptFolder)
     {
         /* Iterates another time to display list files */
-        for (auto& item : std::filesystem::directory_iterator(p_directory))
+        for (auto& item : std::filesystem::directory_iterator(directory))
             if (item.is_directory())
-                ConsiderItem(&p_root, item, p_isEngineItem, false, p_scriptFolder);
+                considerItem(&root, item, isEngineItem, false, scriptFolder);
 
         /* Iterates another time to display list files */
-        for (auto& item : std::filesystem::directory_iterator(p_directory))
+        for (auto& item : std::filesystem::directory_iterator(directory))
             if (!item.is_directory())
-                ConsiderItem(&p_root, item, p_isEngineItem, false, p_scriptFolder);
+                considerItem(&root, item, isEngineItem, false, scriptFolder);
     }
 
-    void AssetBrowser::ConsiderItem(Layout::TreeNode*                       p_root,
-                                    const std::filesystem::directory_entry& p_entry,
-                                    bool                                    p_isEngineItem,
-                                    bool                                    p_autoOpen,
-                                    bool                                    p_scriptFolder)
+    void AssetBrowser::considerItem(Layout::TreeNode*                       root,
+                                    const std::filesystem::directory_entry& entry,
+                                    bool                                    isEngineItem,
+                                    bool                                    autoOpen,
+                                    bool                                    scriptFolder)
     {
-        const bool  isDirectory = p_entry.is_directory();
-        std::string item_name   = p_entry.path().filename().generic_string();
+        const bool  isDirectory = entry.is_directory();
+        std::string item_name   = entry.path().filename().generic_string();
 
-        std::string path = p_entry.path().generic_string();
+        std::string path = entry.path().generic_string();
         if (isDirectory && path.back() != '/') // Add '\\' if is directory and backslash is missing
             path += '/';
         std::string resourceFormatPath = g_runtime_global_context.m_asset_manager->getRelativePath(path);
-        bool        protectedItem      = !p_root || p_isEngineItem;
+        bool        protectedItem      = !root || isEngineItem;
 
         const Path::EFileType fileType = Path::getFileType(item_name);
 
@@ -757,7 +759,7 @@ namespace LunarYue
         }
 
         /* If there is a given treenode (p_root) we attach the new widget to it */
-        auto& itemGroup = p_root ? p_root->CreateWidget<Layout::Group>() : m_assetList->CreateWidget<Layout::Group>();
+        auto& itemGroup = root ? root->CreateWidget<Layout::Group>() : m_assetList->CreateWidget<Layout::Group>();
 
         /* Find the icon to apply to the item */
         // uint32_t iconTextureID = 0;
@@ -769,32 +771,32 @@ namespace LunarYue
         {
             auto& treeNode = itemGroup.CreateWidget<Layout::TreeNode>(item_name);
 
-            if (p_autoOpen)
+            if (autoOpen)
                 treeNode.Open();
 
             auto& ddSource = treeNode.AddPlugin<UI::Plugins::DDSource<std::pair<std::string, Layout::Group*>>>(
                 "Folder", resourceFormatPath, std::make_pair(resourceFormatPath, &itemGroup));
 
-            if (!p_root || p_scriptFolder)
+            if (!root || scriptFolder)
                 treeNode.RemoveAllPlugins();
 
-            auto& contextMenu    = !p_scriptFolder ? treeNode.AddPlugin<FolderContextualMenu>(path, protectedItem && !resourceFormatPath.empty()) :
-                                                     treeNode.AddPlugin<ScriptFolderContextualMenu>(path, protectedItem && !resourceFormatPath.empty());
+            auto& contextMenu    = !scriptFolder ? treeNode.AddPlugin<FolderContextualMenu>(path, protectedItem && !resourceFormatPath.empty()) :
+                                                   treeNode.AddPlugin<ScriptFolderContextualMenu>(path, protectedItem && !resourceFormatPath.empty());
             contextMenu.userData = static_cast<void*>(&treeNode);
 
-            contextMenu.ItemAddedEvent += [this, &treeNode, path, p_isEngineItem, p_scriptFolder](std::string p_string) {
+            contextMenu.ItemAddedEvent += [this, &treeNode, path, isEngineItem, scriptFolder](std::string p_string) {
                 treeNode.Open();
                 treeNode.RemoveAllWidgets();
-                ParseFolder(treeNode, std::filesystem::directory_entry(Path::getParentFolder(p_string)), p_isEngineItem, p_scriptFolder);
+                parseFolder(treeNode, std::filesystem::directory_entry(Path::getParentFolder(p_string)), isEngineItem, scriptFolder);
             };
 
-            if (!p_scriptFolder)
+            if (!scriptFolder)
             {
-                if (!p_isEngineItem)
+                if (!isEngineItem)
                 /* Prevent engine item from being DDTarget (Can't Drag and drop to engine folder) */
                 {
                     treeNode.AddPlugin<UI::Plugins::DDTarget<std::pair<std::string, Layout::Group*>>>("Folder").DataReceivedEvent +=
-                        [this, &treeNode, path, p_isEngineItem](std::pair<std::string, Layout::Group*> p_data) {
+                        [this, &treeNode, path, isEngineItem](std::pair<std::string, Layout::Group*> p_data) {
                             if (!p_data.first.empty())
                             {
                                 std::string folderReceivedPath = g_runtime_global_context.m_asset_manager->getRelativePath(p_data.first);
@@ -820,7 +822,7 @@ namespace LunarYue
 
                                         treeNode.Open();
                                         treeNode.RemoveAllWidgets();
-                                        ParseFolder(treeNode, std::filesystem::directory_entry(correctPath), p_isEngineItem);
+                                        parseFolder(treeNode, std::filesystem::directory_entry(correctPath), isEngineItem);
 
                                         if (!isEngineFolder)
                                             p_data.second->Destroy();
@@ -843,7 +845,7 @@ namespace LunarYue
                         };
 
                     treeNode.AddPlugin<UI::Plugins::DDTarget<std::pair<std::string, Layout::Group*>>>("File").DataReceivedEvent +=
-                        [this, &treeNode, path, p_isEngineItem](std::pair<std::string, Layout::Group*> p_data) {
+                        [this, &treeNode, path, isEngineItem](std::pair<std::string, Layout::Group*> p_data) {
                             if (!p_data.first.empty())
                             {
                                 std::string fileReceivedPath = g_runtime_global_context.m_asset_manager->getFullPath(p_data.first).generic_string();
@@ -867,7 +869,7 @@ namespace LunarYue
 
                                     treeNode.Open();
                                     treeNode.RemoveAllWidgets();
-                                    ParseFolder(treeNode, std::filesystem::directory_entry(correctPath), p_isEngineItem);
+                                    parseFolder(treeNode, std::filesystem::directory_entry(correctPath), isEngineItem);
 
                                     if (!isEngineFile)
                                         p_data.second->Destroy();
@@ -887,7 +889,7 @@ namespace LunarYue
 
                 contextMenu.DestroyedEvent += [&itemGroup](std::string p_deletedPath) { itemGroup.Destroy(); };
 
-                contextMenu.RenamedEvent += [this, &treeNode, path, &ddSource, p_isEngineItem](std::string p_prev, std::string p_newPath) {
+                contextMenu.RenamedEvent += [this, &treeNode, path, &ddSource, isEngineItem](std::string p_prev, std::string p_newPath) {
                     p_newPath += '\\';
 
                     if (!std::filesystem::exists(p_newPath)) // Do not rename a folder if it already exists
@@ -901,7 +903,7 @@ namespace LunarYue
                         treeNode.name           = elementName;
                         treeNode.Open();
                         treeNode.RemoveAllWidgets();
-                        ParseFolder(treeNode, std::filesystem::directory_entry(p_newPath), p_isEngineItem);
+                        parseFolder(treeNode, std::filesystem::directory_entry(p_newPath), isEngineItem);
                         m_pathUpdate[&treeNode] = p_newPath;
                     }
                     else
@@ -910,18 +912,18 @@ namespace LunarYue
                     }
                 };
 
-                contextMenu.ItemAddedEvent += [this, &treeNode, p_isEngineItem](std::string p_path) {
+                contextMenu.ItemAddedEvent += [this, &treeNode, isEngineItem](std::string p_path) {
                     treeNode.RemoveAllWidgets();
-                    ParseFolder(treeNode, std::filesystem::directory_entry(Path::getParentFolder(p_path)), p_isEngineItem);
+                    parseFolder(treeNode, std::filesystem::directory_entry(Path::getParentFolder(p_path)), isEngineItem);
                 };
             }
 
             contextMenu.CreateList();
 
-            treeNode.OpenedEvent += [this, &treeNode, path, p_isEngineItem, p_scriptFolder] {
+            treeNode.OpenedEvent += [this, &treeNode, path, isEngineItem, scriptFolder] {
                 treeNode.RemoveAllWidgets();
                 std::string updatedPath = Path::getParentFolder(path) + treeNode.name;
-                ParseFolder(treeNode, std::filesystem::directory_entry(updatedPath), p_isEngineItem, p_scriptFolder);
+                parseFolder(treeNode, std::filesystem::directory_entry(updatedPath), isEngineItem, scriptFolder);
             };
 
             treeNode.ClosedEvent += [this, &treeNode] { treeNode.RemoveAllWidgets(); };
@@ -961,7 +963,7 @@ namespace LunarYue
             auto& ddSource = clickableText.AddPlugin<UI::Plugins::DDSource<std::pair<std::string, Layout::Group*>>>(
                 "File", resourceFormatPath, std::make_pair(resourceFormatPath, &itemGroup));
 
-            contextMenu->RenamedEvent += [&ddSource, &clickableText, p_scriptFolder](std::string p_prev, std::string p_newPath) {
+            contextMenu->RenamedEvent += [&ddSource, &clickableText, scriptFolder](std::string p_prev, std::string p_newPath) {
                 if (p_newPath != p_prev)
                 {
                     if (!std::filesystem::exists(p_newPath))
@@ -991,9 +993,9 @@ namespace LunarYue
                 }
             };
 
-            contextMenu->DuplicateEvent += [this, &clickableText, p_root, path, p_isEngineItem](std::string newItem) {
+            contextMenu->DuplicateEvent += [this, &clickableText, root, path, isEngineItem](std::string newItem) {
                 // EDITOR_EXEC(DelayAction(
-                //     std::bind(&AssetBrowser::ConsiderItem, this, p_root, std::filesystem::directory_entry {newItem}, p_isEngineItem, false, false),
+                //     std::bind(&AssetBrowser::considerItem, this, p_root, std::filesystem::directory_entry {newItem}, p_isEngineItem, false, false),
                 //     0));
             };
 

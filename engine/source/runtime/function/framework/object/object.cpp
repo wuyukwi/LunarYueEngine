@@ -22,10 +22,8 @@ namespace LunarYue
         {
             return g_editor_tick_component_types.find(component_type_name) != g_editor_tick_component_types.end();
         }
-        else
-        {
-            return true;
-        }
+
+        return true;
     }
 
     Object::~Object()

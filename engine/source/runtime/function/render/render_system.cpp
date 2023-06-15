@@ -219,7 +219,7 @@ namespace LunarYue
 
     void RenderSystem::setRenderPipelineType(RENDER_PIPELINE_TYPE pipeline_type) { m_render_pipeline_type = pipeline_type; }
 
-    void RenderSystem::initializeUIRenderBackend(WindowUI* window_ui) { m_render_pipeline->initializeUIRenderBackend(window_ui); }
+    void RenderSystem::initializeUIRenderBackend(std::shared_ptr<WindowUI> window_ui) { m_render_pipeline->initializeUIRenderBackend(window_ui); }
 
     void RenderSystem::processSwapData()
     {

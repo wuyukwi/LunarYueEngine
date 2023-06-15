@@ -3,5 +3,95 @@
     "x": 0,
     "y": 0,
     "z": -15
-  }
+  },
+  "character_name": "Player",
+  "objects": [
+    {
+      "name": "Emitter",
+      "instanced_components": [
+        {
+          "$typeName": "TransformComponent",
+          "$context": {
+            "transform": {
+              "position": {
+                "x": 32,
+                "y": 11,
+                "z": 3
+              },
+              "rotation": {
+                "w": 0.46944212913513184,
+                "x": 0,
+                "y": 0,
+                "z": 0.88296324014663696
+              },
+              "scale": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+              }
+            }
+          }
+        }
+      ],
+      "definition": "asset/objects/particle/particle.object.json"
+    },
+    {
+      "name": "Player",
+      "instanced_components": [
+        {
+          "$typeName": "TransformComponent",
+          "$context": {
+            "transform": {
+              "position": {
+                "x": 3,
+                "y": 3,
+                "z": 0
+              },
+              "rotation": {
+                "w": 0.70710678118654752,
+                "x": 0,
+                "y": 0,
+                "z": 0.70710678118654752
+              },
+              "scale": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+              }
+            }
+          }
+        }
+      ],
+      "definition": "asset/objects/character/player/player.object.json"
+    },
+    {
+      "name": "Wall_1",
+      "instanced_components": [
+        {
+          "$context": {
+            "transform": {
+              "position": {
+                "x": 1.94597,
+                "y": -0.38554,
+                "z": 0
+              },
+              "rotation": {
+                "x": 0,
+                "y": 0,
+                "z": -0.707683,
+                "w": 0.70653
+              },
+              "scale": {
+                "x": 0.999993,
+                "y": 0.999993,
+                "z": 1
+              }
+            }
+          },
+          "$typeName": "TransformComponent"
+        }
+      ],
+      "definition": "asset/objects/environment/wall.object.json"
+    }
+  ]
 }

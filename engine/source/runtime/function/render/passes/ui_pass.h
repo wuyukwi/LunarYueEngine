@@ -15,17 +15,19 @@ namespace LunarYue
     {
     public:
         void initialize(const RenderPassInitInfo* init_info) override final;
-        void initializeUIRenderBackend(WindowUI* window_ui) override final;
+        void initializeUIRenderBackend(std::shared_ptr<WindowUI> window_ui) override final;
         void draw() override final;
 
         void* getIconId(const std::string& name);
+
+        void changeUI(const std::shared_ptr<WindowUI>& window_ui);
 
     private:
         void uploadFonts();
         void uploadIconTexture();
 
     private:
-        WindowUI* m_window_ui;
+        std::shared_ptr<WindowUI> m_window_ui = nullptr;
 
         struct IconResource
         {

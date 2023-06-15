@@ -26,7 +26,7 @@ namespace LunarYue
 
     void ParticleComponent::computeGlobalTransform()
     {
-        TransformComponent* transform_component = m_parent_object.lock()->getComponent<TransformComponent>();
+        const TransformComponent* transform_component = m_parent_object.lock()->getComponentConst<TransformComponent>();
 
         Matrix4x4 global_transform_matrix = transform_component->getMatrix() * m_local_transform;
 

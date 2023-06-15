@@ -12,35 +12,34 @@ namespace LunarYue
     class AssetBrowser : public UI::Panels::PanelWindow
     {
     public:
-        AssetBrowser(const std::string& p_title, bool p_opened, const UI::Settings::PanelWindowSettings& p_windowSettings);
-        /**
-         * Fill the asset browser panels with widgets corresponding to elements in the asset folder
-         */
-        void Fill();
+        AssetBrowser(const std::string& title, bool opened, const UI::Settings::PanelWindowSettings& windowSettings);
+        // fill the asset browser panels with widgets corresponding to elements in the asset folder
+        void fill();
 
         /**
-         * Clear the asset browser widgets
+         * clear the asset browser widgets
          */
-        void Clear();
+        void clear() const;
 
         /**
-         * Refresh the asset browser widgets (Clear + Fill)
+         * Refresh the asset browser widgets (clear + fill)
          */
-        void Refresh();
+        void refresh();
 
     private:
-        void ParseFolder(UI::Widgets::Layout::TreeNode&          p_root,
-                         const std::filesystem::directory_entry& p_directory,
-                         bool                                    p_isEngineItem,
-                         bool                                    p_scriptFolder = false);
-        void ConsiderItem(UI::Widgets::Layout::TreeNode*          p_root,
-                          const std::filesystem::directory_entry& p_entry,
-                          bool                                    p_isEngineItem,
-                          bool                                    p_autoOpen     = false,
-                          bool                                    p_scriptFolder = false);
+        void parseFolder(UI::Widgets::Layout::TreeNode&          root,
+                         const std::filesystem::directory_entry& directory,
+                         bool                                    isEngineItem,
+                         bool                                    scriptFolder = false);
+
+        void considerItem(UI::Widgets::Layout::TreeNode*          root,
+                          const std::filesystem::directory_entry& entry,
+                          bool                                    isEngineItem,
+                          bool                                    autoOpen     = false,
+                          bool                                    scriptFolder = false);
 
     public:
-        static const std::string __FILENAMES_CHARS;
+        static const std::string FILENAMES_CHARS;
 
     private:
         std::filesystem::path                                           m_engineAssetFolder;

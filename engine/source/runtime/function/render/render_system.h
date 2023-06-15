@@ -62,7 +62,7 @@ namespace LunarYue
         // レンダリングパイプラインタイプの設定
         void setRenderPipelineType(RENDER_PIPELINE_TYPE pipeline_type);
         // UIレンダリングバックエンドの初期化
-        void initializeUIRenderBackend(WindowUI* window_ui);
+        void initializeUIRenderBackend(std::shared_ptr<WindowUI> window_ui);
         // エンジンコンテンツビューポートの更新
         void updateEngineContentViewport(float offset_x, float offset_y, float width, float height);
         // 選択されたメッシュのGUIDを取得

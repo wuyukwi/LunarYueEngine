@@ -11,5 +11,5 @@ namespace LunarYue
         m_render_resource = common_info.render_resource;
     }
     void RenderPassBase::preparePassData(std::shared_ptr<RenderResourceBase> render_resource) {}
-    void RenderPassBase::initializeUIRenderBackend(WindowUI* window_ui) {}
+    void RenderPassBase::initializeUIRenderBackend(std::shared_ptr<WindowUI> window_ui) {}
 } // namespace LunarYue

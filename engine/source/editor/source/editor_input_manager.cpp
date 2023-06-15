@@ -283,7 +283,7 @@ namespace LunarYue
         }
     }
 
-    void EditorInputManager::onWindowClosed() { g_editor_global_context.m_engine_runtime->shutdownEngine(); }
+    void EditorInputManager::onWindowClosed() { g_runtime_global_context.m_window_system->setShouldClose(true); }
 
     bool EditorInputManager::isCursorInRect(Vector2 pos, Vector2 size) const
     {

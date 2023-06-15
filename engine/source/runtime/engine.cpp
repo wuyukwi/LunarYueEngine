@@ -13,9 +13,10 @@
 
 namespace LunarYue
 {
-    // エディタモードのフラグ
+    // Flag indicating editor mode
     bool g_is_editor_mode {false};
-    // エディタで更新するコンポーネントタイプのセット
+
+    // Set of component types to be updated in the editor
     std::unordered_set<std::string> g_editor_tick_component_types {};
 
     void LunarYueEngine::startEngine(const std::string& config_file_path)
@@ -36,8 +37,16 @@ namespace LunarYue
         Reflection::TypeMetaRegister::metaUnregister();
     }
 
-    void LunarYueEngine::initialize() { g_runtime_global_context.initSystems(); }
-    void LunarYueEngine::clear() {}
+    void LunarYueEngine::initialize()
+    {
+        // Initialize the engine systems
+        g_runtime_global_context.initSystems();
+    }
+
+    void LunarYueEngine::clear()
+    {
+        // Clear the engine data
+    }
 
     void LunarYueEngine::run()
     {
@@ -55,19 +64,20 @@ namespace LunarYue
     {
         float delta_time;
         {
-            // std::chrono名前空間を使用して時間を計測する
+            // Measure time using std::chrono namespace
             using namespace std::chrono;
 
-            // 現在の時間を取得
+            // Get the current time
             const steady_clock::time_point tick_time_point = steady_clock::now();
-            // 最後の時間との差分を計算
-            const auto time_span = duration_cast<duration<float>>(tick_time_point - m_last_tick_time_point);
-            delta_time           = time_span.count(); // 単位を秒に変換
 
-            // 最後の時間を現在の時間に更新
+            // Calculate the time difference from the last tick
+            const auto time_span = duration_cast<duration<float>>(tick_time_point - m_last_tick_time_point);
+            delta_time           = time_span.count(); // Convert to seconds
+
+            // Update the last tick time to the current time
             m_last_tick_time_point = tick_time_point;
         }
-        return delta_time; // 時間の差分を返す
+        return delta_time;
     }
 
     bool LunarYueEngine::tickOneFrame(float delta_time)
@@ -75,20 +85,20 @@ namespace LunarYue
         logicalTick(delta_time);
         calculateFPS(delta_time);
 
-        // ロジックとレンダリングコンテキストのデータを交換する
+        // Swap logic and rendering context data
         g_runtime_global_context.m_render_system->swapLogicRenderData();
 
         rendererTick(delta_time);
 
 #ifdef ENABLE_PHYSICS_DEBUG_RENDERER
-        // 物理ワールドのデバッグ描画
+        // Render the physics world for debugging
         g_runtime_global_context.m_physics_manager->renderPhysicsWorld(delta_time);
 #endif
 
-        // イベントをポーリングする
+        // Poll events
         g_runtime_global_context.m_window_system->pollEvents();
 
-        // ウィンドウタイトルを設定する
+        // Set the window title
         g_runtime_global_context.m_window_system->setTitle(std::string("LunarYue - " + std::to_string(getFPS()) + " FPS").c_str());
 
         const bool should_window_close = g_runtime_global_context.m_window_system->shouldClose();
@@ -97,33 +107,36 @@ namespace LunarYue
 
     void LunarYueEngine::logicalTick(float delta_time)
     {
+        // Perform logical updates
         g_runtime_global_context.m_world_manager->tick(delta_time);
         g_runtime_global_context.m_input_system->tick();
     }
 
     bool LunarYueEngine::rendererTick(float delta_time)
     {
+        // Perform renderer updates
         g_runtime_global_context.m_render_system->tick(delta_time);
         return true;
     }
 
     const float LunarYueEngine::s_fps_alpha = 1.f / 100;
-    void        LunarYueEngine::calculateFPS(float delta_time)
+
+    void LunarYueEngine::calculateFPS(float delta_time)
     {
-        // フレームカウントをインクリメントする
+        // Increment frame count
         m_frame_count++;
 
-        if (m_frame_count == 1) // 初回の場合
+        if (m_frame_count == 1) // First frame
         {
-            m_average_duration = delta_time; // 平均デュレーションに現在のデルタタイムを代入する
+            m_average_duration = delta_time; // Set initial delta time as average duration
         }
-        else // 2回目以降の場合
+        else // Subsequent frames
         {
-            // 平均デュレーションを更新する
+            // Update the average duration
             m_average_duration = m_average_duration * (1 - s_fps_alpha) + delta_time * s_fps_alpha;
         }
 
-        // FPSを計算する
+        // Calculate FPS
         m_fps = static_cast<int>(1.f / m_average_duration);
     }
 } // namespace LunarYue
