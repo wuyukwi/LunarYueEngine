@@ -48,6 +48,10 @@ namespace LunarYue
                 {
                     m_editor_font_path = m_root_folder / value;
                 }
+                else if (name == "EditorDefaultLayoutFile")
+                {
+                    m_editor_default_layout = m_root_folder / value;
+                }
                 else if (name == "GlobalRenderingRes")
                 {
                     m_global_rendering_res_url = value;
@@ -56,6 +60,7 @@ namespace LunarYue
                 {
                     m_global_particle_res_url = value;
                 }
+
 #ifdef ENABLE_PHYSICS_DEBUG_RENDERER
                 else if (name == "JoltAssetFolder")
                 {
@@ -77,6 +82,8 @@ namespace LunarYue
     const std::filesystem::path& ConfigManager::getEditorSmallIconPath() const { return m_editor_small_icon_path; }
 
     const std::filesystem::path& ConfigManager::getEditorFontPath() const { return m_editor_font_path; }
+
+    const std::filesystem::path& ConfigManager::getEditorDefaultLayout() const { return m_editor_default_layout; }
 
     const std::string& ConfigManager::getDefaultWorldUrl() const { return m_default_world_url; }
 

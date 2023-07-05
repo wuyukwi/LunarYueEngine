@@ -11,6 +11,12 @@
 
 namespace LunarYue
 {
+    UIPass::~UIPass()
+    {
+        ImGui_ImplVulkan_Shutdown();
+        ImGui_ImplGlfw_Shutdown();
+    }
+
     void UIPass::initialize(const RenderPassInitInfo* init_info)
     {
         RenderPass::initialize(nullptr);

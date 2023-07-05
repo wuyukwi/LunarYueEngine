@@ -27,6 +27,7 @@ namespace LunarYue
         virtual void initializeUIRenderBackend(std::shared_ptr<WindowUI> window_ui);
 
     protected:
+        ~RenderPassBase() = default;
         std::shared_ptr<RHI>                m_rhi;
         std::shared_ptr<RenderResourceBase> m_render_resource;
     };

@@ -8,6 +8,8 @@
 #include "runtime/core/base/macro.h"
 #include "stb_image.h"
 
+#include "platform/path/path.h"
+
 namespace LunarYue::UI::Core
 {
     inline void windowContentScaleUpdate(float scale)
@@ -31,6 +33,9 @@ namespace LunarYue::UI::Core
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
 
+        m_layoutSaveFilename = Path::getRelativePath(g_runtime_global_context.m_config_manager->getEditorDefaultLayout()).generic_string();
+        EnableEditorLayoutSave(true);
+
         // set ui content scale
         float x_scale, y_scale;
         glfwGetWindowContentScale(g_runtime_global_context.m_window_system->getWindow(), &x_scale, &y_scale);
@@ -43,25 +48,21 @@ namespace LunarYue::UI::Core
         io.ConfigDockingAlwaysTabBar         = true;
         io.ConfigWindowsMoveFromTitleBarOnly = true;
 
-        // デフォルトフォントをロードするための設定
         ImFontConfig font_config;
-        font_config.MergeMode = true; // Font Awesome アイコンをデフォルトフォントとマージ
+        font_config.MergeMode = true;
         const float font_size = content_scale * 16;
 
         ImVector<ImWchar>        icon_ranges;
         ImFontGlyphRangesBuilder builder;
-        builder.AddRanges(io.Fonts->GetGlyphRangesDefault()); // デフォルト範囲を追加
+        builder.AddRanges(io.Fonts->GetGlyphRangesDefault());
         static const ImWchar icon_ranges_fa[] = {ICON_MIN_FA, ICON_MAX_FA, 0};
         builder.AddRanges(icon_ranges_fa);
 
-        // 上記と同じ形式で必要なFont Awesomeアイコンを追加
-        builder.BuildRanges(&icon_ranges); // 最終結果を構築
+        builder.BuildRanges(&icon_ranges);
 
-        // デフォルトフォントをロード
         m_fonts["default"] = io.Fonts->AddFontFromFileTTF(
             g_runtime_global_context.m_config_manager->getEditorFontPath().generic_string().data(), font_size, nullptr, icon_ranges.Data);
 
-        // Font Awesome フォントをロード
         std::filesystem::path fa_font_path = g_runtime_global_context.m_config_manager->getEditorFontPath().parent_path() / "fa-solid-900.ttf";
         m_fonts["icon"] = io.Fonts->AddFontFromFileTTF(fa_font_path.generic_string().data(), font_size, &font_config, icon_ranges.Data);
 
@@ -340,7 +341,7 @@ namespace LunarYue::UI::Core
 
     void UIManager::UseDefaultFont() { ImGui::GetIO().FontDefault = nullptr; }
 
-    void UIManager::EnableEditorLayoutSave(bool p_value)
+    void UIManager::EnableEditorLayoutSave(bool p_value) const
     {
         if (p_value)
             ImGui::GetIO().IniFilename = m_layoutSaveFilename.c_str();

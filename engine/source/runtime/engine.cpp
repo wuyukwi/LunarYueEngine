@@ -1,5 +1,7 @@
 ﻿#include "runtime/engine.h"
 
+#include "function/physics/physics_manager.h"
+
 #include "runtime/core/base/macro.h"
 #include "runtime/core/meta/reflection/reflection_register.h"
 

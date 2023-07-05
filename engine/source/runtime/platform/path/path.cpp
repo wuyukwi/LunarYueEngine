@@ -9,6 +9,12 @@ namespace LunarYue
         return file_path.lexically_relative(directory);
     }
 
+    std::filesystem::path Path::getRelativePath(const std::filesystem::path& file_path)
+    {
+        const auto current_path = std::filesystem::current_path();
+        return relative(file_path, current_path);
+    }
+
     vector<string> Path::getPathSegments(const filesystem::path& file_path)
     {
         vector<string> segments;

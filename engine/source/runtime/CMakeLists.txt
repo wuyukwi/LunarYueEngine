@@ -41,6 +41,7 @@ target_link_libraries(${TARGET_NAME} PUBLIC ${vulkan_lib})
 target_link_libraries(${TARGET_NAME} PRIVATE $<BUILD_INTERFACE:json11>)
 target_link_libraries(${TARGET_NAME} PUBLIC $<BUILD_INTERFACE:json11>)
 target_link_libraries(${TARGET_NAME} PUBLIC assimp)
+target_link_libraries(${TARGET_NAME} PUBLIC bgfx)
 
 if(ENABLE_PHYSICS_DEBUG_RENDERER)
   # 物理デバッグレンダリングを有効にする場合にコンパイル定義を追加

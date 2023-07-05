@@ -14,6 +14,8 @@ namespace LunarYue
     class UIPass : public RenderPass
     {
     public:
+        ~UIPass();
+
         void initialize(const RenderPassInitInfo* init_info) override final;
         void initializeUIRenderBackend(std::shared_ptr<WindowUI> window_ui) override final;
         void draw() override final;

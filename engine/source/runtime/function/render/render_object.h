@@ -72,7 +72,7 @@ namespace LunarYue
     struct GameObjectPartId
     {
         ObjectID m_go_id {k_invalid_object_id};
-        size_t    m_part_id {k_invalid_part_id};
+        size_t   m_part_id {k_invalid_part_id};
 
         bool   operator==(const GameObjectPartId& rhs) const { return m_go_id == rhs.m_go_id && m_part_id == rhs.m_part_id; }
         size_t getHashValue() const { return m_go_id ^ (m_part_id << 1); }
@@ -83,15 +83,13 @@ namespace LunarYue
     {
     public:
         GameObjectDesc() : m_go_id(0) {}
-        GameObjectDesc(size_t go_id, const std::vector<GameObjectPartDesc>& parts) :
-            m_go_id(go_id), m_object_parts(parts)
-        {}
+        GameObjectDesc(size_t go_id, std::vector<GameObjectPartDesc> parts) : m_go_id(go_id), m_object_parts(std::move(parts)) {}
 
-        ObjectID                              getId() const { return m_go_id; }
+        ObjectID                               getId() const { return m_go_id; }
         const std::vector<GameObjectPartDesc>& getObjectParts() const { return m_object_parts; }
 
     private:
-        ObjectID                       m_go_id {k_invalid_object_id};
+        ObjectID                        m_go_id {k_invalid_object_id};
         std::vector<GameObjectPartDesc> m_object_parts;
     };
 } // namespace LunarYue

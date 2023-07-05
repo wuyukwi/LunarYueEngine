@@ -67,7 +67,7 @@ namespace LunarYue::UI::Core
         /**
          * Allow the user to enable/disable .ini generation to save his editor layout
          */
-        void EnableEditorLayoutSave(bool p_value);
+        void EnableEditorLayoutSave(bool p_value) const;
 
         /**
          *  Return true if the editor layout save system is on

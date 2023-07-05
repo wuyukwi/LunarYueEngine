@@ -87,10 +87,8 @@ namespace LunarYue
 
         std::vector<JPHShapeData> jph_shapes;
 
-        for (size_t shape_index = 0; shape_index < rigidbody_actor_res.m_shapes.size(); shape_index++)
+        for (const auto& shape : rigidbody_actor_res.m_shapes)
         {
-            const RigidBodyShape& shape = rigidbody_actor_res.m_shapes[shape_index];
-
             const Matrix4x4 shape_global_transform = global_transform.getMatrix() * shape.m_local_transform.getMatrix();
 
             Vector3    global_position, global_scale;
@@ -116,7 +114,7 @@ namespace LunarYue
         JPH::EMotionType motion_type = JPH::EMotionType::Static;
         JPH::ObjectLayer layer       = Layers::NON_MOVING;
 
-        JPH::Ref<JPH::StaticCompoundShapeSettings> compund_shape_setting = new JPH::StaticCompoundShapeSettings;
+        JPH::Ref compund_shape_setting = new JPH::StaticCompoundShapeSettings;
         for (const JPHShapeData& shape_data : jph_shapes)
         {
             compund_shape_setting->AddShape(toVec3(shape_data.local_transform.m_position * shape_data.global_scale),

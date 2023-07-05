@@ -44,27 +44,29 @@ namespace LunarYue
 
     struct VisiableNodes
     {
-        std::vector<RenderMeshNode>*              p_directional_light_visible_mesh_nodes {nullptr};
-        std::vector<RenderMeshNode>*              p_point_lights_visible_mesh_nodes {nullptr};
-        std::vector<RenderMeshNode>*              p_main_camera_visible_mesh_nodes {nullptr};
-        RenderAxisNode*                           p_axis_node {nullptr};
+        std::vector<RenderMeshNode>* p_directional_light_visible_mesh_nodes {nullptr};
+        std::vector<RenderMeshNode>* p_point_lights_visible_mesh_nodes {nullptr};
+        std::vector<RenderMeshNode>* p_main_camera_visible_mesh_nodes {nullptr};
+        RenderAxisNode*              p_axis_node {nullptr};
     };
 
     class RenderPass : public RenderPassBase
     {
     public:
+        virtual ~RenderPass() = default;
+
         struct FrameBufferAttachment
         {
             RHIImage*        image;
             RHIDeviceMemory* mem;
             RHIImageView*    view;
-            RHIFormat       format;
+            RHIFormat        format;
         };
 
         struct Framebuffer
         {
-            int           width;
-            int           height;
+            int             width;
+            int             height;
             RHIFramebuffer* framebuffer;
             RHIRenderPass*  render_pass;
 
@@ -83,7 +85,7 @@ namespace LunarYue
             RHIPipeline*       pipeline;
         };
 
-        GlobalRenderResource*      m_global_render_resource {nullptr};
+        GlobalRenderResource* m_global_render_resource {nullptr};
 
         std::vector<Descriptor>         m_descriptor_infos;
         std::vector<RenderPipelineBase> m_render_pipelines;

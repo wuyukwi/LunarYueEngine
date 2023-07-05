@@ -15,6 +15,7 @@ namespace LunarYue
         const std::filesystem::path& getEditorBigIconPath() const;
         const std::filesystem::path& getEditorSmallIconPath() const;
         const std::filesystem::path& getEditorFontPath() const;
+        const std::filesystem::path& getEditorDefaultLayout() const;
 
 #ifdef ENABLE_PHYSICS_DEBUG_RENDERER
         const std::filesystem::path& getJoltPhysicsAssetFolder() const;
@@ -31,6 +32,7 @@ namespace LunarYue
         std::filesystem::path m_editor_big_icon_path;
         std::filesystem::path m_editor_small_icon_path;
         std::filesystem::path m_editor_font_path;
+        std::filesystem::path m_editor_default_layout;
 
 #ifdef ENABLE_PHYSICS_DEBUG_RENDERER
         std::filesystem::path m_jolt_physics_asset_folder;

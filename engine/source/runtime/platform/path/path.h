@@ -24,6 +24,7 @@ namespace LunarYue
         };
 
         static std::filesystem::path getRelativePath(const std::filesystem::path& directory, const std::filesystem::path& file_path);
+        static std::filesystem::path getRelativePath(const std::filesystem::path& file_path);
 
         static std::vector<std::string> getPathSegments(const std::filesystem::path& file_path);
 
