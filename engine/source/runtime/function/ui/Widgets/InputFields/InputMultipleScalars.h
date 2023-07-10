@@ -2,7 +2,7 @@
 
 #include <array>
 
-#include "function/ui/Event/Event.h"
+#include "function/event/event.h"
 
 #include "function/ui/Widgets/DataWidget.h"
 
@@ -82,8 +82,8 @@ namespace LunarYue::UI::Widgets::InputFields
         std::string                                      label;
         std::string                                      format;
         bool                                             selectAllOnClick;
-        LunarYue::Eventing::Event<std::array<T, _Size>&> ContentChangedEvent;
-        LunarYue::Eventing::Event<std::array<T, _Size>&> EnterPressedEvent;
+        Event<std::array<T, _Size>&> ContentChangedEvent;
+        Event<std::array<T, _Size>&> EnterPressedEvent;
 
     private:
         ImGuiDataType m_dataType;

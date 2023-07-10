@@ -4,6 +4,7 @@
 #include "runtime/function/render/render_guid_allocator.h"
 #include "runtime/function/render/render_swap_context.h"
 #include "runtime/function/render/render_type.h"
+#include "runtime/function/render/renderer_callback.h"
 
 #include <array>
 #include <memory>
@@ -19,6 +20,7 @@ namespace LunarYue
     class RenderCamera;
     class WindowUI;
     class DebugDrawManager;
+    class RendererCallback;
 
     struct RenderSystemInitInfo
     {
@@ -107,6 +109,8 @@ namespace LunarYue
         std::shared_ptr<RenderResourceBase> m_render_resource;
         // レンダリングパイプラインオブジェクト
         std::shared_ptr<RenderPipelineBase> m_render_pipeline;
+
+        std::unique_ptr<RendererCallback> m_callback;
 
         // スワップデータの処理
         void processSwapData();

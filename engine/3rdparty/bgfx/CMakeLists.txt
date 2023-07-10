@@ -28,10 +28,10 @@ endif()
 
 include(CMakeDependentOption)
 
-option(BX_AMALGAMATED "Amalgamated bx build for faster compilation" OFF)
+option(BX_AMALGAMATED "Amalgamated bx build for faster compilation" ON)
 option(BX_CONFIG_DEBUG "Log debug messages (default: on in debug)" OFF)
-option(BGFX_AMALGAMATED "Amalgamated bgfx build for faster compilation" OFF)
-option(BGFX_BUILD_TOOLS "Build bgfx tools." OFF)
+option(BGFX_AMALGAMATED "Amalgamated bgfx build for faster compilation" ON)
+option(BGFX_BUILD_TOOLS "Build bgfx tools." ON)
 cmake_dependent_option(BGFX_BUILD_TOOLS_BIN2C "Build bx binary to c converter." ON BGFX_BUILD_TOOLS OFF)
 cmake_dependent_option(BGFX_BUILD_TOOLS_SHADER "Build bgfx shader tools." ON BGFX_BUILD_TOOLS OFF)
 cmake_dependent_option(BGFX_BUILD_TOOLS_GEOMETRY "Build bgfx geometry tools." ON BGFX_BUILD_TOOLS OFF)
@@ -43,7 +43,7 @@ option(BGFX_INSTALL "Create installation target." OFF)
 cmake_dependent_option(
 	BGFX_INSTALL_EXAMPLES "Install examples and their runtimes." OFF "BGFX_INSTALL;BGFX_BUILD_EXAMPLES" OFF
 )
-option(BGFX_CUSTOM_TARGETS "Include convenience custom targets." OFF)
+option(BGFX_CUSTOM_TARGETS "Include convenience custom targets." ON)
 option(BGFX_CONFIG_MULTITHREADED "Build bgfx with multithreaded configuration" ON)
 option(BGFX_CONFIG_RENDERER_WEBGPU "Enable the webgpu renderer" OFF)
 option(BGFX_CONFIG_DEBUG_ANNOTATION "Enable gfx debug annotations (default: on in debug)" OFF)

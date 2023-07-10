@@ -2,8 +2,8 @@
 
 #include <string>
 
-#include "function/ui/Event/Event.h"
-#include "imgui.h"
+#include "function/event/event.h"
+#include "dear-imgui/imgui.h"
 #include "runtime/function/ui/Plugins/IPlugin.h"
 
 namespace LunarYue::UI::Plugins

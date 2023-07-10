@@ -143,9 +143,15 @@ namespace LunarYue
         std::shared_ptr<WindowSystem> window_system = g_runtime_global_context.m_window_system;
         ASSERT(window_system);
 
-        window_system->registerOnKeyFunc(
-            std::bind(&InputSystem::onKey, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
-        window_system->registerOnCursorPosFunc(std::bind(&InputSystem::onCursorPos, this, std::placeholders::_1, std::placeholders::_2));
+        window_system->registerOnKeyFunc([this](auto&& PH1, auto&& PH2, auto&& PH3, auto&& PH4) {
+            onKey(std::forward<decltype(PH1)>(PH1),
+                  std::forward<decltype(PH2)>(PH2),
+                  std::forward<decltype(PH3)>(PH3),
+                  std::forward<decltype(PH4)>(PH4));
+        });
+
+        window_system->registerOnCursorPosFunc(
+            [this](auto&& PH1, auto&& PH2) { onCursorPos(std::forward<decltype(PH1)>(PH1), std::forward<decltype(PH2)>(PH2)); });
     }
 
     void InputSystem::tick()

@@ -13,6 +13,8 @@
 #include "runtime/function/render/render_system.h"
 #include "runtime/function/render/window_system.h"
 
+#include "bgfx/bgfx.h"
+
 namespace LunarYue
 {
     // Flag indicating editor mode
@@ -84,7 +86,7 @@ namespace LunarYue
 
     bool LunarYueEngine::tickOneFrame(float delta_time)
     {
-        logicalTick(delta_time);
+        // logicalTick(delta_time);
         calculateFPS(delta_time);
 
         // Swap logic and rendering context data

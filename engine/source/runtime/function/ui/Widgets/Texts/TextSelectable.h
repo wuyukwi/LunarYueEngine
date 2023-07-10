@@ -1,6 +1,6 @@
 #pragma once
 
-#include "function/ui/Event/Event.h"
+#include "function/event/event.h"
 
 #include "function/ui/Widgets/Texts/Text.h"
 
@@ -27,8 +27,8 @@ namespace LunarYue::UI::Widgets::Texts
         bool selected;
         bool disabled;
 
-        LunarYue::Eventing::Event<bool> ClickedEvent;
-        LunarYue::Eventing::Event<>     SelectedEvent;
-        LunarYue::Eventing::Event<>     UnselectedEvent;
+        Event<bool> ClickedEvent;
+        Event<>     SelectedEvent;
+        Event<>     UnselectedEvent;
     };
 } // namespace LunarYue::UI::Widgets::Texts

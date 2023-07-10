@@ -23,8 +23,8 @@
 #include "runtime/function/render/render_system.h"
 #include "runtime/function/render/window_system.h"
 
-#include <imgui.h>
-#include <imgui_internal.h>
+#include <dear-imgui/imgui.h>
+#include <dear-imgui/imgui_internal.h>
 
 #include "editor/include/editor_asset_browser.h"
 #include "editor/include/editor_detail_window.h"
@@ -304,179 +304,180 @@ namespace LunarYue
 
     void EditorUI::showEditorMenu(bool* p_open)
     {
-        ImGuiDockNodeFlags dock_flags = ImGuiDockNodeFlags_DockSpace;
+        // ImGuiDockNodeFlags dock_flags = ImGuiDockNodeFlags_DockSpace;
 
-        ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse |
-                                        ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBackground |
-                                        ImGuiConfigFlags_NoMouseCursorChange | ImGuiWindowFlags_NoBringToFrontOnFocus;
+        // ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse |
+        //                                 ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBackground |
+        //                                 ImGuiConfigFlags_NoMouseCursorChange | ImGuiWindowFlags_NoBringToFrontOnFocus;
 
-        const ImGuiViewport* main_viewport = ImGui::GetMainViewport();                                    // メインビューポートの取得
-        ImGui::SetNextWindowPos(main_viewport->WorkPos, ImGuiCond_Always);                                // ウィンドウの位置を設定
-        std::array<int, 2> window_size = g_runtime_global_context.m_window_system->getWindowSize();       // ウィンドウサイズの取得
-        ImGui::SetNextWindowSize(ImVec2((float)window_size[0], (float)window_size[1]), ImGuiCond_Always); // ウィンドウサイズを設定
+        // const ImGuiViewport* main_viewport = ImGui::GetMainViewport();                                    // メインビューポートの取得
+        // ImGui::SetNextWindowPos(main_viewport->WorkPos, ImGuiCond_Always);                                // ウィンドウの位置を設定
+        // std::array<int, 2> window_size = g_runtime_global_context.m_window_system->getWindowSize();       // ウィンドウサイズの取得
+        // ImGui::SetNextWindowSize(ImVec2((float)window_size[0], (float)window_size[1]), ImGuiCond_Always); // ウィンドウサイズを設定
 
-        ImGui::SetNextWindowViewport(main_viewport->ID); // メインビューポートを設定
+        // ImGui::SetNextWindowViewport(main_viewport->ID); // メインビューポートを設定
 
-        ImGui::Begin("Editor menu", p_open, window_flags); // エディタメニューウィンドウを開始
+        // ImGui::Begin("Editor menu", p_open, window_flags); // エディタメニューウィンドウを開始
 
-        ImGuiID main_docking_id = ImGui::GetID("Main Docking");
-        if (ImGui::DockBuilderGetNode(main_docking_id) == nullptr)
-        {
-            ImGui::DockBuilderRemoveNode(main_docking_id);
+        // ImGuiID main_docking_id = ImGui::GetID("Main Docking");
+        // if (ImGui::DockBuilderGetNode(main_docking_id) == nullptr)
+        //{
+        //     ImGui::DockBuilderRemoveNode(main_docking_id);
 
-            ImGui::DockBuilderAddNode(main_docking_id, dock_flags);
-            ImGui::DockBuilderSetNodePos(main_docking_id, ImVec2(main_viewport->WorkPos.x, main_viewport->WorkPos.y + 18.0f));
-            ImGui::DockBuilderSetNodeSize(main_docking_id, ImVec2((float)window_size[0], (float)window_size[1] - 18.0f));
+        //    ImGui::DockBuilderAddNode(main_docking_id, dock_flags);
+        //    ImGui::DockBuilderSetNodePos(main_docking_id, ImVec2(main_viewport->WorkPos.x, main_viewport->WorkPos.y + 18.0f));
+        //    ImGui::DockBuilderSetNodeSize(main_docking_id, ImVec2((float)window_size[0], (float)window_size[1] - 18.0f));
 
-            ImGuiID center = main_docking_id;
-            ImGuiID left;
-            ImGuiID right = ImGui::DockBuilderSplitNode(center, ImGuiDir_Right, 0.30f, nullptr, &left);
+        //    ImGuiID center = main_docking_id;
+        //    ImGuiID left;
+        //    ImGuiID right = ImGui::DockBuilderSplitNode(center, ImGuiDir_Right, 0.30f, nullptr, &left);
 
-            ImGuiID left_other;
-            ImGuiID left_file_content = ImGui::DockBuilderSplitNode(left, ImGuiDir_Down, 0.30f, nullptr, &left_other);
+        //    ImGuiID left_other;
+        //    ImGuiID left_file_content = ImGui::DockBuilderSplitNode(left, ImGuiDir_Down, 0.30f, nullptr, &left_other);
 
-            ImGuiID left_game_engine;
-            ImGuiID left_asset = ImGui::DockBuilderSplitNode(left_other, ImGuiDir_Left, 0.25f, nullptr, &left_game_engine);
+        //    ImGuiID left_game_engine;
+        //    ImGuiID left_asset = ImGui::DockBuilderSplitNode(left_other, ImGuiDir_Left, 0.25f, nullptr, &left_game_engine);
 
-            ImGui::DockBuilderDockWindow("World Objects", left_asset);
-            ImGui::DockBuilderDockWindow("Components Details", right);
-            ImGui::DockBuilderDockWindow("File Content", left_file_content);
-            ImGui::DockBuilderDockWindow("Game Engine", left_game_engine);
+        //    ImGui::DockBuilderDockWindow("World Objects", left_asset);
+        //    ImGui::DockBuilderDockWindow("Components Details", right);
+        //    ImGui::DockBuilderDockWindow("File Content", left_file_content);
+        //    ImGui::DockBuilderDockWindow("Game Engine", left_game_engine);
 
-            ImGui::DockBuilderFinish(main_docking_id);
-        }
+        //    ImGui::DockBuilderFinish(main_docking_id);
+        //}
 
-        ImGui::DockSpace(main_docking_id);
+        // ImGui::DockSpace(main_docking_id);
 
-        if (ImGui::BeginMenuBar())
-        {
-            if (ImGui::BeginMenu("Menu"))
-            {
-                if (ImGui::MenuItem("Reload Current Level"))
-                {
-                    g_runtime_global_context.m_world_manager->reloadCurrentLevel();
-                }
+        // if (ImGui::BeginMenuBar())
+        //{
+        //     if (ImGui::BeginMenu("Menu"))
+        //     {
+        //         if (ImGui::MenuItem("Reload Current Level"))
+        //         {
+        //             g_runtime_global_context.m_world_manager->reloadCurrentLevel();
+        //         }
 
-                if (ImGui::MenuItem("Save Current Level"))
-                {
-                    g_runtime_global_context.m_world_manager->saveCurrentLevel();
-                }
+        //        if (ImGui::MenuItem("Save Current Level"))
+        //        {
+        //            g_runtime_global_context.m_world_manager->saveCurrentLevel();
+        //        }
 
-                // デバッグメニュー
-                if (ImGui::BeginMenu("Debug"))
-                {
-                    // サブメニューを作成
-                    auto createSubMenu = [&](const std::string& title, std::initializer_list<std::pair<std::string, bool*>> options) {
-                        if (ImGui::BeginMenu(title.c_str()))
-                        {
-                            for (const auto& option : options)
-                            {
-                                ImGui::Checkbox(option.first.c_str(), option.second);
-                            }
-                            ImGui::EndMenu();
-                        }
-                    };
+        //        // デバッグメニュー
+        //        if (ImGui::BeginMenu("Debug"))
+        //        {
+        //            // サブメニューを作成
+        //            auto createSubMenu = [&](const std::string& title, std::initializer_list<std::pair<std::string, bool*>> options) {
+        //                if (ImGui::BeginMenu(title.c_str()))
+        //                {
+        //                    for (const auto& option : options)
+        //                    {
+        //                        ImGui::Checkbox(option.first.c_str(), option.second);
+        //                    }
+        //                    ImGui::EndMenu();
+        //                }
+        //            };
 
-                    createSubMenu("Animation",
-                                  {{"Show Skeleton", &g_runtime_global_context.m_render_debug_config->animation.show_skeleton},
-                                   {"Show Bone Name", &g_runtime_global_context.m_render_debug_config->animation.show_bone_name}});
+        //            createSubMenu("Animation",
+        //                          {{"Show Skeleton", &g_runtime_global_context.m_render_debug_config->animation.show_skeleton},
+        //                           {"Show Bone Name", &g_runtime_global_context.m_render_debug_config->animation.show_bone_name}});
 
-                    createSubMenu("Camera", {{"Show Runtime Info", &g_runtime_global_context.m_render_debug_config->camera.show_runtime_info}});
+        //            createSubMenu("Camera", {{"Show Runtime Info", &g_runtime_global_context.m_render_debug_config->camera.show_runtime_info}});
 
-                    createSubMenu("Game Object",
-                                  {{"Show Bounding Box", &g_runtime_global_context.m_render_debug_config->gameObject.show_bounding_box}});
+        //            createSubMenu("Game Object",
+        //                          {{"Show Bounding Box", &g_runtime_global_context.m_render_debug_config->gameObject.show_bounding_box}});
 
-                    ImGui::EndMenu();
-                }
+        //            ImGui::EndMenu();
+        //        }
 
-                // エンジンを終了
-                if (ImGui::MenuItem("Exit"))
-                {
-                    g_editor_global_context.m_engine_runtime->shutdownEngine();
-                    g_runtime_global_context.m_window_system->setShouldClose(true);
-                }
-                ImGui::EndMenu();
-            }
+        //        // エンジンを終了
+        //        if (ImGui::MenuItem("Exit"))
+        //        {
+        //            g_editor_global_context.m_engine_runtime->shutdownEngine();
+        //            g_runtime_global_context.m_window_system->setShouldClose(true);
+        //        }
+        //        ImGui::EndMenu();
+        //    }
 
-            if (ImGui::BeginMenu("Window"))
-            {
-                ImGui::MenuItem("World Objects", nullptr, &m_asset_window_open);
-                ImGui::MenuItem("Game", nullptr, &m_game_engine_window_open);
-                ImGui::MenuItem("File Content", nullptr, &m_file_content_window_open);
-                ImGui::MenuItem("Detail", nullptr, &m_detail_window_open);
-                ImGui::MenuItem("ImGui Demo", nullptr, &m_imgui_demo_window_open);
-                ImGui::EndMenu();
-            }
+        //    if (ImGui::BeginMenu("Window"))
+        //    {
+        //        ImGui::MenuItem("World Objects", nullptr, &m_asset_window_open);
+        //        ImGui::MenuItem("Game", nullptr, &m_game_engine_window_open);
+        //        ImGui::MenuItem("File Content", nullptr, &m_file_content_window_open);
+        //        ImGui::MenuItem("Detail", nullptr, &m_detail_window_open);
+        //        ImGui::MenuItem("ImGui Demo", nullptr, &m_imgui_demo_window_open);
+        //        ImGui::EndMenu();
+        //    }
 
-            if (ImGui::BeginMenu("Create new level"))
-            {
-                if (ImGui::MenuItem("Create"))
-                {
-                    g_runtime_global_context.m_world_manager->createNewLevel("asset/level/test.json");
-                }
-                ImGui::EndMenu();
-            }
-            if (ImGui::BeginMenu("Create new object"))
-            {
+        //    if (ImGui::BeginMenu("Create new level"))
+        //    {
+        //        if (ImGui::MenuItem("Create"))
+        //        {
+        //            g_runtime_global_context.m_world_manager->createNewLevel("asset/level/test.json");
+        //        }
+        //        ImGui::EndMenu();
+        //    }
+        //    if (ImGui::BeginMenu("Create new object"))
+        //    {
 
-                if (ImGui::MenuItem("Create"))
-                {
-                    // 現在のアクティブなレベルを取得する
-                    std::shared_ptr<Level> level = g_runtime_global_context.m_world_manager->getCurrentActiveLevel().lock();
-                    if (level == nullptr)
-                        return;
+        //        if (ImGui::MenuItem("Create"))
+        //        {
+        //            // 現在のアクティブなレベルを取得する
+        //            std::shared_ptr<Level> level = g_runtime_global_context.m_world_manager->getCurrentActiveLevel().lock();
+        //            if (level == nullptr)
+        //                return;
 
-                    // 新しいGameObjectを作成し、シーンに追加する
-                    const size_t new_gobject_id = level->createEmptyObject("asset/objects", "test");
-                    if (new_gobject_id != k_invalid_object_id)
-                    {
-                        // 新しいGameObjectが正常に作成された場合、それを選択する
-                        g_editor_global_context.m_scene_manager->onGObjectSelected(new_gobject_id);
-                    }
-                }
-                ImGui::EndMenu();
-            }
-            if (ImGui::BeginMenu("add component"))
-            {
-                // 選択されたオブジェクトを取得
-                std::shared_ptr<Object> selected_object = g_editor_global_context.m_scene_manager->getSelectedGObject().lock();
-                if (selected_object != nullptr)
-                {
-                    auto&& selected_object_components = selected_object->getComponents();
+        //            // 新しいGameObjectを作成し、シーンに追加する
+        //            const size_t new_gobject_id = level->createEmptyObject("asset/objects", "test");
+        //            if (new_gobject_id != k_invalid_object_id)
+        //            {
+        //                // 新しいGameObjectが正常に作成された場合、それを選択する
+        //                g_editor_global_context.m_scene_manager->onGObjectSelected(new_gobject_id);
+        //            }
+        //        }
+        //        ImGui::EndMenu();
+        //    }
+        //    if (ImGui::BeginMenu("add component"))
+        //    {
+        //        // 選択されたオブジェクトを取得
+        //        std::shared_ptr<Object> selected_object = g_editor_global_context.m_scene_manager->getSelectedGObject().lock();
+        //        if (selected_object != nullptr)
+        //        {
+        //            auto&& selected_object_components = selected_object->getComponents();
 
-                    for (auto& component_ptr : selected_object_components)
-                    {
-                        auto object_instance = Reflection::ReflectionInstance(Reflection::TypeMeta::newMetaFromName(component_ptr.getTypeName()),
-                                                                              component_ptr.getPtr());
+        //            for (auto& component_ptr : selected_object_components)
+        //            {
+        //                auto object_instance = Reflection::ReflectionInstance(Reflection::TypeMeta::newMetaFromName(component_ptr.getTypeName()),
+        //                                                                      component_ptr.getPtr());
 
-                        // 基本クラスのリフレクションインスタンスリストを取得
-                        Reflection::ReflectionInstance* reflection_instance;
-                        const int count = object_instance.m_meta.getBaseClassReflectionInstanceList(reflection_instance, object_instance.m_instance);
+        //                // 基本クラスのリフレクションインスタンスリストを取得
+        //                Reflection::ReflectionInstance* reflection_instance;
+        //                const int count = object_instance.m_meta.getBaseClassReflectionInstanceList(reflection_instance,
+        //                object_instance.m_instance);
 
-                        // 基本クラスのリフレクションインスタンスを反復処理し、対応するUIを作成
-                        for (int index = 0; index < count; index++)
-                        {
-                            createClassUI(reflection_instance[index]);
-                        }
+        //                // 基本クラスのリフレクションインスタンスを反復処理し、対応するUIを作成
+        //                for (int index = 0; index < count; index++)
+        //                {
+        //                    createClassUI(reflection_instance[index]);
+        //                }
 
-                        // リーフノードUIを作成
-                        // createLeafNodeUI(instance);
+        //                // リーフノードUIを作成
+        //                // createLeafNodeUI(instance);
 
-                        // 反復処理中に割り当てたリフレクションインスタンスを削除（必要に応じて）
-                        if (count > 0)
-                            delete[] reflection_instance;
-                    }
-                }
-                else
-                {}
+        //                // 反復処理中に割り当てたリフレクションインスタンスを削除（必要に応じて）
+        //                if (count > 0)
+        //                    delete[] reflection_instance;
+        //            }
+        //        }
+        //        else
+        //        {}
 
-                ImGui::EndMenu();
-            }
+        //        ImGui::EndMenu();
+        //    }
 
-            ImGui::EndMenuBar();
-        }
+        //    ImGui::EndMenuBar();
+        //}
 
-        ImGui::End();
+        // ImGui::End();
     }
 
     void EditorUI::showEditorWorldObjectsWindow(bool* p_open)
@@ -744,25 +745,25 @@ namespace LunarYue
         // ファイルツリーのルートノードを取得する
         EditorFileNode* editor_root_node = m_editor_file_service.getEditorRootNode();
 
-        static float size_ratio   = 0.35f;
-        float        window_width = ImGui::GetWindowContentRegionWidth();
+        static float size_ratio = 0.35f;
+        // float        window_width = ImGui::GetWindowContentRegionWidth();
 
         // フォルダの階層を表示する
-        ImGui::BeginChild("FolderHierarchy", ImVec2(window_width * size_ratio, 0), true);
-        static int current_folder = 0;
-        current_folder            = 0;
-        buildEditorFolderHierarchy(editor_root_node);
-        ImGui::EndChild();
+        // ImGui::BeginChild("FolderHierarchy", ImVec2(window_width * size_ratio, 0), true);
+        // static int current_folder = 0;
+        // current_folder            = 0;
+        // buildEditorFolderHierarchy(editor_root_node);
+        // ImGui::EndChild();
 
-        ImGui::SameLine();
+        // ImGui::SameLine();
 
-        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.8f, 0.8f, 0.8f, 0.4f));
-        ImGui::Button("##vsplitter", ImVec2(8.0f, -1.0f));
-        ImGui::PopStyleColor();
-        if (ImGui::IsItemHovered())
-            ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
-        if (ImGui::IsItemActive())
-            size_ratio += ImGui::GetIO().MouseDelta.x / window_width;
+        // ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.8f, 0.8f, 0.8f, 0.4f));
+        // ImGui::Button("##vsplitter", ImVec2(8.0f, -1.0f));
+        // ImGui::PopStyleColor();
+        // if (ImGui::IsItemHovered())
+        //     ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
+        // if (ImGui::IsItemActive())
+        //     size_ratio += ImGui::GetIO().MouseDelta.x / window_width;
 
         // フォルダのコンテンツを表示する
         ImGui::SameLine();
@@ -839,7 +840,7 @@ namespace LunarYue
                 ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
             }
 
-            ImGui::ImageButton(g_runtime_global_context.m_render_system->getIconId(icon), ImVec2(thumbnailSize, thumbnailSize));
+            //  ImGui::ImageButton(g_runtime_global_context.m_render_system->getIconId(icon), ImVec2(thumbnailSize, thumbnailSize));
 
             if (ImGui::BeginDragDropSource())
             {

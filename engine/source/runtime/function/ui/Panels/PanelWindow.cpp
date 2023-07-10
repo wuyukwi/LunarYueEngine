@@ -1,7 +1,7 @@
 #include "runtime/function/ui/Panels/PanelWindow.h"
 #include "runtime/function/ui/Internal/Converter.h"
 
-#include "imgui_internal.h"
+#include "dear-imgui/imgui_internal.h"
 
 namespace LunarYue::UI::Panels
 {
@@ -80,8 +80,8 @@ namespace LunarYue::UI::Panels
                 windowFlags |= ImGuiWindowFlags_NoResize;
             if (!movable)
                 windowFlags |= ImGuiWindowFlags_NoMove;
-            if (!dockable)
-                windowFlags |= ImGuiWindowFlags_NoDocking;
+            // if (!dockable)
+            //     windowFlags |= ImGuiWindowFlags_NoDocking;
             if (hideBackground)
                 windowFlags |= ImGuiWindowFlags_NoBackground;
             if (forceHorizontalScrollbar)

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "function/ui/Event/Event.h"
+#include "function/event/event.h"
 
 #include "function/ui/Widgets/DataWidget.h"
 
@@ -26,7 +26,7 @@ namespace LunarYue::UI::Widgets::InputFields
         std::string                            content;
         std::string                            label;
         bool                                   selectAllOnClick = false;
-        LunarYue::Eventing::Event<std::string> ContentChangedEvent;
-        LunarYue::Eventing::Event<std::string> EnterPressedEvent;
+        Event<std::string> ContentChangedEvent;
+        Event<std::string> EnterPressedEvent;
     };
 } // namespace LunarYue::UI::Widgets::InputFields

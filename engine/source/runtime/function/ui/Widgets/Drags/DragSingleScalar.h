@@ -1,6 +1,6 @@
 #pragma once
 
-#include "function/ui/Event/Event.h"
+#include "function/event/event.h"
 
 #include "function/ui/Widgets/DataWidget.h"
 
@@ -61,7 +61,7 @@ namespace LunarYue::UI::Widgets::Drags
         float                        speed;
         std::string                  label;
         std::string                  format;
-        LunarYue::Eventing::Event<T> ValueChangedEvent;
+        Event<T> ValueChangedEvent;
 
     private:
         ImGuiDataType m_dataType;

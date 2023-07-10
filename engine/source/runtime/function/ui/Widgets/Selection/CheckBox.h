@@ -1,6 +1,6 @@
 #pragma once
 
-#include "function/ui/Event/Event.h"
+#include "function/event/event.h"
 
 #include "function/ui/Widgets/DataWidget.h"
 
@@ -25,6 +25,6 @@ namespace LunarYue::UI::Widgets::Selection
     public:
         bool                            value;
         std::string                     label;
-        LunarYue::Eventing::Event<bool> ValueChangedEvent;
+        Event<bool> ValueChangedEvent;
     };
 } // namespace LunarYue::UI::Widgets::Selection

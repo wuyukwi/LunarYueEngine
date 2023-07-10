@@ -1,6 +1,6 @@
 #pragma once
 
-#include "function/ui/Event/Event.h"
+#include "function/event/event.h"
 
 #include "function/ui/Widgets/DataWidget.h"
 
@@ -44,7 +44,7 @@ namespace LunarYue::UI::Widgets::Selection
 
     public:
         std::string                    label;
-        LunarYue::Eventing::Event<int> ClickedEvent;
+        Event<int> ClickedEvent;
 
     private:
         bool m_selected = false;

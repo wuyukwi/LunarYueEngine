@@ -1,6 +1,6 @@
 #pragma once
 
-#include "function/ui/Event/Event.h"
+#include "function/event/event.h"
 #include "runtime/core/math/vector2.h"
 
 #include "function/ui/Widgets/DataWidget.h"
@@ -83,7 +83,7 @@ namespace LunarYue::UI::Widgets::Sliders
         Vector2                      verticalModeSize; /* Only applied with ESliderOrientation::VERTICAL */
         std::string                  label;
         std::string                  format;
-        LunarYue::Eventing::Event<T> ValueChangedEvent;
+        Event<T> ValueChangedEvent;
 
     private:
         ImGuiDataType m_dataType;

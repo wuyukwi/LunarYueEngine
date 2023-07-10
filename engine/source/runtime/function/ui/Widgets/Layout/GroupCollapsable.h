@@ -1,6 +1,6 @@
 #pragma once
 
-#include "function/ui/Event/Event.h"
+#include "function/event/event.h"
 
 #include "function/ui/Widgets/Layout/Group.h"
 
@@ -25,7 +25,7 @@ namespace LunarYue::UI::Widgets::Layout
         std::string                 name;
         bool                        closable = false;
         bool                        opened   = true;
-        LunarYue::Eventing::Event<> CloseEvent;
-        LunarYue::Eventing::Event<> OpenEvent;
+        Event<> CloseEvent;
+        Event<> OpenEvent;
     };
 } // namespace LunarYue::UI::Widgets::Layout

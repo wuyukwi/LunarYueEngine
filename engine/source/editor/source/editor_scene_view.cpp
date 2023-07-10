@@ -1,7 +1,5 @@
 #include "editor/include/editor_scene_view.h"
 
-#include <imgui_internal.h>
-
 #include "editor/include/editor_global_context.h"
 #include "editor/include/editor_input_manager.h"
 

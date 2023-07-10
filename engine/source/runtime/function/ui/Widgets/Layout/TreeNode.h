@@ -1,6 +1,6 @@
 #pragma once
 
-#include "function/ui/Event/Event.h"
+#include "function/event/event.h"
 
 #include "runtime/function/ui/Internal/WidgetContainer.h"
 #include "function/ui/Widgets/DataWidget.h"
@@ -43,10 +43,10 @@ namespace LunarYue::UI::Widgets::Layout
 		bool selected = false;
 		bool leaf = false;
 
-		LunarYue::Eventing::Event<> ClickedEvent;
-		LunarYue::Eventing::Event<> DoubleClickedEvent;
-		LunarYue::Eventing::Event<> OpenedEvent;
-		LunarYue::Eventing::Event<> ClosedEvent;
+		Event<> ClickedEvent;
+		Event<> DoubleClickedEvent;
+		Event<> OpenedEvent;
+		Event<> ClosedEvent;
 
 	private:
 		bool m_arrowClickToOpen = false;

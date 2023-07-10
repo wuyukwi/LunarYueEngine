@@ -1,6 +1,6 @@
 #pragma once
 
-#include "function/ui/Event/Event.h"
+#include "function/event/event.h"
 
 #include "function/ui/Widgets/DataWidget.h"
 #include "runtime/function/ui/Types/Color.h"
@@ -26,6 +26,6 @@ namespace LunarYue::UI::Widgets::Selection
     public:
         bool                                     enableAlpha;
         Types::Color                             color;
-        LunarYue::Eventing::Event<Types::Color&> ColorChangedEvent;
+        Event<Types::Color&> ColorChangedEvent;
     };
 } // namespace LunarYue::UI::Widgets::Selection

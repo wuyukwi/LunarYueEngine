@@ -38,7 +38,7 @@ namespace LunarYue::UI::Widgets::Selection
         void OnRadioButtonClicked(int p_radioID);
 
     public:
-        LunarYue::Eventing::Event<int> ValueChangedEvent;
+        Event<int> ValueChangedEvent;
 
     private:
         int                                                                                         m_availableRadioID = 0;

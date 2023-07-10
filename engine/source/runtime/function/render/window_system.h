@@ -28,7 +28,7 @@ namespace LunarYue
         void               setShouldClose(bool value) const;         // Set the should close flag
         bool               shouldClose() const;                      // Check if the window should close
         void               setTitle(const char* title);              // Set the window title
-        GLFWwindow*        getWindow() const;                        // Get the GLFW window handle
+        void*              getWindow() const;                        // Get the GLFW window handle
         std::array<int, 2> getWindowSize() const;                    // Get the window size
 
         // Event callback function types
@@ -246,5 +246,8 @@ namespace LunarYue
         std::vector<onDropFunc>        m_onDropFunc;
         std::vector<onWindowSizeFunc>  m_onWindowSizeFunc;
         std::vector<onWindowCloseFunc> m_onWindowCloseFunc;
+
+        void* glfwNativeWindowHandle(GLFWwindow* _window) const;
+        void  glfwDestroyWindowImpl(GLFWwindow* _window);
     };
 } // namespace LunarYue

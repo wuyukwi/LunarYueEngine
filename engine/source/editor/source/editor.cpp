@@ -47,20 +47,20 @@ namespace LunarYue
         g_editor_global_context.m_scene_manager->initialize();
         g_editor_global_context.m_input_manager->initialize();
 
-        g_editor_global_context.m_ui_manager = std::make_shared<UI::Core::UIManager>();
-        g_editor_global_context.m_ui_manager->initialize(UI::Core::EditorStyle::DUNE_DARK);
+        // g_editor_global_context.m_ui_manager = std::make_shared<UI::Core::UIManager>();
+        // g_editor_global_context.m_ui_manager->initialize(UI::Core::EditorStyle::DUNE_DARK);
 
         g_editor_global_context.m_engine_runtime = m_engine_runtime;
-        g_editor_global_context.m_scene_manager->setEditorCamera(g_runtime_global_context.m_render_system->getRenderCamera());
-        g_editor_global_context.m_scene_manager->uploadAxisResource();
+        // g_editor_global_context.m_scene_manager->setEditorCamera(g_runtime_global_context.m_render_system->getRenderCamera());
+        // g_editor_global_context.m_scene_manager->uploadAxisResource();
 
         // m_editor_launcher = std::make_shared<EditorLauncher>();
         // m_editor_launcher->initialize();
 
-        m_editor_ui = std::make_shared<EditorUI>();
-        m_editor_ui->initialize();
+        // m_editor_ui = std::make_shared<EditorUI>();
+        // m_editor_ui->initialize();
 
-        g_runtime_global_context.m_render_system->initializeUIRenderBackend(m_editor_ui);
+        // g_runtime_global_context.m_render_system->initializeUIRenderBackend(m_editor_ui);
     }
 
     void LunarYueEditor::clear()
@@ -75,8 +75,8 @@ namespace LunarYue
         {
             const float delta_time = m_engine_runtime->calculateDeltaTime();
 
-            g_editor_global_context.m_scene_manager->tick(delta_time);
-            g_editor_global_context.m_input_manager->tick(delta_time);
+            // g_editor_global_context.m_scene_manager->tick(delta_time);
+            // g_editor_global_context.m_input_manager->tick(delta_time);
 
             if (!m_engine_runtime->tickOneFrame(delta_time))
                 return;

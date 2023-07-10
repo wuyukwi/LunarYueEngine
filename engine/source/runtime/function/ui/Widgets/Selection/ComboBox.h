@@ -2,7 +2,7 @@
 
 #include <map>
 
-#include "function/ui/Event/Event.h"
+#include "function/event/event.h"
 
 #include "function/ui/Widgets/DataWidget.h"
 
@@ -28,6 +28,6 @@ namespace LunarYue::UI::Widgets::Selection
         int                        currentChoice;
 
     public:
-        LunarYue::Eventing::Event<int> ValueChangedEvent;
+        Event<int> ValueChangedEvent;
     };
 } // namespace LunarYue::UI::Widgets::Selection

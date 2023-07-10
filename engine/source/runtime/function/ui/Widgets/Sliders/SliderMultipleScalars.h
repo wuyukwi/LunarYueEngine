@@ -2,7 +2,7 @@
 
 #include <array>
 
-#include "function/ui/Event/Event.h"
+#include "function/event/event.h"
 
 #include "function/ui/Widgets/DataWidget.h"
 
@@ -62,7 +62,7 @@ namespace LunarYue::UI::Widgets::Sliders
         std::array<T, _Size>                             values;
         std::string                                      label;
         std::string                                      format;
-        LunarYue::Eventing::Event<std::array<T, _Size>&> ValueChangedEvent;
+        Event<std::array<T, _Size>&> ValueChangedEvent;
 
     protected:
         ImGuiDataType_ m_dataType;

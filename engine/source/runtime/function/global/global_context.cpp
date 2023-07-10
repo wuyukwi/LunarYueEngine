@@ -61,13 +61,13 @@ namespace LunarYue
 
         m_input_system->initialize();
 
-        m_particle_manager->initialize();
+        // m_particle_manager->initialize();
 
         RenderSystemInitInfo render_init_info;
         render_init_info.window_system = m_window_system;
         m_render_system->initialize(render_init_info);
 
-        m_debugdraw_manager->initialize();
+        // m_debugdraw_manager->initialize();
 
         m_file_system->initializer();
     }

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "function/ui/Event/Event.h"
+#include "function/event/event.h" #include "function/event/event.h"
 
 #include "function/ui/Widgets/Texts/Text.h"
 
@@ -22,7 +22,7 @@ namespace LunarYue::UI::Widgets::Texts
         virtual void _Draw_Impl() override;
 
     public:
-        LunarYue::Eventing::Event<> ClickedEvent;
-        LunarYue::Eventing::Event<> DoubleClickedEvent;
+        Event<> ClickedEvent;
+        Event<> DoubleClickedEvent;
     };
 } // namespace LunarYue::UI::Widgets::Texts

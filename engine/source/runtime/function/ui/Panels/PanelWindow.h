@@ -1,6 +1,6 @@
 #pragma once
 
-#include "function/ui/Event/Event.h"
+#include "function/event/event.h"
 
 #include "runtime/function/ui/Panels/APanelTransformable.h"
 #include "runtime/function/ui/Settings/PanelWindowSettings.h"

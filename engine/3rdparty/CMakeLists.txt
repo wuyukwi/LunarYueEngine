@@ -3,12 +3,6 @@ set(third_party_folder "ThirdParty")
 # 共有ライブラリをビルドしないようにする
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 
-# imguiのビルドとプロパティ設定
-if(NOT TARGET imgui)
-    include(imgui.cmake)
-    set_target_properties(imgui PROPERTIES FOLDER ${third_party_folder}/imgui)
-endif()
-
 # glfwのビルドとプロパティ設定
 if(NOT TARGET glfw)
     option(GLFW_BUILD_EXAMPLES "" OFF)
@@ -96,12 +90,17 @@ endif()
 if(NOT TARGET assimp)
     add_subdirectory(assimp)
     set_target_properties(assimp PROPERTIES FOLDER ${third_party_folder}/assimp)
-	set_target_properties(unit PROPERTIES FOLDER ${third_party_folder}/assimp)
 	set_target_properties(UpdateAssimpLibsDebugSymbolsAndDLLs PROPERTIES FOLDER ${third_party_folder}/assimp)
 	set_target_properties(zlibstatic PROPERTIES FOLDER ${third_party_folder}/assimp)
 endif()
 
 if(NOT TARGET bgfx)
     add_subdirectory(bgfx)
-    set_target_properties(bgfx PROPERTIES FOLDER ${third_party_folder}/bgfx)
+#    set_target_properties(bgfx PROPERTIES FOLDER ${third_party_folder}/bgfx)
+endif()
+
+# imguiのビルドとプロパティ設定
+if(NOT TARGET imgui)
+   include(imgui.cmake)
+    set_target_properties(imgui PROPERTIES FOLDER ${third_party_folder}/imgui)
 endif()

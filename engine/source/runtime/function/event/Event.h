@@ -2,7 +2,7 @@
 
 #include <functional>
 
-namespace LunarYue::Eventing
+namespace LunarYue
 {
     /**
      * The ID of a listener (Registered callback).
@@ -27,26 +27,26 @@ namespace LunarYue::Eventing
          * Also return the ID of the new listener (You should store the returned ID if you want to remove the listener later)
          * @param p_call
          */
-        ListenerID AddListener(Callback p_callback);
+        ListenerID AddListener(Callback callback);
 
         /**
          * Add a function callback to this event
          * Also return the ID of the new listener (You should store the returned ID if you want to remove the listener later)
          * @param p_call
          */
-        ListenerID operator+=(Callback p_callback);
+        ListenerID operator+=(Callback callback);
 
         /**
          * Remove a function callback to this event using a Listener (Created when calling AddListener)
          * @param p_listener
          */
-        bool RemoveListener(ListenerID p_listenerID);
+        bool RemoveListener(ListenerID listenerID);
 
         /**
          * Remove a function callback to this event using a Listener (Created when calling AddListener)
          * @param p_listener
          */
-        bool operator-=(ListenerID p_listenerID);
+        bool operator-=(ListenerID listenerID);
 
         /**
          * Remove every listeners to this event
@@ -68,6 +68,49 @@ namespace LunarYue::Eventing
         std::unordered_map<ListenerID, Callback> m_callbacks;
         ListenerID                               m_availableListenerID = 0;
     };
-} // namespace LunarYue::Eventing
 
-#include "function/ui/Event/Event.inl"
+    template<class... ArgTypes>
+    ListenerID Event<ArgTypes...>::AddListener(Callback callback)
+    {
+        ListenerID listenerID = m_availableListenerID++;
+        m_callbacks.emplace(listenerID, callback);
+        return listenerID;
+    }
+
+    template<class... ArgTypes>
+    ListenerID Event<ArgTypes...>::operator+=(Callback callback)
+    {
+        return AddListener(callback);
+    }
+
+    template<class... ArgTypes>
+    bool Event<ArgTypes...>::RemoveListener(ListenerID listenerID)
+    {
+        return m_callbacks.erase(listenerID) != 0;
+    }
+
+    template<class... ArgTypes>
+    bool Event<ArgTypes...>::operator-=(ListenerID listenerID)
+    {
+        return RemoveListener(listenerID);
+    }
+
+    template<class... ArgTypes>
+    void Event<ArgTypes...>::RemoveAllListeners()
+    {
+        m_callbacks.clear();
+    }
+
+    template<class... ArgTypes>
+    uint64_t Event<ArgTypes...>::GetListenerCount()
+    {
+        return m_callbacks.size();
+    }
+
+    template<class... ArgTypes>
+    void Event<ArgTypes...>::Invoke(ArgTypes... p_args)
+    {
+        for (auto const& [key, value] : m_callbacks)
+            value(p_args...);
+    }
+} // namespace LunarYue

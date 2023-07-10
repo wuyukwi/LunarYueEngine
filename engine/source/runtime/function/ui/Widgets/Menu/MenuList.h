@@ -1,6 +1,6 @@
 #pragma once
 
-#include "function/ui/Event/Event.h"
+#include "function/event/event.h"
 
 #include "function/ui/Widgets/Layout/Group.h"
 
@@ -25,7 +25,7 @@ namespace LunarYue::UI::Widgets::Menu
     public:
         std::string                 name;
         bool                        locked;
-        LunarYue::Eventing::Event<> ClickedEvent;
+        Event<> ClickedEvent;
 
     private:
         bool m_opened;
