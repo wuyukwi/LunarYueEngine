@@ -100,7 +100,7 @@ if(NOT TARGET bgfx)
 endif()
 
 # imguiのビルドとプロパティ設定
-if(NOT TARGET imgui)
-   include(imgui.cmake)
-    set_target_properties(imgui PROPERTIES FOLDER ${third_party_folder}/imgui)
-endif()
+#if(NOT TARGET imgui)
+#   include(imgui.cmake)
+#    set_target_properties(imgui PROPERTIES FOLDER ${third_party_folder}/imgui)
+#endif()

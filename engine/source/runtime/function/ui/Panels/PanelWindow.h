@@ -103,8 +103,8 @@ namespace LunarYue::UI::Panels
         bool allowInputs              = true;
         bool titleBar                 = true;
 
-        Eventing::Event<> OpenEvent;
-        Eventing::Event<> CloseEvent;
+        Event<> OpenEvent;
+        Event<> CloseEvent;
 
     private:
         bool m_opened;

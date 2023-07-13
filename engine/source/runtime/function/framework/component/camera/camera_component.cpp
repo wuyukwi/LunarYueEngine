@@ -12,7 +12,6 @@
 #include "runtime/function/input/input_system.h"
 
 #include "runtime/function/render/render_camera.h"
-#include "runtime/function/render/render_swap_context.h"
 #include "runtime/function/render/render_system.h"
 
 namespace LunarYue
@@ -39,10 +38,10 @@ namespace LunarYue
             LOG_ERROR("invalid camera type");
         }
 
-        RenderSwapContext& swap_context = g_runtime_global_context.m_render_system->getSwapContext();
-        CameraSwapData     camera_swap_data;
-        camera_swap_data.m_fov_x                           = m_camera_res.m_parameter->m_fov;
-        swap_context.getLogicSwapData().m_camera_swap_data = camera_swap_data;
+        // RenderSwapContext& swap_context = g_runtime_global_context.m_render_system->getSwapContext();
+        // CameraSwapData     camera_swap_data;
+        // camera_swap_data.m_fov_x                           = m_camera_res.m_parameter->m_fov;
+        // swap_context.getLogicSwapData().m_camera_swap_data = camera_swap_data;
     }
 
     void CameraComponent::tick(float delta_time)
@@ -95,11 +94,11 @@ namespace LunarYue
 
         Matrix4x4 desired_mat = Math::makeLookAtMatrix(m_position, m_position + m_forward, m_up);
 
-        RenderSwapContext& swap_context = g_runtime_global_context.m_render_system->getSwapContext();
-        CameraSwapData     camera_swap_data;
-        camera_swap_data.m_camera_type                     = RenderCameraType::Motor;
-        camera_swap_data.m_view_matrix                     = desired_mat;
-        swap_context.getLogicSwapData().m_camera_swap_data = camera_swap_data;
+        // RenderSwapContext& swap_context = g_runtime_global_context.m_render_system->getSwapContext();
+        // CameraSwapData     camera_swap_data;
+        // camera_swap_data.m_camera_type                     = RenderCameraType::Motor;
+        // camera_swap_data.m_view_matrix                     = desired_mat;
+        // swap_context.getLogicSwapData().m_camera_swap_data = camera_swap_data;
 
         Vector3    object_facing = m_forward - m_forward.dotProduct(Vector3::UNIT_Z) * Vector3::UNIT_Z;
         Vector3    object_left   = Vector3::UNIT_Z.crossProduct(object_facing);
@@ -139,11 +138,11 @@ namespace LunarYue
 
         Matrix4x4 desired_mat = Math::makeLookAtMatrix(m_position, m_position + m_forward, m_up);
 
-        RenderSwapContext& swap_context = g_runtime_global_context.m_render_system->getSwapContext();
-        CameraSwapData     camera_swap_data;
-        camera_swap_data.m_camera_type                     = RenderCameraType::Motor;
-        camera_swap_data.m_view_matrix                     = desired_mat;
-        swap_context.getLogicSwapData().m_camera_swap_data = camera_swap_data;
+        // RenderSwapContext& swap_context = g_runtime_global_context.m_render_system->getSwapContext();
+        // CameraSwapData     camera_swap_data;
+        // camera_swap_data.m_camera_type                     = RenderCameraType::Motor;
+        // camera_swap_data.m_view_matrix                     = desired_mat;
+        // swap_context.getLogicSwapData().m_camera_swap_data = camera_swap_data;
     }
 
     void CameraComponent::tickFreeCamera(float delta_time)
@@ -198,10 +197,10 @@ namespace LunarYue
 
         Matrix4x4 desired_mat = Math::makeLookAtMatrix(m_position, m_position + m_forward, m_up);
 
-        RenderSwapContext& swap_context = g_runtime_global_context.m_render_system->getSwapContext();
-        CameraSwapData     camera_swap_data;
-        camera_swap_data.m_camera_type                     = RenderCameraType::Motor;
-        camera_swap_data.m_view_matrix                     = desired_mat;
-        swap_context.getLogicSwapData().m_camera_swap_data = camera_swap_data;
+        // RenderSwapContext& swap_context = g_runtime_global_context.m_render_system->getSwapContext();
+        // CameraSwapData     camera_swap_data;
+        // camera_swap_data.m_camera_type                     = RenderCameraType::Motor;
+        // camera_swap_data.m_view_matrix                     = desired_mat;
+        // swap_context.getLogicSwapData().m_camera_swap_data = camera_swap_data;
     }
 } // namespace LunarYue

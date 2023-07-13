@@ -41,8 +41,8 @@ namespace LunarYue::UI::Widgets::Selection
         Event<int> ValueChangedEvent;
 
     private:
-        int                                                                                         m_availableRadioID = 0;
-        int                                                                                         m_selected         = -1;
-        std::vector<std::pair<LunarYue::Eventing::ListenerID, std::reference_wrapper<RadioButton>>> m_radioButtons;
+        int                                                                     m_availableRadioID = 0;
+        int                                                                     m_selected         = -1;
+        std::vector<std::pair<ListenerID, std::reference_wrapper<RadioButton>>> m_radioButtons;
     };
 } // namespace LunarYue::UI::Widgets::Selection

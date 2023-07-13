@@ -5,43 +5,24 @@
 #include "runtime/resource/asset_manager/asset_manager.h"
 #include "runtime/resource/config_manager/config_manager.h"
 
+#include "bgfx_utils.h"
+#include "entry/entry.h"
+#include "imgui/imgui.h"
 #include "runtime/function/global/global_context.h"
 #include "runtime/function/render/debugdraw/debug_draw_manager.h"
 #include "runtime/function/render/render_camera.h"
-#include "runtime/function/render/render_pass.h"
-#include "runtime/function/render/render_pipeline.h"
-#include "runtime/function/render/render_resource.h"
-#include "runtime/function/render/render_resource_base.h"
 #include "runtime/function/render/render_scene.h"
 #include "runtime/function/render/window_system.h"
-
-#include "runtime/function/render/passes/main_camera_pass.h"
-#include "runtime/function/render/passes/particle_pass.h"
-
-#include "runtime/function/render/interface/vulkan/vulkan_rhi.h"
-
-#include <GLFW/glfw3.h>
-#include <bgfx/bgfx.h>
-#include <bgfx/platform.h>
-#include <bx/bx.h>
-#include <stdio.h>
-#if BX_PLATFORM_LINUX
-#define GLFW_EXPOSE_NATIVE_X11
-#elif BX_PLATFORM_WINDOWS
-#define GLFW_EXPOSE_NATIVE_WIN32
-#elif BX_PLATFORM_OSX
-#define GLFW_EXPOSE_NATIVE_COCOA
-#endif
-#include <GLFW/glfw3native.h>
-
-// #include "entry/entry.h"
-//
-// #include "imgui/imgui.h"
+#include <bx/uint32_t.h>
 
 namespace LunarYue
 {
+    RenderSystem::~RenderSystem()
+    {
+        imguiDestroy();
 
-    RenderSystem::~RenderSystem() { clear(); }
+        bgfx::shutdown();
+    }
 
     void RenderSystem::initialize(RenderSystemInitInfo init_info)
     {
@@ -49,104 +30,71 @@ namespace LunarYue
 
         const auto windows_system = init_info.window_system;
 
+        auto window_info = init_info.window_system->getWindowInfo();
+
         bgfx::Init bgfxInit;
-        bgfxInit.type     = bgfx::RendererType::Count;
+        bgfxInit.type     = bgfx::RendererType::Vulkan;
         bgfxInit.vendorId = BGFX_PCI_ID_NONE;
 
         bgfxInit.resolution.format = bgfx::TextureFormat::RGBA8;
-        bgfxInit.resolution.width  = windows_system->getWindowSize()[0];
-        bgfxInit.resolution.height = windows_system->getWindowSize()[1];
-        bgfxInit.resolution.reset  = BGFX_RESET_VSYNC;
 
-        bgfxInit.platformData.nwh = glfwNativeWindowHandle(init_info.window_system->getWindow());
+        bgfxInit.resolution.width  = window_info.m_width;
+        bgfxInit.resolution.height = window_info.m_height;
+        bgfxInit.resolution.reset  = window_info.m_reset;
+        bgfxInit.debug             = window_info.m_debug;
+
+        bgfxInit.platformData.nwh = entry::getNativeWindowHandle(entry::kDefaultWindowHandle);
+        bgfxInit.platformData.ndt = entry::getNativeDisplayHandle();
 
         bgfxInit.callback = m_callback.get();
 
-        // Set view 0 clear state.
-        // bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x303030ff, 1.0f, 0);
+        if (bgfx::init(bgfxInit) == false)
+        {
+            LOG_ERROR("bgfx init failed")
+        }
 
-#ifndef NDEBUG
-        // bgfxInit.debug   = true;
-        // bgfxInit.profile = true;
+        bgfx::setDebug(window_info.m_debug);
 
-#else
-#endif
+        bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x303030ff, 1.0f, 0);
 
-        bgfx::init(bgfxInit);
+        imguiCreate();
+    }
 
-        // imguiCreate();
+    void RenderSystem::beginFrame()
+    {
+        const auto window_state = g_runtime_global_context.m_window_system->getWindowState();
 
-        // std::shared_ptr<ConfigManager> config_manager = g_runtime_global_context.m_config_manager;
-        // std::shared_ptr<AssetManager>  asset_manager  = g_runtime_global_context.m_asset_manager;
+        imguiBeginFrame(window_state.m_mouse.m_mx,
+                        window_state.m_mouse.m_my,
+                        (window_state.m_mouse.m_buttons[entry::MouseButton::Left] ? IMGUI_MBUT_LEFT : 0) |
+                            (window_state.m_mouse.m_buttons[entry::MouseButton::Right] ? IMGUI_MBUT_RIGHT : 0) |
+                            (window_state.m_mouse.m_buttons[entry::MouseButton::Middle] ? IMGUI_MBUT_MIDDLE : 0),
+                        window_state.m_mouse.m_mz,
+                        uint16_t(window_state.m_width),
+                        uint16_t(window_state.m_height));
 
-        //// render context initialize
-        // RHIInitInfo rhi_init_info;
-        // rhi_init_info.window_system = init_info.window_system;
+        // Set view 0 default viewport.
+        bgfx::setViewRect(0, 0, 0, uint16_t(window_state.m_width), uint16_t(window_state.m_height));
+    }
 
-        // m_rhi = std::make_shared<VulkanRHI>();
-        // m_rhi->initialize(rhi_init_info);
+    void RenderSystem::endFrame()
+    {
+        imguiEndFrame();
 
-        //// global rendering resource
-        // GlobalRenderingRes global_rendering_res;
-        // const std::string& global_rendering_res_url = config_manager->getGlobalRenderingResUrl();
-        // asset_manager->loadAsset(global_rendering_res_url, global_rendering_res);
-
-        //// upload ibl, color grading textures
-        // LevelResourceDesc level_resource_desc;
-        // level_resource_desc.m_ibl_resource_desc.m_skybox_irradiance_map       = global_rendering_res.m_skybox_irradiance_map;
-        // level_resource_desc.m_ibl_resource_desc.m_skybox_specular_map         = global_rendering_res.m_skybox_specular_map;
-        // level_resource_desc.m_ibl_resource_desc.m_brdf_map                    = global_rendering_res.m_brdf_map;
-        // level_resource_desc.m_color_grading_resource_desc.m_color_grading_map = global_rendering_res.m_color_grading_map;
-
-        // m_render_resource = std::make_shared<RenderResource>();
-        // m_render_resource->uploadGlobalRenderResource(m_rhi, level_resource_desc);
-
-        //// setup render camera
-        // const CameraPose& camera_pose = global_rendering_res.m_camera_config.m_pose;
-        // m_render_camera               = std::make_shared<RenderCamera>();
-        // m_render_camera->lookAt(camera_pose.m_position, camera_pose.m_target, camera_pose.m_up);
-        // m_render_camera->m_zfar  = global_rendering_res.m_camera_config.m_z_far;
-        // m_render_camera->m_znear = global_rendering_res.m_camera_config.m_z_near;
-        // m_render_camera->setAspect(global_rendering_res.m_camera_config.m_aspect.x / global_rendering_res.m_camera_config.m_aspect.y);
-
-        //// setup render scene
-        // m_render_scene                                  = std::make_shared<RenderScene>();
-        // m_render_scene->m_ambient_light                 = {global_rendering_res.m_ambient_light.toVector3()};
-        // m_render_scene->m_directional_light.m_direction = global_rendering_res.m_directional_light.m_direction.normalisedCopy();
-        // m_render_scene->m_directional_light.m_color     = global_rendering_res.m_directional_light.m_color.toVector3();
-        // m_render_scene->setVisibleNodesReference();
-
-        //// initialize render pipeline
-        // RenderPipelineInitInfo pipeline_init_info;
-        // pipeline_init_info.enable_fxaa     = global_rendering_res.m_enable_fxaa;
-        // pipeline_init_info.render_resource = m_render_resource;
-
-        // m_render_pipeline        = std::make_shared<RenderPipeline>();
-        // m_render_pipeline->m_rhi = m_rhi;
-        // m_render_pipeline->initialize(pipeline_init_info);
-
-        //// descriptor set layout in main camera pass will be used when uploading resource
-        // std::static_pointer_cast<RenderResource>(m_render_resource)->m_mesh_descriptor_set_layout =
-        //     &dynamic_cast<RenderPass*>(m_render_pipeline->m_main_camera_pass.get())->m_descriptor_infos[MainCameraPass::LayoutType::_per_mesh].layout;
-        // std::static_pointer_cast<RenderResource>(m_render_resource)->m_material_descriptor_set_layout =
-        //     &dynamic_cast<RenderPass*>(m_render_pipeline->m_main_camera_pass.get())
-        //          ->m_descriptor_infos[MainCameraPass::LayoutType::_mesh_per_material]
-        //          .layout;
+        bgfx::frame();
     }
 
     void RenderSystem::tick(float delta_time)
     {
-        const auto windows_system = g_runtime_global_context.m_window_system;
-
-        // Set view 0 default viewport.
-        bgfx::setViewRect(0, 0, 0, uint16_t(windows_system->getWindowSize()[0]), uint16_t(windows_system->getWindowSize()[1]));
-
         // This dummy draw call is here to make sure that view 0 is cleared
         // if no other draw calls are submitted to view 0.
         bgfx::touch(0);
 
         // Use debug font to print information about this example.
         bgfx::dbgTextClear();
+        // bgfx::dbgTextImage(
+        //     bx::max<uint16_t>(uint16_t(m_width / 2 / 8), 20) - 20, bx::max<uint16_t>(uint16_t(m_height / 2 / 16), 6) - 6, 40, 12, s_logo,
+        // 160);
         bgfx::dbgTextPrintf(
             0, 1, 0x0f, "Color can be changed with ANSI \x1b[9;me\x1b[10;ms\x1b[11;mc\x1b[12;ma\x1b[13;mp\x1b[14;me\x1b[0m code too.");
 
@@ -164,76 +112,11 @@ namespace LunarYue
                             stats->height,
                             stats->textWidth,
                             stats->textHeight);
-
-        // Advance to next frame. Rendering thread will be kicked to
-        // process submitted rendering primitives.
-        bgfx::frame();
-
-        //// process swap data between logic and render contexts
-        // processSwapData();
-
-        //// prepare render command context
-        // m_rhi->prepareContext();
-
-        //// update per-frame buffer
-        // m_render_resource->updatePerFrameBuffer(m_render_scene, m_render_camera);
-
-        //// update per-frame visible objects
-        // m_render_scene->updateVisibleObjects(std::static_pointer_cast<RenderResource>(m_render_resource), m_render_camera);
-
-        //// prepare pipeline's render passes data
-        // m_render_pipeline->preparePassData(m_render_resource);
-
-        // g_runtime_global_context.m_debugdraw_manager->tick(delta_time);
-
-        //// render one frame
-        // if (m_render_pipeline_type == RENDER_PIPELINE_TYPE::FORWARD_PIPELINE)
-        //{
-        //     m_render_pipeline->forwardRender(m_rhi, m_render_resource);
-        // }
-        // else if (m_render_pipeline_type == RENDER_PIPELINE_TYPE::DEFERRED_PIPELINE)
-        //{
-        //     m_render_pipeline->deferredRender(m_rhi, m_render_resource);
-        // }
-        // else
-        //{
-        //     LOG_ERROR(__FUNCTION__, "unsupported render pipeline type");
-        // }
     }
 
-    void RenderSystem::clear()
-    {
-        // imguiDestroy();
+    void RenderSystem::clear() {}
 
-        bgfx::shutdown();
-        /*      if (m_rhi)
-              {
-                  m_rhi->clear();
-              }
-              m_rhi.reset();
-
-              if (m_render_scene)
-              {
-                  m_render_scene->clear();
-              }
-              m_render_scene.reset();
-
-              if (m_render_resource)
-              {
-                  m_render_resource->clear();
-              }
-              m_render_resource.reset();
-
-              if (m_render_pipeline)
-              {
-                  m_render_pipeline->clear();
-              }
-              m_render_pipeline.reset();*/
-    }
-
-    void RenderSystem::swapLogicRenderData() { m_swap_context.swapLogicRenderData(); }
-
-    RenderSwapContext& RenderSystem::getSwapContext() { return m_swap_context; }
+    void RenderSystem::swapLogicRenderData() {}
 
     std::shared_ptr<RenderCamera> RenderSystem::getRenderCamera() const { return m_render_camera; }
 
@@ -241,256 +124,29 @@ namespace LunarYue
 
     void RenderSystem::updateEngineContentViewport(float offset_x, float offset_y, float width, float height)
     {
-        std::static_pointer_cast<VulkanRHI>(m_rhi)->m_viewport.x        = offset_x;
-        std::static_pointer_cast<VulkanRHI>(m_rhi)->m_viewport.y        = offset_y;
-        std::static_pointer_cast<VulkanRHI>(m_rhi)->m_viewport.width    = width;
-        std::static_pointer_cast<VulkanRHI>(m_rhi)->m_viewport.height   = height;
-        std::static_pointer_cast<VulkanRHI>(m_rhi)->m_viewport.minDepth = 0.0f;
-        std::static_pointer_cast<VulkanRHI>(m_rhi)->m_viewport.maxDepth = 1.0f;
 
         m_render_camera->setAspect(width / height);
     }
 
-    EngineContentViewport RenderSystem::getEngineContentViewport() const
-    {
-        float x      = std::static_pointer_cast<VulkanRHI>(m_rhi)->m_viewport.x;
-        float y      = std::static_pointer_cast<VulkanRHI>(m_rhi)->m_viewport.y;
-        float width  = std::static_pointer_cast<VulkanRHI>(m_rhi)->m_viewport.width;
-        float height = std::static_pointer_cast<VulkanRHI>(m_rhi)->m_viewport.height;
-        return {x, y, width, height};
-    }
-
-    uint32_t RenderSystem::getGuidOfPickedMesh(const Vector2& picked_uv) { return m_render_pipeline->getGuidOfPickedMesh(picked_uv); }
+    uint32_t RenderSystem::getGuidOfPickedMesh(const Vector2& picked_uv) { return k_invalid_object_id; }
 
     ObjectID RenderSystem::getGObjectIDByMeshID(uint32_t mesh_id) const { return m_render_scene->getGObjectIDByMeshID(mesh_id); }
 
-    void RenderSystem::createAxis(std::array<RenderEntity, 3> axis_entities, std::array<RenderMeshData, 3> mesh_datas)
-    {
-        for (int i = 0; i < axis_entities.size(); i++)
-        {
-            m_render_resource->uploadGameObjectRenderResource(m_rhi, axis_entities[i], mesh_datas[i]);
-        }
-    }
+    void RenderSystem::createAxis(std::array<RenderEntity, 3> axis_entities, std::array<RenderMeshData, 3> mesh_datas) {}
 
-    void RenderSystem::setVisibleAxis(std::optional<RenderEntity> axis)
-    {
-        m_render_scene->m_render_axis = axis;
+    void RenderSystem::setVisibleAxis(std::optional<RenderEntity> axis) { m_render_scene->m_render_axis = axis; }
 
-        if (axis.has_value())
-        {
-            std::static_pointer_cast<RenderPipeline>(m_render_pipeline)->setAxisVisibleState(true);
-        }
-        else
-        {
-            std::static_pointer_cast<RenderPipeline>(m_render_pipeline)->setAxisVisibleState(false);
-        }
-    }
-
-    void RenderSystem::setSelectedAxis(size_t selected_axis)
-    {
-        std::static_pointer_cast<RenderPipeline>(m_render_pipeline)->setSelectedAxis(selected_axis);
-    }
+    void RenderSystem::setSelectedAxis(size_t selected_axis) {}
 
     GuidAllocator<GameObjectPartId>& RenderSystem::getGOInstanceIdAllocator() { return m_render_scene->getInstanceIdAllocator(); }
 
     GuidAllocator<MeshSourceDesc>& RenderSystem::getMeshAssetIdAllocator() { return m_render_scene->getMeshAssetIdAllocator(); }
 
-    void* RenderSystem::getIconId(const std::string& file) { return m_render_pipeline->getIconId(file); }
-
-    void RenderSystem::destroyIcon(const std::string& file) {}
-
     void RenderSystem::clearForLevelReloading() { m_render_scene->clearForLevelReloading(); }
 
     void RenderSystem::setRenderPipelineType(RENDER_PIPELINE_TYPE pipeline_type) { m_render_pipeline_type = pipeline_type; }
 
-    void RenderSystem::initializeUIRenderBackend(std::shared_ptr<WindowUI> window_ui) { m_render_pipeline->initializeUIRenderBackend(window_ui); }
+    void RenderSystem::initializeUIRenderBackend(std::shared_ptr<WindowUI> window_ui) {}
 
-    void RenderSystem::processSwapData()
-    {
-        RenderSwapData& swap_data = m_swap_context.getRenderSwapData();
-
-        std::shared_ptr<AssetManager> asset_manager = g_runtime_global_context.m_asset_manager;
-        ASSERT(asset_manager);
-
-        // TODO: update global resources if needed
-        if (swap_data.m_level_resource_desc.has_value())
-        {
-            m_render_resource->uploadGlobalRenderResource(m_rhi, *swap_data.m_level_resource_desc);
-
-            // reset level resource swap data to a clean state
-            m_swap_context.resetLevelRsourceSwapData();
-        }
-
-        // update game object if needed
-        if (swap_data.m_game_object_resource_desc.has_value())
-        {
-            while (!swap_data.m_game_object_resource_desc->isEmpty())
-            {
-                GameObjectDesc gobject = swap_data.m_game_object_resource_desc->getNextProcessObject();
-
-                for (size_t part_index = 0; part_index < gobject.getObjectParts().size(); part_index++)
-                {
-                    const auto&      game_object_part = gobject.getObjectParts()[part_index];
-                    GameObjectPartId part_id          = {gobject.getId(), part_index};
-
-                    bool is_entity_in_scene = m_render_scene->getInstanceIdAllocator().hasElement(part_id);
-
-                    RenderEntity render_entity;
-                    render_entity.m_instance_id  = static_cast<uint32_t>(m_render_scene->getInstanceIdAllocator().allocGuid(part_id));
-                    render_entity.m_model_matrix = game_object_part.m_transform_desc.m_transform_matrix;
-
-                    m_render_scene->addInstanceIdToMap(render_entity.m_instance_id, gobject.getId());
-
-                    // mesh properties
-                    MeshSourceDesc mesh_source    = {game_object_part.m_mesh_desc.m_mesh_file};
-                    bool           is_mesh_loaded = m_render_scene->getMeshAssetIdAllocator().hasElement(mesh_source);
-
-                    RenderMeshData mesh_data;
-                    if (!is_mesh_loaded)
-                    {
-                        mesh_data = m_render_resource->loadMeshData(mesh_source, render_entity.m_bounding_box);
-                    }
-                    else
-                    {
-                        render_entity.m_bounding_box = m_render_resource->getCachedBoudingBox(mesh_source);
-                    }
-
-                    render_entity.m_mesh_asset_id          = m_render_scene->getMeshAssetIdAllocator().allocGuid(mesh_source);
-                    render_entity.m_enable_vertex_blending = game_object_part.m_skeleton_animation_result.m_transforms.size() > 1; // take care
-                    render_entity.m_joint_matrices.resize(game_object_part.m_skeleton_animation_result.m_transforms.size());
-                    for (size_t i = 0; i < game_object_part.m_skeleton_animation_result.m_transforms.size(); ++i)
-                    {
-                        render_entity.m_joint_matrices[i] = game_object_part.m_skeleton_animation_result.m_transforms[i].m_matrix;
-                    }
-
-                    // material properties
-                    MaterialSourceDesc material_source;
-                    if (game_object_part.m_material_desc.m_with_texture)
-                    {
-                        material_source = {game_object_part.m_material_desc.m_base_color_texture_file,
-                                           game_object_part.m_material_desc.m_metallic_roughness_texture_file,
-                                           game_object_part.m_material_desc.m_normal_texture_file,
-                                           game_object_part.m_material_desc.m_occlusion_texture_file,
-                                           game_object_part.m_material_desc.m_emissive_texture_file};
-                    }
-                    else
-                    {
-                        // TODO: move to default material definition json file
-                        material_source = {asset_manager->getFullPath("asset/texture/default/albedo.jpg").generic_string(),
-                                           asset_manager->getFullPath("asset/texture/default/mr.jpg").generic_string(),
-                                           asset_manager->getFullPath("asset/texture/default/normal.jpg").generic_string(),
-                                           "",
-                                           ""};
-                    }
-                    bool is_material_loaded = m_render_scene->getMaterialAssetdAllocator().hasElement(material_source);
-
-                    RenderMaterialData material_data;
-                    if (!is_material_loaded)
-                    {
-                        material_data = m_render_resource->loadMaterialData(material_source);
-                    }
-
-                    render_entity.m_material_asset_id = m_render_scene->getMaterialAssetdAllocator().allocGuid(material_source);
-
-                    // create game object on the graphics api side
-                    if (!is_mesh_loaded)
-                    {
-                        m_render_resource->uploadGameObjectRenderResource(m_rhi, render_entity, mesh_data);
-                    }
-
-                    if (!is_material_loaded)
-                    {
-                        m_render_resource->uploadGameObjectRenderResource(m_rhi, render_entity, material_data);
-                    }
-
-                    // add object to render scene if needed
-                    if (!is_entity_in_scene)
-                    {
-                        m_render_scene->m_render_entities.push_back(render_entity);
-                    }
-                    else
-                    {
-                        for (auto& entity : m_render_scene->m_render_entities)
-                        {
-                            if (entity.m_instance_id == render_entity.m_instance_id)
-                            {
-                                entity = render_entity;
-                                break;
-                            }
-                        }
-                    }
-                }
-                // after finished processing, pop this game object
-                swap_data.m_game_object_resource_desc->pop();
-            }
-
-            // reset game object swap data to a clean state
-            m_swap_context.resetGameObjectResourceSwapData();
-        }
-
-        // remove deleted objects
-        if (swap_data.m_game_object_to_delete.has_value())
-        {
-            while (!swap_data.m_game_object_to_delete->isEmpty())
-            {
-                GameObjectDesc gobject = swap_data.m_game_object_to_delete->getNextProcessObject();
-                m_render_scene->deleteEntityByGObjectID(gobject.getId());
-                swap_data.m_game_object_to_delete->pop();
-            }
-
-            m_swap_context.resetGameObjectToDelete();
-        }
-
-        // process camera swap data
-        if (swap_data.m_camera_swap_data.has_value())
-        {
-            if (swap_data.m_camera_swap_data->m_fov_x.has_value())
-            {
-                m_render_camera->setFOVx(*swap_data.m_camera_swap_data->m_fov_x);
-            }
-
-            if (swap_data.m_camera_swap_data->m_view_matrix.has_value())
-            {
-                m_render_camera->setMainViewMatrix(*swap_data.m_camera_swap_data->m_view_matrix);
-            }
-
-            if (swap_data.m_camera_swap_data->m_camera_type.has_value())
-            {
-                m_render_camera->setCurrentCameraType(*swap_data.m_camera_swap_data->m_camera_type);
-            }
-
-            m_swap_context.resetCameraSwapData();
-        }
-
-        if (swap_data.m_particle_submit_request.has_value())
-        {
-            std::shared_ptr<ParticlePass> particle_pass = std::static_pointer_cast<ParticlePass>(m_render_pipeline->m_particle_pass);
-
-            int emitter_count = swap_data.m_particle_submit_request->getEmitterCount();
-            particle_pass->setEmitterCount(emitter_count);
-
-            for (int index = 0; index < emitter_count; ++index)
-            {
-                const ParticleEmitterDesc& desc = swap_data.m_particle_submit_request->getEmitterDesc(index);
-                particle_pass->createEmitter(index, desc);
-            }
-
-            particle_pass->initializeEmitters();
-
-            m_swap_context.resetPartilceBatchSwapData();
-        }
-        if (swap_data.m_emitter_tick_request.has_value())
-        {
-            std::static_pointer_cast<ParticlePass>(m_render_pipeline->m_particle_pass)
-                ->setTickIndices(swap_data.m_emitter_tick_request->m_emitter_indices);
-            m_swap_context.resetEmitterTickSwapData();
-        }
-
-        if (swap_data.m_emitter_transform_request.has_value())
-        {
-            std::static_pointer_cast<ParticlePass>(m_render_pipeline->m_particle_pass)
-                ->setTransformIndices(swap_data.m_emitter_transform_request->m_transform_descs);
-            m_swap_context.resetEmitterTransformSwapData();
-        }
-    }
+    void RenderSystem::processSwapData() {}
 } // namespace LunarYue

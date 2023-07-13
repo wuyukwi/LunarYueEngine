@@ -5,81 +5,87 @@
 #include "runtime/function/render/render_system.h"
 
 #include "editor/include/editor_global_context.h"
-#include "editor/include/editor_input_manager.h"
-#include "editor/include/editor_launcher.h"
-#include "editor/include/editor_panels_manager.h"
-#include "editor/include/editor_scene_manager.h"
 #include "editor/include/editor_ui.h"
 
 #include "function/render/window_system.h"
-#include "function/ui/Core/UIManager.h"
+
+#include "imgui/imgui.h"
+
 #include "resource/asset_manager/asset_manager.h"
+
+#include "editor/include/editor_ui.h"
 
 namespace LunarYue
 {
+
     EditorGlobalContext g_editor_global_context;
 
-    void registerEdtorTickComponent(std::string component_type_name) { g_editor_tick_component_types.insert(component_type_name); }
+    void registerEdtorTickComponent(const std::string& component_type_name) { g_editor_tick_component_types.insert(component_type_name); }
 
-    LunarYueEditor::LunarYueEditor()
+    LunarYueEditor::LunarYueEditor(const char* _name, const char* _description, const char* _url) : AppI(_name, _description, _url)
     {
         registerEdtorTickComponent("TransformComponent");
         registerEdtorTickComponent("MeshComponent");
-        // registerEdtorTickComponent("RigidbodyComponent");
-        // registerEdtorTickComponent("MotorComponent");
-        // registerEdtorTickComponent("AnimationComponent");
-        // registerEdtorTickComponent("CameraComponent");
-        // registerEdtorTickComponent("ParticleComponent");
-        // registerEdtorTickComponent("LuaComponent");
+
+        m_engine_runtime = std::make_shared<LunarYueEngine>();
+        g_is_editor_mode = true;
     }
 
-    LunarYueEditor::~LunarYueEditor() {}
-
-    void LunarYueEditor::initialize(std::shared_ptr<LunarYueEngine> engine_runtime)
+    void LunarYueEditor::setupEngine(std::shared_ptr<LunarYueEngine> engine)
     {
-        assert(engine_runtime);
-
-        g_is_editor_mode = true;
-        m_engine_runtime = engine_runtime;
-
-        g_editor_global_context.m_scene_manager = std::make_shared<EditorSceneManager>();
-        g_editor_global_context.m_input_manager = std::make_shared<EditorInputManager>();
-        g_editor_global_context.m_scene_manager->initialize();
-        g_editor_global_context.m_input_manager->initialize();
-
-        // g_editor_global_context.m_ui_manager = std::make_shared<UI::Core::UIManager>();
-        // g_editor_global_context.m_ui_manager->initialize(UI::Core::EditorStyle::DUNE_DARK);
-
-        g_editor_global_context.m_engine_runtime = m_engine_runtime;
-        // g_editor_global_context.m_scene_manager->setEditorCamera(g_runtime_global_context.m_render_system->getRenderCamera());
-        // g_editor_global_context.m_scene_manager->uploadAxisResource();
-
+        assert(engine);
         // m_editor_launcher = std::make_shared<EditorLauncher>();
         // m_editor_launcher->initialize();
-
-        // m_editor_ui = std::make_shared<EditorUI>();
-        // m_editor_ui->initialize();
 
         // g_runtime_global_context.m_render_system->initializeUIRenderBackend(m_editor_ui);
     }
 
-    void LunarYueEditor::clear()
+    void LunarYueEditor::init(int32_t _argc, const char* const* _argv, uint32_t _width, uint32_t _height)
     {
-        m_editor_launcher.reset();
-        m_editor_ui.reset();
+        // g_editor_global_context.m_scene_manager = std::make_shared<EditorSceneManager>();
+        // g_editor_global_context.m_input_manager = std::make_shared<EditorInputManager>();
+        // g_editor_global_context.m_scene_manager->initialize();
+        // g_editor_global_context.m_input_manager->initialize();
+
+        // g_editor_global_context.m_scene_manager->setEditorCamera(g_runtime_global_context.m_render_system->getRenderCamera());
+        // g_editor_global_context.m_scene_manager->uploadAxisResource();
+
+        const std::filesystem::path executable_path(_argv[0]);
+        const std::filesystem::path config_file_path = executable_path.parent_path() / LunarYueEditorConfigFile;
+        m_engine_runtime->startEngine(config_file_path.generic_string());
+
+        m_engine_runtime->initialize();
+
+        g_editor_global_context.m_ui_manager = std::make_shared<UI::Core::UIManager>();
+        g_editor_global_context.m_ui_manager->initialize(UI::Core::EditorStyle::DUNE_DARK);
+
+        m_editor_ui = std::make_shared<EditorUI>();
+        m_editor_ui->initialize();
     }
 
-    void LunarYueEditor::run() const
+    int LunarYueEditor::shutdown()
     {
-        while (true)
+        //        g_runtime_global_context.m_render_system->clear();
+        m_engine_runtime->shutdownEngine();
+        return 0;
+    }
+
+    bool LunarYueEditor::update()
+    {
+        const float delta_time = m_engine_runtime->calculateDeltaTime();
+
+        while (!g_runtime_global_context.m_window_system->processWindowEvents())
         {
-            const float delta_time = m_engine_runtime->calculateDeltaTime();
 
-            // g_editor_global_context.m_scene_manager->tick(delta_time);
-            // g_editor_global_context.m_input_manager->tick(delta_time);
+            g_runtime_global_context.m_render_system->beginFrame();
 
-            if (!m_engine_runtime->tickOneFrame(delta_time))
-                return;
+            m_engine_runtime->tickOneFrame(delta_time);
+
+            m_editor_ui->preRender();
+
+            g_runtime_global_context.m_render_system->endFrame();
         }
+
+        return false;
     }
 } // namespace LunarYue

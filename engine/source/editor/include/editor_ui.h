@@ -2,7 +2,6 @@
 
 #include "runtime/function/framework/object/object.h"
 #include "runtime/function/ui/Core/UIManager.h"
-#include "runtime/function/ui/window_ui.h"
 
 #include "editor/include/editor_file_service.h"
 
@@ -13,7 +12,7 @@
 namespace LunarYue
 {
     // LunarYueエディタのUIクラス
-    class EditorUI : public WindowUI
+    class EditorUI
     {
     public:
         // コンストラクタ
@@ -51,9 +50,9 @@ namespace LunarYue
 
     public:
         // 初期化
-        virtual void initialize() override final;
+        virtual void initialize();
         // プリレンダー
-        virtual void preRender() override final;
+        virtual void preRender();
 
     private:
         // エディタUIクリエータのマップ

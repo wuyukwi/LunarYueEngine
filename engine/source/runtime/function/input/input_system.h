@@ -29,7 +29,7 @@ namespace LunarYue
         void onCursorPos(double current_cursor_x, double current_cursor_y);
 
         // システムの初期化
-        void initialize();
+        void initialie();
         // システムの更新
         void tick();
         // システムのクリア

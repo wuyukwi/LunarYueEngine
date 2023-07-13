@@ -1,8 +1,10 @@
 #pragma once
 
-#include "runtime/core/math/vector2.h"
+#include "common.h"
 
 #include <memory>
+
+#include "editor_launcher.h"
 
 namespace LunarYue
 {
@@ -10,25 +12,25 @@ namespace LunarYue
     class EditorUI;
     class LunarYueEngine;
 
-    class LunarYueEditor
+    class LunarYueEditor : public entry::AppI
     {
-        friend class EditorLauncher;
-        friend class EditorUI;
 
     public:
-        LunarYueEditor();
+        LunarYueEditor(const char* _name        = "LunarYueEditor",
+                       const char* _description = "Author: HuangQiYue",
+                       const char* _url         = "https://github.com/wuyukwi/LunarYueEngine");
 
-        virtual ~LunarYueEditor();
+        void setupEngine(std::shared_ptr<LunarYueEngine> engine);
 
-        void initialize(std::shared_ptr<LunarYueEngine> engine_runtime);
+        void init(int32_t _argc, const char* const* _argv, uint32_t _width, uint32_t _height) override;
 
-        void clear();
+        virtual int shutdown() override;
 
-        void run() const;
+        bool update() override;
 
     protected:
         std::shared_ptr<EditorLauncher> m_editor_launcher;
-        std::shared_ptr<EditorUI> m_editor_ui;
+        std::shared_ptr<EditorUI>       m_editor_ui;
 
         std::shared_ptr<LunarYueEngine> m_engine_runtime;
     };

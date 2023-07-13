@@ -2,13 +2,16 @@
 
 #include "runtime/function/render/render_entity.h"
 #include "runtime/function/render/render_guid_allocator.h"
-#include "runtime/function/render/render_swap_context.h"
 #include "runtime/function/render/render_type.h"
 #include "runtime/function/render/renderer_callback.h"
 
 #include <array>
 #include <memory>
 #include <optional>
+
+#include "function/framework/object/object_id_allocator.h"
+
+#include "resource/asset_manager/asset_manager.h"
 
 namespace LunarYue
 {
@@ -47,6 +50,8 @@ namespace LunarYue
 
         // レンダリングシステムの初期化
         void initialize(RenderSystemInitInfo init_info);
+        void beginFrame();
+        void endFrame();
         // レンダリングの更新
         void tick(float delta_time);
         // レンダリングデータのクリア
@@ -54,8 +59,6 @@ namespace LunarYue
 
         // 描画データのスワップ
         void swapLogicRenderData();
-        // スワップコンテキストの取得
-        RenderSwapContext& getSwapContext();
         // レンダリングカメラの取得
         std::shared_ptr<RenderCamera> getRenderCamera() const;
         // RHIの取得
@@ -95,9 +98,6 @@ namespace LunarYue
     private:
         // レンダリングパイプラインタイプ
         RENDER_PIPELINE_TYPE m_render_pipeline_type {RENDER_PIPELINE_TYPE::DEFERRED_PIPELINE};
-
-        // レンダリングスワップコンテキスト
-        RenderSwapContext m_swap_context;
 
         // RHIオブジェクト
         std::shared_ptr<RHI> m_rhi;

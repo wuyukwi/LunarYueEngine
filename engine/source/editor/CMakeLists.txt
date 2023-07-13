@@ -14,10 +14,11 @@ add_executable(${TARGET_NAME} ${EDITOR_HEADERS} ${EDITOR_SOURCES} ${EDITOR_RESOU
 
 # 定義の追加
 add_compile_definitions("LunarYue_ROOT_DIR=${BINARY_ROOT_DIR}")
+add_compile_definitions("LunarYueEditorConfigFile=\"${TARGET_NAME}.ini\"")
 
 # インクルードディレクトリの設定
 target_include_directories(
-  ${TARGET_NAME} 
+  ${TARGET_NAME}
   PUBLIC $<BUILD_INTERFACE:${THIRD_PARTY_DIR}/stb>
 )
 
@@ -30,6 +31,8 @@ target_compile_options(${TARGET_NAME} PUBLIC "$<$<COMPILE_LANG_AND_ID:CXX,MSVC>:
 
 # ライブラリのリンク設定
 target_link_libraries(${TARGET_NAME} LunarYueRuntime)
+#target_link_libraries(${TARGET_NAME} PUBLIC bgfx)
+#target_link_libraries(${TARGET_NAME} PUBLIC example-common)
 
 # POST_BUILD_COMMANDSには、プロジェクトがビルドされた後に実行されるカスタムコマンドが含まれます
 set(POST_BUILD_COMMANDS

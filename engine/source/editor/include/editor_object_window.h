@@ -60,8 +60,8 @@ namespace LunarYue
         void AddActorByInstance(std::weak_ptr<Object> object);
 
     public:
-        Eventing::Event<std::weak_ptr<Object>> ActorSelectedEvent;
-        Eventing::Event<std::weak_ptr<Object>> ActorUnselectedEvent;
+        Event<std::weak_ptr<Object>> ActorSelectedEvent;
+        Event<std::weak_ptr<Object>> ActorUnselectedEvent;
 
     private:
         UI::Widgets::Layout::TreeNode* m_sceneRoot;

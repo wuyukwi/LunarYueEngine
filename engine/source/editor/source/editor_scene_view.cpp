@@ -35,31 +35,7 @@ namespace LunarYue
 
     void SceneView::Update(float p_deltaTime) {}
 
-    void SceneView::_Render_Impl()
-    {
-        hideBackground = true;
-
-        // auto [winWidth, winHeight] = GetSafeSize();
-        //  coord of right bottom point of full window minus coord of right bottom point of menu bar window.
-
-        // if (new_window_pos != m_engine_window_pos || new_window_size != m_engine_window_size)
-        {
-#if defined(__MACH__)
-            // The dpi_scale is not reactive to DPI changes or monitor switching, it might be a bug from ImGui.
-            // Return value from ImGui::GetMainViewport()->DpiScal is always the same as first frame.
-            // glfwGetMonitorContentScale and glfwSetWindowContentScaleCallback are more adaptive.
-            float dpi_scale = main_viewport->DpiScale;
-            g_runtime_global_context.m_render_system->updateEngineContentViewport(render_target_window_pos.x * dpi_scale,
-                                                                                  render_target_window_pos.y * dpi_scale,
-                                                                                  render_target_window_size.x * dpi_scale,
-                                                                                  render_target_window_size.y * dpi_scale);
-#else
-            g_runtime_global_context.m_render_system->updateEngineContentViewport(m_position.x, m_position.y, m_size.x, m_size.y);
-#endif
-            g_editor_global_context.m_input_manager->setEngineWindowPos(m_position);
-            g_editor_global_context.m_input_manager->setEngineWindowSize(m_size);
-        }
-    }
+    void SceneView::_Render_Impl() {}
 
     void SceneView::RenderScene(uint8_t p_defaultRenderState) {}
 

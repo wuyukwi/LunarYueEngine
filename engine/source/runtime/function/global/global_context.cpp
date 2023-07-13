@@ -56,10 +56,8 @@ namespace LunarYue
 
         m_world_manager->initialize();
 
-        WindowCreateInfo window_create_info;
+        WindowInfo window_create_info;
         m_window_system->initialize(window_create_info);
-
-        m_input_system->initialize();
 
         // m_particle_manager->initialize();
 
@@ -78,10 +76,9 @@ namespace LunarYue
 
         m_debugdraw_manager.reset();
 
-        m_render_system->clear();
-        m_render_system.reset();
-
         m_window_system.reset();
+
+        m_render_system.reset();
 
         m_world_manager->clear();
         m_world_manager.reset();

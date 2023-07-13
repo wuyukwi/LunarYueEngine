@@ -32,13 +32,13 @@ namespace LunarYue
         // 実行
         void run();
         // 1フレームごとの更新
-        bool tickOneFrame(float delta_time);
+        void tickOneFrame(float delta_time);
 
         // 現在の FPS の取得
         int getFPS() const { return m_fps; }
 
-    protected:
-        // 論理更新
+        // protected:
+        //  論理更新
         void logicalTick(float delta_time);
         // レンダリング更新
         bool rendererTick(float delta_time);

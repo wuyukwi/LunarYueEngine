@@ -6,7 +6,6 @@
 
 #include "runtime/core/base/macro.h"
 #include "runtime/function/global/global_context.h"
-#include "runtime/function/render/render_swap_context.h"
 #include "runtime/function/render/render_system.h"
 
 namespace LunarYue
@@ -41,18 +40,18 @@ namespace LunarYue
 
     void ParticleComponent::tick(float delta_time)
     {
-        RenderSwapContext& swap_context = g_runtime_global_context.m_render_system->getSwapContext();
+        // RenderSwapContext& swap_context = g_runtime_global_context.m_render_system->getSwapContext();
 
-        RenderSwapData& logic_swap_data = swap_context.getLogicSwapData();
+        // RenderSwapData& logic_swap_data = swap_context.getLogicSwapData();
 
-        logic_swap_data.addTickParticleEmitter(m_transform_desc.m_id);
+        // logic_swap_data.addTickParticleEmitter(m_transform_desc.m_id);
 
-        const TransformComponent* transform_component = m_parent_object.lock()->getComponent<TransformComponent>();
-        if (transform_component->isDirty())
-        {
-            computeGlobalTransform();
+        // const TransformComponent* transform_component = m_parent_object.lock()->getComponent<TransformComponent>();
+        // if (transform_component->isDirty())
+        //{
+        //     computeGlobalTransform();
 
-            logic_swap_data.updateParticleTransform(m_transform_desc);
-        }
+        //    logic_swap_data.updateParticleTransform(m_transform_desc);
+        //}
     }
 }; // namespace LunarYue

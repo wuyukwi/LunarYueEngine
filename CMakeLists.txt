@@ -30,5 +30,6 @@ set(CMAKE_INSTALL_PREFIX "${LunarYue_ROOT_DIR}/bin")
 
 # バイナリのルートディレクトリをインストールプレフィックスに設定しています。
 set(BINARY_ROOT_DIR "${CMAKE_INSTALL_PREFIX}/")
+set(BINARY_ROOT_DIR_TEST "${CMAKE_INSTALL_PREFIX}/Test")
 
 add_subdirectory(engine)

@@ -29,8 +29,8 @@ namespace LunarYue::UI::Widgets::Menu
         std::string           shortcut;
         bool                  checkable;
         bool                  checked;
-        Eventing::Event<>     ClickedEvent;
-        Eventing::Event<bool> ValueChangedEvent;
+        Event<>     ClickedEvent;
+        Event<bool> ValueChangedEvent;
 
     private:
         bool m_selected;

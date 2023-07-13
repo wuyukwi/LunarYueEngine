@@ -69,27 +69,27 @@ namespace LunarYue
         // static UI::Widgets::Texts::Text&   DrawMesh(UI::Internal::WidgetContainer& p_root,
         //                                             const std::string&             p_name,
         //                                             Rendering::Resources::Model*&  p_data,
-        //                                             Eventing::Event<>*             p_updateNotifier = nullptr);
+        //                                             Event<>*             p_updateNotifier = nullptr);
         // static UI::Widgets::Visual::Image& DrawTexture(UI::Internal::WidgetContainer&  p_root,
         //                                                const std::string&              p_name,
         //                                                Rendering::Resources::Texture*& p_data,
-        //                                                Eventing::Event<>*              p_updateNotifier = nullptr);
+        //                                                Event<>*              p_updateNotifier = nullptr);
         // static UI::Widgets::Texts::Text&   DrawShader(UI::Internal::WidgetContainer& p_root,
         //                                               const std::string&             p_name,
         //                                               Rendering::Resources::Shader*& p_data,
-        //                                               Eventing::Event<>*             p_updateNotifier = nullptr);
+        //                                               Event<>*             p_updateNotifier = nullptr);
         // static UI::Widgets::Texts::Text&   DrawMaterial(UI::Internal::WidgetContainer& p_root,
         //                                                 const std::string&             p_name,
         //                                                 Core::Resources::Material*&    p_data,
-        //                                                 Eventing::Event<>*             p_updateNotifier = nullptr);
+        //                                                 Event<>*             p_updateNotifier = nullptr);
         // static UI::Widgets::Texts::Text&   DrawSound(UI::Internal::WidgetContainer& p_root,
         //                                              const std::string&             p_name,
         //                                              Audio::Resources::Sound*&      p_data,
-        //                                              Eventing::Event<>*             p_updateNotifier = nullptr);
+        //                                              Event<>*             p_updateNotifier = nullptr);
         // static UI::Widgets::Texts::Text&   DrawAsset(UI::Internal::WidgetContainer& p_root,
         //                                              const std::string&             p_name,
         //                                              std::string&                   p_data,
-        //                                              Eventing::Event<>*             p_updateNotifier = nullptr);
+        //                                              Event<>*             p_updateNotifier = nullptr);
 
         template<typename T>
         static void DrawScalar(UI::Internal::WidgetContainer& p_root,

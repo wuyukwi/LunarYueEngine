@@ -9,7 +9,6 @@
 #include "runtime/function/global/global_context.h"
 #include "runtime/function/input/input_system.h"
 #include "runtime/function/particle/particle_manager.h"
-#include "runtime/function/render/debugdraw/debug_draw_manager.h"
 #include "runtime/function/render/render_system.h"
 #include "runtime/function/render/window_system.h"
 
@@ -52,17 +51,7 @@ namespace LunarYue
         // Clear the engine data
     }
 
-    void LunarYueEngine::run()
-    {
-        std::shared_ptr<WindowSystem> window_system = g_runtime_global_context.m_window_system;
-        ASSERT(window_system);
-
-        while (!window_system->shouldClose())
-        {
-            const float delta_time = calculateDeltaTime();
-            tickOneFrame(delta_time);
-        }
-    }
+    void LunarYueEngine::run() {}
 
     float LunarYueEngine::calculateDeltaTime()
     {
@@ -84,36 +73,20 @@ namespace LunarYue
         return delta_time;
     }
 
-    bool LunarYueEngine::tickOneFrame(float delta_time)
+    void LunarYueEngine::tickOneFrame(float delta_time)
     {
-        // logicalTick(delta_time);
         calculateFPS(delta_time);
 
-        // Swap logic and rendering context data
-        g_runtime_global_context.m_render_system->swapLogicRenderData();
+        logicalTick(delta_time);
 
         rendererTick(delta_time);
-
-#ifdef ENABLE_PHYSICS_DEBUG_RENDERER
-        // Render the physics world for debugging
-        g_runtime_global_context.m_physics_manager->renderPhysicsWorld(delta_time);
-#endif
-
-        // Poll events
-        g_runtime_global_context.m_window_system->pollEvents();
-
-        // Set the window title
-        g_runtime_global_context.m_window_system->setTitle(std::string("LunarYue - " + std::to_string(getFPS()) + " FPS").c_str());
-
-        const bool should_window_close = g_runtime_global_context.m_window_system->shouldClose();
-        return !should_window_close;
     }
 
     void LunarYueEngine::logicalTick(float delta_time)
     {
         // Perform logical updates
         g_runtime_global_context.m_world_manager->tick(delta_time);
-        g_runtime_global_context.m_input_system->tick();
+        // g_runtime_global_context.m_input_system->tick();
     }
 
     bool LunarYueEngine::rendererTick(float delta_time)

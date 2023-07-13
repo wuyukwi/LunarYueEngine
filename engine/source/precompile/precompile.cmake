@@ -33,27 +33,18 @@ elseif(CMAKE_HOST_APPLE)
 endif()
 
 set (PARSER_INPUT ${CMAKE_BINARY_DIR}/parser_header.h)
-### BUILDING ====================================================================================
 set(PRECOMPILE_TARGET "LunarYuePreCompile")
 
-# Called first time when building target 
-add_custom_target(${PRECOMPILE_TARGET} ALL
-
-# COMMAND # (DEBUG: DON'T USE )
-#     this will make configure_file() is called on each compile
-#   ${CMAKE_COMMAND} -E touch ${PRECOMPILE_PARAM_IN_PATH}a
-
-# If more than one COMMAND is specified they will be executed in order...
-COMMAND
-  ${CMAKE_COMMAND} -E echo "************************************************************* "
-COMMAND
-  ${CMAKE_COMMAND} -E echo "**** [Precompile] BEGIN "
-COMMAND
-  ${CMAKE_COMMAND} -E echo "************************************************************* "
-
-COMMAND
-    ${PRECOMPILE_PARSER} "${LunarYue_PRECOMPILE_PARAMS_PATH}"  "${PARSER_INPUT}"  "${ENGINE_ROOT_DIR}/source" ${sys_include} "LunarYue" 0
 ### BUILDING ====================================================================================
-COMMAND
-    ${CMAKE_COMMAND} -E echo "+++ Precompile finished +++"
-)
+
+add_custom_command(OUTPUT ${PARSER_INPUT}
+                   COMMAND ${PRECOMPILE_PARSER} "${LunarYue_PRECOMPILE_PARAMS_PATH}" "${PARSER_INPUT}" "${ENGINE_ROOT_DIR}/source" ${sys_include} "LunarYue" 0
+                   DEPENDS ${LunarYue_PRECOMPILE_PARAMS_PATH}
+                   COMMENT "Precompiling"
+                   VERBATIM)
+
+add_custom_target(${PRECOMPILE_TARGET} ALL
+                  DEPENDS ${PARSER_INPUT}
+                  COMMENT "Precompile finished")
+
+add_dependencies(${PRECOMPILE_TARGET} LunarYuePreCompile)

@@ -10,8 +10,6 @@
 
 namespace LunarYue
 {
-    class RenderSwapContext;
-
     REFLECTION_TYPE(MeshComponent)
     CLASS(MeshComponent : public Component, WhiteListFields)
     {

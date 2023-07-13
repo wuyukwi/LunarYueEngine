@@ -66,9 +66,9 @@ namespace LunarYue::UI::Plugins
 
     public:
         std::string        identifier;
-        Eventing::Event<T> DataReceivedEvent;
-        Eventing::Event<>  HoverStartEvent;
-        Eventing::Event<>  HoverEndEvent;
+        Event<T> DataReceivedEvent;
+        Event<>  HoverStartEvent;
+        Event<>  HoverEndEvent;
 
         bool showYellowRect = true;
 

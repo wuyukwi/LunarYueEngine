@@ -295,8 +295,8 @@ namespace LunarYue
 
             current_active_level->deleteGObjectByID(m_selected_gobject_id);
 
-            RenderSwapContext& swap_context = g_runtime_global_context.m_render_system->getSwapContext();
-            swap_context.getLogicSwapData().addDeleteGameObject(GameObjectDesc {selected_object->getID(), {}});
+            // RenderSwapContext& swap_context = g_runtime_global_context.m_render_system->getSwapContext();
+            // swap_context.getLogicSwapData().addDeleteGameObject(GameObjectDesc {selected_object->getID(), {}});
         }
         onGObjectSelected(k_invalid_object_id);
     }
@@ -537,36 +537,37 @@ namespace LunarYue
 
     void EditorSceneManager::uploadAxisResource()
     {
-        auto& instance_id_allocator   = g_runtime_global_context.m_render_system->getGOInstanceIdAllocator();
-        auto& mesh_asset_id_allocator = g_runtime_global_context.m_render_system->getMeshAssetIdAllocator();
+        // auto& instance_id_allocator = g_runtime_global_context.m_render_system->getGOInstanceIdAllocator();
+        //// auto& mesh_asset_id_allocator = g_runtime_global_context.m_render_system->getMeshAssetIdAllocator();
 
-        // assign some value that won't be used by other game objects
-        {
-            GameObjectPartId axis_instance_id = {0xFFAA, 0xFFAA};
-            MeshSourceDesc   mesh_source_desc = {"%%translation_axis%%"};
+        //// assign some value that won't be used by other game objects
+        //{
+        //    GameObjectPartId axis_instance_id = {0xFFAA, 0xFFAA};
+        //    MeshSourceDesc   mesh_source_desc = {"%%translation_axis%%"};
 
-            m_translation_axis.m_instance_id   = instance_id_allocator.allocGuid(axis_instance_id);
-            m_translation_axis.m_mesh_asset_id = mesh_asset_id_allocator.allocGuid(mesh_source_desc);
-        }
+        //    m_translation_axis.m_instance_id   = instance_id_allocator.allocGuid(axis_instance_id);
+        //    m_translation_axis.m_mesh_asset_id = mesh_asset_id_allocator.allocGuid(mesh_source_desc);
+        //}
 
-        {
-            GameObjectPartId axis_instance_id = {0xFFBB, 0xFFBB};
-            MeshSourceDesc   mesh_source_desc = {"%%rotate_axis%%"};
+        //{
+        //    GameObjectPartId axis_instance_id = {0xFFBB, 0xFFBB};
+        //    MeshSourceDesc   mesh_source_desc = {"%%rotate_axis%%"};
 
-            m_rotation_axis.m_instance_id   = instance_id_allocator.allocGuid(axis_instance_id);
-            m_rotation_axis.m_mesh_asset_id = mesh_asset_id_allocator.allocGuid(mesh_source_desc);
-        }
+        //    m_rotation_axis.m_instance_id   = instance_id_allocator.allocGuid(axis_instance_id);
+        //    m_rotation_axis.m_mesh_asset_id = mesh_asset_id_allocator.allocGuid(mesh_source_desc);
+        //}
 
-        {
-            GameObjectPartId axis_instance_id = {0xFFCC, 0xFFCC};
-            MeshSourceDesc   mesh_source_desc = {"%%scale_axis%%"};
+        //{
+        //    GameObjectPartId axis_instance_id = {0xFFCC, 0xFFCC};
+        //    MeshSourceDesc   mesh_source_desc = {"%%scale_axis%%"};
 
-            m_scale_aixs.m_instance_id   = instance_id_allocator.allocGuid(axis_instance_id);
-            m_scale_aixs.m_mesh_asset_id = mesh_asset_id_allocator.allocGuid(mesh_source_desc);
-        }
+        //    m_scale_aixs.m_instance_id   = instance_id_allocator.allocGuid(axis_instance_id);
+        //    m_scale_aixs.m_mesh_asset_id = mesh_asset_id_allocator.allocGuid(mesh_source_desc);
+        //}
 
-        g_runtime_global_context.m_render_system->createAxis({m_translation_axis, m_rotation_axis, m_scale_aixs},
-                                                             {m_translation_axis.m_mesh_data, m_rotation_axis.m_mesh_data, m_scale_aixs.m_mesh_data});
+        /*    g_runtime_global_context.m_render_system->createAxis({m_translation_axis, m_rotation_axis, m_scale_aixs},
+                                                                 {m_translation_axis.m_mesh_data, m_rotation_axis.m_mesh_data,
+           m_scale_aixs.m_mesh_data});*/
     }
 
     size_t EditorSceneManager::getGuidOfPickedMesh(const Vector2& picked_uv) const

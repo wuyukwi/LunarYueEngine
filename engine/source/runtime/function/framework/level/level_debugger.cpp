@@ -1,4 +1,7 @@
 #include "level_debugger.h"
+
+#include "function/render/debugdraw/debug_draw_group.h"
+
 #include "runtime/core/meta/reflection/reflection.h"
 #include "runtime/engine.h"
 #include "runtime/function/character/character.h"
@@ -10,7 +13,6 @@
 #include "runtime/resource/asset_manager/asset_manager.h"
 
 #include "runtime/function/global/global_context.h"
-#include "runtime/function/render/debugdraw/debug_draw_manager.h"
 #include "runtime/function/render/render_debug_config.h"
 namespace LunarYue
 {
@@ -97,8 +99,6 @@ namespace LunarYue
         if (transform_component == nullptr || animation_component == nullptr)
             return;
 
-        DebugDrawGroup* debug_draw_group = g_runtime_global_context.m_debugdraw_manager->tryGetOrCreateDebugDrawGroup("bone");
-
         Matrix4x4 object_matrix =
             Transform(transform_component->getPosition(), transform_component->getRotation(), transform_component->getScale()).getMatrix();
 
@@ -124,14 +124,14 @@ namespace LunarYue
             parent_bone_position = object_matrix * parent_bone_matrix * parent_bone_position;
             parent_bone_position /= parent_bone_position[3];
 
-            debug_draw_group->addLine(Vector3(bone_position.x, bone_position.y, bone_position.z),
-                                      Vector3(parent_bone_position.x, parent_bone_position.y, parent_bone_position.z),
-                                      Vector4(1.0f, 0.0f, 0.0f, 1.0f),
-                                      Vector4(1.0f, 0.0f, 0.0f, 1.0f),
-                                      0.0f,
-                                      true);
-            debug_draw_group->addSphere(
-                Vector3(bone_position.x, bone_position.y, bone_position.z), 0.015f, Vector4(0.0f, 0.0f, 1.0f, 1.0f), 0.0f, true);
+            //       debug_draw_group->addLine(Vector3(bone_position.x, bone_position.y, bone_position.z),
+            // Vector3(parent_bone_position.x, parent_bone_position.y, parent_bone_position.z),
+            // Vector4(1.0f, 0.0f, 0.0f, 1.0f),
+            // Vector4(1.0f, 0.0f, 0.0f, 1.0f),
+            // 0.0f,
+            // true);
+            //      debug_draw_group->addSphere(
+            //           Vector3(bone_position.x, bone_position.y, bone_position.z), 0.015f, Vector4(0.0f, 0.0f, 1.0f, 1.0f), 0.0f, true);
         }
     }
 
@@ -143,7 +143,7 @@ namespace LunarYue
         if (transform_component == nullptr || animation_component == nullptr)
             return;
 
-        DebugDrawGroup* debug_draw_group = g_runtime_global_context.m_debugdraw_manager->tryGetOrCreateDebugDrawGroup("bone name");
+        //    DebugDrawGroup* debug_draw_group = g_runtime_global_context.m_debugdraw_manager->tryGetOrCreateDebugDrawGroup("bone name");
 
         Matrix4x4 object_matrix =
             Transform(transform_component->getPosition(), transform_component->getRotation(), transform_component->getScale()).getMatrix();
@@ -163,8 +163,9 @@ namespace LunarYue
             bone_position = object_matrix * bone_matrix * bone_position;
             bone_position /= bone_position[3];
 
-            debug_draw_group->addText(
-                bones[bone_index].getName(), Vector4(1.0f, 0.0f, 0.0f, 1.0f), Vector3(bone_position.x, bone_position.y, bone_position.z), 8, false);
+            /*  debug_draw_group->addText(
+                  bones[bone_index].getName(), Vector4(1.0f, 0.0f, 0.0f, 1.0f), Vector3(bone_position.x, bone_position.y, bone_position.z), 8,
+               false);*/
         }
     }
 
@@ -178,12 +179,12 @@ namespace LunarYue
         rigidbody_component->getShapeBoundingBoxes(bounding_boxes);
         for (size_t bounding_box_index = 0; bounding_box_index < bounding_boxes.size(); bounding_box_index++)
         {
-            AxisAlignedBox  bounding_box     = bounding_boxes[bounding_box_index];
-            DebugDrawGroup* debug_draw_group = g_runtime_global_context.m_debugdraw_manager->tryGetOrCreateDebugDrawGroup("bounding box");
-            Vector3         center           = Vector3(bounding_box.getCenter().x, bounding_box.getCenter().y, bounding_box.getCenter().z);
-            Vector3         halfExtent = Vector3(bounding_box.getHalfExtent().x, bounding_box.getHalfExtent().y, bounding_box.getHalfExtent().z);
+            AxisAlignedBox bounding_box = bounding_boxes[bounding_box_index];
+            // DebugDrawGroup* debug_draw_group = g_runtime_global_context.m_debugdraw_manager->tryGetOrCreateDebugDrawGroup("bounding box");
+            Vector3 center     = Vector3(bounding_box.getCenter().x, bounding_box.getCenter().y, bounding_box.getCenter().z);
+            Vector3 halfExtent = Vector3(bounding_box.getHalfExtent().x, bounding_box.getHalfExtent().y, bounding_box.getHalfExtent().z);
 
-            debug_draw_group->addBox(center, halfExtent, Vector4(1.0f, 0.0f, 0.0f, 0.0f), Vector4(0.0f, 1.0f, 0.0f, 1.0f));
+            // debug_draw_group->addBox(center, halfExtent, Vector4(1.0f, 0.0f, 0.0f, 0.0f), Vector4(0.0f, 1.0f, 0.0f, 1.0f));
         }
     }
 
@@ -193,7 +194,7 @@ namespace LunarYue
         if (camera_component == nullptr)
             return;
 
-        DebugDrawGroup* debug_draw_group = g_runtime_global_context.m_debugdraw_manager->tryGetOrCreateDebugDrawGroup("show camera info");
+        //     DebugDrawGroup* debug_draw_group = g_runtime_global_context.m_debugdraw_manager->tryGetOrCreateDebugDrawGroup("show camera info");
 
         std::ostringstream buffer;
         buffer << "camera mode: ";
@@ -219,6 +220,6 @@ namespace LunarYue
         Vector3 direction = forward - position;
         buffer << "camera position: (" << position.x << "," << position.y << "," << position.z << ")" << std::endl;
         buffer << "camera direction : (" << direction.x << "," << direction.y << "," << direction.z << ")";
-        debug_draw_group->addText(buffer.str(), Vector4(1.0f, 0.0f, 0.0f, 1.0f), Vector3(-1.0f, -0.2f, 0.0f), 10, true);
+        //   debug_draw_group->addText(buffer.str(), Vector4(1.0f, 0.0f, 0.0f, 1.0f), Vector3(-1.0f, -0.2f, 0.0f), 10, true);
     }
 } // namespace LunarYue

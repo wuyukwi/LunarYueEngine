@@ -148,8 +148,8 @@ namespace LunarYue
     public:
         bool                                      m_protected;
         std::string                               filePath;
-        Eventing::Event<std::string>              DestroyedEvent;
-        Eventing::Event<std::string, std::string> RenamedEvent;
+        Event<std::string>              DestroyedEvent;
+        Event<std::string, std::string> RenamedEvent;
     };
 
     class FolderContextualMenu : public BrowserItemContextualMenu
@@ -288,7 +288,7 @@ namespace LunarYue
         void DeleteItem() override {}
 
     public:
-        Eventing::Event<std::string> ItemAddedEvent;
+        Event<std::string> ItemAddedEvent;
     };
 
     class ScriptFolderContextualMenu : public FolderContextualMenu
@@ -401,7 +401,7 @@ namespace LunarYue
         }
 
     public:
-        Eventing::Event<std::string> DuplicateEvent;
+        Event<std::string> DuplicateEvent;
     };
 
     template<typename Resource, typename ResourceLoader>

@@ -67,8 +67,8 @@ namespace LunarYue::UI::Plugins
         std::string       identifier;
         std::string       tooltip;
         T                 data;
-        Eventing::Event<> DragStartEvent;
-        Eventing::Event<> DragStopEvent;
+        Event<> DragStartEvent;
+        Event<> DragStopEvent;
 
         bool hasTooltip = true;
 

@@ -17,11 +17,10 @@ void LunarYue::UI::Widgets::Selection::RadioButtonLinker::Link(RadioButton& p_ra
 
 void LunarYue::UI::Widgets::Selection::RadioButtonLinker::Unlink(RadioButton& p_radioButton)
 {
-    auto it = std::find_if(m_radioButtons.begin(),
-                           m_radioButtons.end(),
-                           [&p_radioButton](std::pair<LunarYue::Eventing::ListenerID, std::reference_wrapper<RadioButton>>& p_pair) {
-                               return &p_pair.second.get() == &p_radioButton;
-                           });
+    auto it = std::find_if(
+        m_radioButtons.begin(), m_radioButtons.end(), [&p_radioButton](std::pair<ListenerID, std::reference_wrapper<RadioButton>>& p_pair) {
+            return &p_pair.second.get() == &p_radioButton;
+        });
 
     if (it != m_radioButtons.end())
     {

@@ -378,10 +378,10 @@ namespace LunarYue
     //	#pragma endregion
 
     // public:
-    //	Eventing::Event<OvCore::ECS::Actor&> ActorSelectedEvent;
-    //	Eventing::Event<OvCore::ECS::Actor&> ActorUnselectedEvent;
-    //	Eventing::Event<EEditorMode> EditorModeChangedEvent;
-    //	Eventing::Event<> PlayEvent;
+    //	Event<OvCore::ECS::Actor&> ActorSelectedEvent;
+    //	Event<OvCore::ECS::Actor&> ActorUnselectedEvent;
+    //	Event<EEditorMode> EditorModeChangedEvent;
+    //	Event<> PlayEvent;
 
     // private:
     //	Context& m_context;

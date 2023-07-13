@@ -1054,7 +1054,7 @@ namespace LunarYue
             float indent_scale = 1.0f;
 #else // Not tested on Linux
             float x_scale, y_scale;
-            glfwGetWindowContentScale(g_runtime_global_context.m_window_system->getWindow(), &x_scale, &y_scale);
+            // glfwGetWindowContentScale(g_runtime_global_context.m_window_system->getWindow(), &x_scale, &y_scale);
             float indent_scale = fmaxf(1.0f, fmaxf(x_scale, y_scale));
 #endif
             indent_val = g_editor_global_context.m_input_manager->getEngineWindowSize().x - 100.0f * indent_scale;
@@ -1069,7 +1069,7 @@ namespace LunarYue
                     g_is_editor_mode = false;
                     g_editor_global_context.m_scene_manager->drawSelectedEntityAxis();
                     g_editor_global_context.m_input_manager->resetEditorCommand();
-                    g_runtime_global_context.m_window_system->setFocusMode(true);
+                    // g_runtime_global_context.m_window_system->setFocusMode(true);
                 }
                 ImGui::PopStyleColor();
                 ImGui::PopID();
@@ -1224,14 +1224,7 @@ namespace LunarYue
     {
         g_editor_global_context.m_panels_manager = std::make_shared<PanelsManager>(m_canvas);
 
-        m_iconTextureMap["folder"]   = "resource/icon/folder.png";
-        m_iconTextureMap["object"]   = "resource/icon/object.png";
-        m_iconTextureMap["question"] = "resource/icon/question.png";
-
         setupUI();
-
-        // initialize imgui vulkan render backend
-        //  g_runtime_global_context.m_render_system->initializeUIRenderBackend(this);
     }
 
     void EditorUI::preRender()

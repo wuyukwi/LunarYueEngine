@@ -42,8 +42,7 @@ namespace LunarYue
         file_menu.CreateWidget<Menu::MenuItem>("Reload Current Level").ClickedEvent +=
             [ObjectPtr = g_runtime_global_context.m_world_manager] { ObjectPtr->reloadCurrentLevel(); };
 
-        file_menu.CreateWidget<Menu::MenuItem>("Exit", "ALT + F4").ClickedEvent +=
-            [ObjectPtr = g_runtime_global_context.m_window_system] { ObjectPtr->setShouldClose(true); };
+        file_menu.CreateWidget<Menu::MenuItem>("Exit", "ALT + F4").ClickedEvent += [ObjectPtr = g_runtime_global_context.m_window_system] {};
     };
 
     void MenuBar::CreateBuildMenu() {}

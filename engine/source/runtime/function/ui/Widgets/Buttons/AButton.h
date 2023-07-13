@@ -15,6 +15,6 @@ namespace LunarYue::UI::Widgets::Buttons
         void _Draw_Impl() override = 0;
 
     public:
-        Eventing::Event<> ClickedEvent;
+        Event<> ClickedEvent;
     };
 } // namespace LunarYue::UI::Widgets::Buttons

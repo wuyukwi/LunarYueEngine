@@ -94,7 +94,7 @@ namespace LunarYue
     /* UI::Widgets::Texts::Text& GUIDrawer::DrawMesh(UI::Internal::WidgetContainer& p_root,
                                                    const std::string&             p_name,
                                                    Rendering::Resources::Model*&  p_data,
-                                                   Tools::Eventing::Event<>*      p_updateNotifier)
+                                                   Tools::Event<>*      p_updateNotifier)
      {
          CreateTitle(p_root, p_name);
 
@@ -134,7 +134,7 @@ namespace LunarYue
      UI::Widgets::Visual::Image& GUIDrawer::DrawTexture(UI::Internal::WidgetContainer&  p_root,
                                                         const std::string&              p_name,
                                                         Rendering::Resources::Texture*& p_data,
-                                                        Tools::Eventing::Event<>*       p_updateNotifier)
+                                                        Tools::Event<>*       p_updateNotifier)
      {
          CreateTitle(p_root, p_name);
 
@@ -175,7 +175,7 @@ namespace LunarYue
      UI::Widgets::Texts::Text& GUIDrawer::DrawShader(UI::Internal::WidgetContainer& p_root,
                                                      const std::string&             p_name,
                                                      Rendering::Resources::Shader*& p_data,
-                                                     Tools::Eventing::Event<>*      p_updateNotifier)
+                                                     Tools::Event<>*      p_updateNotifier)
      {
          CreateTitle(p_root, p_name);
 
@@ -215,7 +215,7 @@ namespace LunarYue
      UI::Widgets::Texts::Text& GUIDrawer::DrawMaterial(UI::Internal::WidgetContainer& p_root,
                                                        const std::string&             p_name,
                                                        Core::Resources::Material*&    p_data,
-                                                       Tools::Eventing::Event<>*      p_updateNotifier)
+                                                       Tools::Event<>*      p_updateNotifier)
      {
          CreateTitle(p_root, p_name);
 
@@ -255,7 +255,7 @@ namespace LunarYue
      UI::Widgets::Texts::Text& GUIDrawer::DrawSound(UI::Internal::WidgetContainer& p_root,
                                                     const std::string&             p_name,
                                                     Audio::Resources::Sound*&      p_data,
-                                                    Tools::Eventing::Event<>*      p_updateNotifier)
+                                                    Tools::Event<>*      p_updateNotifier)
      {
          CreateTitle(p_root, p_name);
 
@@ -295,7 +295,7 @@ namespace LunarYue
      UI::Widgets::Texts::Text& GUIDrawer::DrawAsset(UI::Internal::WidgetContainer& p_root,
                                                     const std::string&             p_name,
                                                     std::string&                   p_data,
-                                                    Tools::Eventing::Event<>*      p_updateNotifier)
+                                                    Tools::Event<>*      p_updateNotifier)
      {
          CreateTitle(p_root, p_name);
 
