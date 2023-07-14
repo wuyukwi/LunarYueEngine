@@ -56,8 +56,8 @@ namespace LunarYue
 
         m_engine_runtime->initialize();
 
-        g_editor_global_context.m_ui_manager = std::make_shared<UI::Core::UIManager>();
-        g_editor_global_context.m_ui_manager->initialize(UI::Core::EditorStyle::DUNE_DARK);
+        g_editor_global_context.m_ui_manager = std::make_shared<UIManager>();
+        g_editor_global_context.m_ui_manager->initialize(EditorStyle::DUNE_DARK);
 
         m_editor_ui = std::make_shared<EditorUI>();
         m_editor_ui->initialize();

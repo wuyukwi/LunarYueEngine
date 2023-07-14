@@ -70,17 +70,17 @@ namespace LunarYue
 
         auto& editor_style = setting_menu.CreateWidget<Menu::MenuList>("Editor Style");
         editor_style.CreateWidget<Menu::MenuItem>("DUNE_DARK").ClickedEvent +=
-            [ObjectPtr = g_editor_global_context.m_ui_manager] { ObjectPtr->ApplyStyle(UI::Core::EditorStyle::DUNE_DARK); };
+            [ObjectPtr = g_editor_global_context.m_ui_manager] { ObjectPtr->ApplyStyle(EditorStyle::DUNE_DARK); };
         editor_style.CreateWidget<Menu::MenuItem>("ALTERNATIVE_DARK").ClickedEvent +=
-            [ObjectPtr = g_editor_global_context.m_ui_manager] { ObjectPtr->ApplyStyle(UI::Core::EditorStyle::ALTERNATIVE_DARK); };
+            [ObjectPtr = g_editor_global_context.m_ui_manager] { ObjectPtr->ApplyStyle(EditorStyle::ALTERNATIVE_DARK); };
         editor_style.CreateWidget<Menu::MenuItem>("IM_CLASSIC_STYLE").ClickedEvent +=
-            [ObjectPtr = g_editor_global_context.m_ui_manager] { ObjectPtr->ApplyStyle(UI::Core::EditorStyle::IM_CLASSIC_STYLE); };
+            [ObjectPtr = g_editor_global_context.m_ui_manager] { ObjectPtr->ApplyStyle(EditorStyle::IM_CLASSIC_STYLE); };
         editor_style.CreateWidget<Menu::MenuItem>("IM_DARK_STYLE").ClickedEvent +=
-            [ObjectPtr = g_editor_global_context.m_ui_manager] { ObjectPtr->ApplyStyle(UI::Core::EditorStyle::IM_DARK_STYLE); };
+            [ObjectPtr = g_editor_global_context.m_ui_manager] { ObjectPtr->ApplyStyle(EditorStyle::IM_DARK_STYLE); };
         editor_style.CreateWidget<Menu::MenuItem>("IM_LIGHT_STYLE").ClickedEvent +=
-            [ObjectPtr = g_editor_global_context.m_ui_manager] { ObjectPtr->ApplyStyle(UI::Core::EditorStyle::IM_LIGHT_STYLE); };
+            [ObjectPtr = g_editor_global_context.m_ui_manager] { ObjectPtr->ApplyStyle(EditorStyle::IM_LIGHT_STYLE); };
         editor_style.CreateWidget<Menu::MenuItem>("PICCOLO_STYLE").ClickedEvent +=
-            [ObjectPtr = g_editor_global_context.m_ui_manager] { ObjectPtr->ApplyStyle(UI::Core::EditorStyle::PICCOLO_STYLE); };
+            [ObjectPtr = g_editor_global_context.m_ui_manager] { ObjectPtr->ApplyStyle(EditorStyle::PICCOLO_STYLE); };
     }
 
     void MenuBar::CreateHelpMenu() {}
