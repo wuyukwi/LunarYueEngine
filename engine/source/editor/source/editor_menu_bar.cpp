@@ -5,6 +5,7 @@
 #include "function/global/global_context.h"
 #include "function/render/window_system.h"
 #include "function/ui/Widgets/Visual/Separator.h"
+#include "function/ui/ui_manager.h"
 
 using namespace LunarYue::UI::Widgets;
 

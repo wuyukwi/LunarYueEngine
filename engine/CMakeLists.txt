@@ -34,9 +34,6 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     set_property(DIRECTORY ${CMAKE_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT LunarYueEditor)
 endif()
 
-# LunarYueShaderCompileのターゲットを設定
-set(SHADER_COMPILE_TARGET LunarYueShaderCompile)
-
 # shaderフォルダーのビルドを実行
 add_subdirectory(shader)
 # 3rdpartyフォルダーのビルドを実行

@@ -13,7 +13,7 @@
 
 #include "resource/asset_manager/asset_manager.h"
 
-#include "editor/include/editor_ui.h"
+#include "function/ui/ui_manager.h"
 
 namespace LunarYue
 {
@@ -29,15 +29,6 @@ namespace LunarYue
 
         m_engine_runtime = std::make_shared<LunarYueEngine>();
         g_is_editor_mode = true;
-    }
-
-    void LunarYueEditor::setupEngine(std::shared_ptr<LunarYueEngine> engine)
-    {
-        assert(engine);
-        // m_editor_launcher = std::make_shared<EditorLauncher>();
-        // m_editor_launcher->initialize();
-
-        // g_runtime_global_context.m_render_system->initializeUIRenderBackend(m_editor_ui);
     }
 
     void LunarYueEditor::init(int32_t _argc, const char* const* _argv, uint32_t _width, uint32_t _height)

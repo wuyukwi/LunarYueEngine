@@ -10,7 +10,7 @@ namespace LunarYue
         REFLECTION_BODY(SubMeshRes);
 
     public:
-        std::string m_obj_file_ref;
+        std::string m_file_ref;
         Transform   m_transform;
         std::string m_material;
     };

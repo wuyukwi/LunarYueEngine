@@ -5,14 +5,15 @@
 #include "runtime/resource/asset_manager/asset_manager.h"
 #include "runtime/resource/config_manager/config_manager.h"
 
-#include "bgfx_utils.h"
-#include "entry/entry.h"
-#include "imgui/imgui.h"
 #include "runtime/function/global/global_context.h"
 #include "runtime/function/render/debugdraw/debug_draw_manager.h"
 #include "runtime/function/render/render_camera.h"
 #include "runtime/function/render/render_scene.h"
 #include "runtime/function/render/window_system.h"
+
+#include "bgfx_utils.h"
+#include "entry/entry.h"
+#include "imgui/imgui.h"
 #include <bx/uint32_t.h>
 
 namespace LunarYue
@@ -30,7 +31,7 @@ namespace LunarYue
 
         const auto windows_system = init_info.window_system;
 
-        auto window_info = init_info.window_system->getWindowInfo();
+        const auto window_info = init_info.window_system->getWindowInfo();
 
         bgfx::Init bgfxInit;
         bgfxInit.type     = bgfx::RendererType::Vulkan;
@@ -43,8 +44,8 @@ namespace LunarYue
         bgfxInit.resolution.reset  = window_info.m_reset;
         bgfxInit.debug             = window_info.m_debug;
 
-        bgfxInit.platformData.nwh = entry::getNativeWindowHandle(entry::kDefaultWindowHandle);
-        bgfxInit.platformData.ndt = entry::getNativeDisplayHandle();
+        bgfxInit.platformData.nwh = windows_system->getWindowHandle();
+        bgfxInit.platformData.ndt = windows_system->getDisplayHandle();
 
         bgfxInit.callback = m_callback.get();
 

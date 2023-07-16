@@ -1,7 +1,6 @@
 #pragma once
 
 #include "runtime/function/framework/object/object.h"
-#include "runtime/function/ui/UIManager.h"
 
 #include "editor/include/editor_file_service.h"
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "function/event/event.h" #include "function/event/event.h"
+#include "function/event/event.h"
 
 #include "function/ui/Widgets/Texts/Text.h"
 

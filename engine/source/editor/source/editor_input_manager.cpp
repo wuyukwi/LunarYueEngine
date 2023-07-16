@@ -71,88 +71,7 @@ namespace LunarYue
         editor_camera->move(camera_relative_pos);
     }
 
-    void EditorInputManager::onKeyInEditorMode(int key, int scancode, int action, int mods)
-    {
-        if (action == GLFW_PRESS)
-        {
-            switch (key)
-            {
-                case GLFW_KEY_A:
-                    m_editor_command |= (unsigned int)EditorCommand::camera_left;
-                    break;
-                case GLFW_KEY_S:
-                    m_editor_command |= (unsigned int)EditorCommand::camera_back;
-                    break;
-                case GLFW_KEY_W:
-                    m_editor_command |= (unsigned int)EditorCommand::camera_foward;
-                    break;
-                case GLFW_KEY_D:
-                    m_editor_command |= (unsigned int)EditorCommand::camera_right;
-                    break;
-                case GLFW_KEY_Q:
-                    m_editor_command |= (unsigned int)EditorCommand::camera_up;
-                    break;
-                case GLFW_KEY_E:
-                    m_editor_command |= (unsigned int)EditorCommand::camera_down;
-                    break;
-                case GLFW_KEY_T:
-                    m_editor_command |= (unsigned int)EditorCommand::translation_mode;
-                    break;
-                case GLFW_KEY_R:
-                    m_editor_command |= (unsigned int)EditorCommand::rotation_mode;
-                    break;
-                case GLFW_KEY_C:
-                    m_editor_command |= (unsigned int)EditorCommand::scale_mode;
-                    break;
-                case GLFW_KEY_DELETE:
-                    m_editor_command |= (unsigned int)EditorCommand::delete_object;
-                    break;
-                default:
-                    break;
-            }
-        }
-        else if (action == GLFW_RELEASE)
-        {
-            switch (key)
-            {
-                case GLFW_KEY_ESCAPE:
-                    m_editor_command &= (k_complement_control_command ^ (unsigned int)EditorCommand::exit);
-                    break;
-                case GLFW_KEY_A:
-                    m_editor_command &= (k_complement_control_command ^ (unsigned int)EditorCommand::camera_left);
-                    break;
-                case GLFW_KEY_S:
-                    m_editor_command &= (k_complement_control_command ^ (unsigned int)EditorCommand::camera_back);
-                    break;
-                case GLFW_KEY_W:
-                    m_editor_command &= (k_complement_control_command ^ (unsigned int)EditorCommand::camera_foward);
-                    break;
-                case GLFW_KEY_D:
-                    m_editor_command &= (k_complement_control_command ^ (unsigned int)EditorCommand::camera_right);
-                    break;
-                case GLFW_KEY_Q:
-                    m_editor_command &= (k_complement_control_command ^ (unsigned int)EditorCommand::camera_up);
-                    break;
-                case GLFW_KEY_E:
-                    m_editor_command &= (k_complement_control_command ^ (unsigned int)EditorCommand::camera_down);
-                    break;
-                case GLFW_KEY_T:
-                    m_editor_command &= (k_complement_control_command ^ (unsigned int)EditorCommand::translation_mode);
-                    break;
-                case GLFW_KEY_R:
-                    m_editor_command &= (k_complement_control_command ^ (unsigned int)EditorCommand::rotation_mode);
-                    break;
-                case GLFW_KEY_C:
-                    m_editor_command &= (k_complement_control_command ^ (unsigned int)EditorCommand::scale_mode);
-                    break;
-                case GLFW_KEY_DELETE:
-                    m_editor_command &= (k_complement_control_command ^ (unsigned int)EditorCommand::delete_object);
-                    break;
-                default:
-                    break;
-            }
-        }
-    }
+    void EditorInputManager::onKeyInEditorMode(int key, int scancode, int action, int mods) {}
 
     void EditorInputManager::onKey(int key, int scancode, int action, int mods)
     {
@@ -201,17 +120,7 @@ namespace LunarYue
             return;
 
         if (isCursorInRect(m_engine_window_pos, m_engine_window_size))
-        {
-            if (key == GLFW_MOUSE_BUTTON_LEFT)
-            {
-                Vector2 picked_uv((m_mouse_x - m_engine_window_pos.x) / m_engine_window_size.x,
-                                  (m_mouse_y - m_engine_window_pos.y) / m_engine_window_size.y);
-                size_t  select_mesh_id = g_editor_global_context.m_scene_manager->getGuidOfPickedMesh(picked_uv);
-
-                size_t gobject_id = g_runtime_global_context.m_render_system->getGObjectIDByMeshID(select_mesh_id);
-                g_editor_global_context.m_scene_manager->onGObjectSelected(gobject_id);
-            }
-        }
+        {}
     }
 
     void EditorInputManager::onWindowClosed() {}

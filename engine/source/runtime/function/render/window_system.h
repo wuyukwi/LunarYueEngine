@@ -1,10 +1,8 @@
 #pragma once
 
-#include <GLFW/glfw3.h>
-
-#include <array>
 #include <functional>
-#include <vector>
+#include <map>
+#include <string>
 
 #include "bgfx/defines.h"
 #include "entry/entry.h"
@@ -30,15 +28,19 @@ namespace LunarYue
         void               setTitle(const char* title);        // Set the window title
         WindowInfo         getWindowInfo() const;              // Get the window size
         entry::WindowState getWindowState() const;
+        void*              getWindowHandle();
+        void*              getDisplayHandle();
+        void               createWindow(const std::string& name);
+        void               destroyWindow(const std::string& name);
 
     protected:
-        // private:
         entry::WindowState m_state;
 
-        uint32_t           m_width;
-        uint32_t           m_height;
-        uint32_t           m_debug;
-        uint32_t           m_reset;
-        entry::WindowState m_windows[8];
+        uint32_t m_width;
+        uint32_t m_height;
+        uint32_t m_debug;
+        uint32_t m_reset;
+
+        std::map<std::string, entry::WindowState> m_windows;
     };
 } // namespace LunarYue

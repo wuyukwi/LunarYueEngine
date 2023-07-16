@@ -4,14 +4,26 @@ set(third_party_folder "ThirdParty")
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 
 # glfwのビルドとプロパティ設定
-if(NOT TARGET glfw)
-    option(GLFW_BUILD_EXAMPLES "" OFF)
-    option(GLFW_BUILD_TESTS "" OFF)
-    option(GLFW_BUILD_DOCS "" OFF)
-    option(GLFW_INSTALL "" OFF)
-    add_subdirectory(glfw)
-    set_target_properties(glfw PROPERTIES FOLDER ${third_party_folder}/glfw)
-    set_target_properties(update_mappings PROPERTIES FOLDER ${third_party_folder}/glfw)
+#if(NOT TARGET glfw)
+#    option(GLFW_BUILD_EXAMPLES "" OFF)
+#    option(GLFW_BUILD_TESTS "" OFF)
+#    option(GLFW_BUILD_DOCS "" OFF)
+#    option(GLFW_INSTALL "" OFF)
+#    add_subdirectory(glfw)
+#    set_target_properties(glfw PROPERTIES FOLDER ${third_party_folder}/glfw)
+#    set_target_properties(update_mappings PROPERTIES FOLDER ${third_party_folder}/glfw)
+#endif()
+
+# sdlのビルドとプロパティ設定
+if(NOT TARGET SDL2)
+    option(BGFX_WITH_SDL "" ON)
+    option(SDL2_DISABLE_INSTALL "" ON)
+    add_subdirectory(SDL2 EXCLUDE_FROM_ALL)
+
+    set_target_properties(SDL2-static PROPERTIES FOLDER ${third_party_folder}/SDL2)
+    set_target_properties(SDL2main PROPERTIES FOLDER ${third_party_folder}/SDL2)
+    set_target_properties(SDL2_test PROPERTIES FOLDER ${third_party_folder}/SDL2)
+    set_target_properties(sdl_headers_copy PROPERTIES FOLDER ${third_party_folder}/SDL2)
 endif()
 
 # spdlogのビルドとプロパティ設定
@@ -51,7 +63,7 @@ if(NOT TARGET Jolt)
     endif()
 
     add_subdirectory(JoltPhysics/Build)
-	
+
     if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
         include(CheckCXXCompilerFlag)
         check_cxx_compiler_flag("-Wno-unqualified-std-cast-call" COMPILER_CHECK_UNQUALIFIED)
@@ -59,16 +71,16 @@ if(NOT TARGET Jolt)
             target_compile_options(Jolt PRIVATE "-Wno-unqualified-std-cast-call")
         endif()
     endif()
-	
+
     # 物理デバッグレンダリングが有効な場合はTestFrameworkも含める
     if(ENABLE_PHYSICS_DEBUG_RENDERER)
         set_target_properties(Jolt TestFramework
-            PROPERTIES 
+            PROPERTIES
             FOLDER ${third_party_folder}/JoltPhysics
             MSVC_RUNTIME_LIBRARY "MultiThreadedDLL")
     else()
         set_target_properties(Jolt
-            PROPERTIES 
+            PROPERTIES
             FOLDER ${third_party_folder}/JoltPhysics
             MSVC_RUNTIME_LIBRARY "MultiThreadedDLL")
     endif()
@@ -95,8 +107,19 @@ if(NOT TARGET assimp)
 endif()
 
 if(NOT TARGET bgfx)
+    if(CMAKE_BUILD_TYPE MATCHES "Debug")
+        option(BX_CONFIG_DEBUG "Log debug messages" ON)
+        option(BGFX_CONFIG_DEBUG_ANNOTATION "Enable gfx debug annotations" ON)
+    endif()
+    option(BX_AMALGAMATED "Amalgamated bx build for faster compilation" ON)
+    option(BGFX_AMALGAMATED "Amalgamated bgfx build for faster compilation" ON)
+    option(BGFX_BUILD_TOOLS "Build bgfx tools." ON)
+    cmake_dependent_option(BGFX_BUILD_TOOLS_BIN2C "Build bx binary to c converter." ON BGFX_BUILD_TOOLS OFF)
+    cmake_dependent_option(BGFX_BUILD_TOOLS_SHADER "Build bgfx shader tools." ON BGFX_BUILD_TOOLS OFF)
+    cmake_dependent_option(BGFX_BUILD_TOOLS_GEOMETRY "Build bgfx geometry tools." ON BGFX_BUILD_TOOLS OFF)
+    cmake_dependent_option(BGFX_BUILD_TOOLS_TEXTURE "Build bgfx texture tools." OFF BGFX_BUILD_TOOLS OFF)
+    option(BGFX_INSTALL "Create installation target." OFF)
     add_subdirectory(bgfx)
-#    set_target_properties(bgfx PROPERTIES FOLDER ${third_party_folder}/bgfx)
 endif()
 
 # imguiのビルドとプロパティ設定

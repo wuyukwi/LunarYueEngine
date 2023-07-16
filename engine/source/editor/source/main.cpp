@@ -1,10 +1,6 @@
-#include <filesystem>
-#include <iostream>
-#include <thread>
-
-#include "runtime/engine.h"
-//
 #include "editor/include/editor.h"
+#include "editor/include/editor_launcher.h"
+#include <filesystem>
 //
 // namespace LunarYue
 //{
@@ -32,8 +28,9 @@
 
 int _main_(int _argc, char** _argv)
 {
-
+    // std::shared_ptr<LunarYue::EditorLauncher> launcher = std::make_shared<LunarYue::EditorLauncher>();
+    // entry::runApp(launcher.get(), _argc, _argv);
+    // return 0;
     std::shared_ptr<LunarYue::LunarYueEditor> editor = std::make_shared<LunarYue::LunarYueEditor>();
-
     return entry::runApp(editor.get(), _argc, _argv);
 }

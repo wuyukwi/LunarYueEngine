@@ -25,7 +25,7 @@ namespace LunarYue
         for (const SubMeshRes& sub_mesh : m_mesh_res.m_sub_meshes)
         {
             GameObjectPartDesc& meshComponent     = m_raw_meshes[raw_mesh_count];
-            meshComponent.m_mesh_desc.m_mesh_file = asset_manager->getFullPath(sub_mesh.m_obj_file_ref).generic_string();
+            meshComponent.m_mesh_desc.m_mesh_file = asset_manager->getFullPath(sub_mesh.m_file_ref).generic_string();
 
             meshComponent.m_material_desc.m_with_texture = sub_mesh.m_material.empty() == false;
 

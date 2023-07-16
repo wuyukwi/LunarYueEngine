@@ -607,12 +607,16 @@ function(bgfx_compile_shader_to_header)
 			list(APPEND COMMANDS COMMAND bgfx::shaderc ${CLI})
 		endforeach()
 
+		set(COMBINED_HEADER_FILE ${ARGS_OUTPUT_DIR}/../../${SHADER_FILE_NAME_WE}.bin.h)
 		add_custom_command(
 			OUTPUT ${OUTPUTS}
 			COMMAND ${CMAKE_COMMAND} -E make_directory ${ARGS_OUTPUT_DIR} ${COMMANDS}
 			MAIN_DEPENDENCY ${SHADER_FILE_ABSOLUTE}
 			DEPENDS ${ARGS_VARYING_DEF}
+			COMMAND ${CMAKE_COMMAND} -E touch ${COMBINED_HEADER_FILE}
+			COMMAND ${CMAKE_COMMAND} -E cat ${ALL_OUTPUTS} >> ${COMBINED_HEADER_FILE}
 		)
+
 	endforeach()
 
 	if(DEFINED ARGS_OUT_FILES_VAR)

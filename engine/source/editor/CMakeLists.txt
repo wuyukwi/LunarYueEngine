@@ -31,8 +31,6 @@ target_compile_options(${TARGET_NAME} PUBLIC "$<$<COMPILE_LANG_AND_ID:CXX,MSVC>:
 
 # ライブラリのリンク設定
 target_link_libraries(${TARGET_NAME} LunarYueRuntime)
-#target_link_libraries(${TARGET_NAME} PUBLIC bgfx)
-#target_link_libraries(${TARGET_NAME} PUBLIC example-common)
 
 # POST_BUILD_COMMANDSには、プロジェクトがビルドされた後に実行されるカスタムコマンドが含まれます
 set(POST_BUILD_COMMANDS

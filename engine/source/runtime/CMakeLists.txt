@@ -33,14 +33,17 @@ target_compile_options(${TARGET_NAME} PUBLIC "$<$<COMPILE_LANG_AND_ID:CXX,MSVC>:
 # 依存関係をリンクする
 target_link_libraries(${TARGET_NAME} PUBLIC spdlog::spdlog)
 target_link_libraries(${TARGET_NAME} PRIVATE stb)
-target_link_libraries(${TARGET_NAME} PUBLIC glfw)
-#target_link_libraries(${TARGET_NAME} PUBLIC imgui)
+#if(TARGET SDL2::SDL2main)
+#    target_link_libraries(${TARGET_NAME} PUBLIC SDL2::SDL2main)
+#endif()
+#target_link_libraries(${TARGET_NAME} PUBLIC SDL2::SDL2-static)
 target_link_libraries(${TARGET_NAME} PUBLIC Jolt)
 target_link_libraries(${TARGET_NAME} PUBLIC lua_static sol2)
 target_link_libraries(${TARGET_NAME} PUBLIC $<BUILD_INTERFACE:json11>)
 target_link_libraries(${TARGET_NAME} PUBLIC assimp)
 target_link_libraries(${TARGET_NAME} PUBLIC bgfx)
 target_link_libraries(${TARGET_NAME} PUBLIC example-common)
+target_link_libraries(${TARGET_NAME} PUBLIC LunarYueShaderCompile)
 
 
 if(ENABLE_PHYSICS_DEBUG_RENDERER)
@@ -49,12 +52,6 @@ if(ENABLE_PHYSICS_DEBUG_RENDERER)
   # TestFrameworkとd3d12.lib、shcore.libをリンクする
   target_link_libraries(${TARGET_NAME} PUBLIC TestFramework d3d12.lib shcore.lib)
 endif()
-
-# SHADER_COMPILE_TARGETの依存関係を追加し、ENGINE_ROOT_DIR/shader/generated/cppをインターフェースディレクトリに追加する
-add_dependencies(${TARGET_NAME} ${SHADER_COMPILE_TARGET})
-target_include_directories(
-  ${TARGET_NAME}
-  PUBLIC $<BUILD_INTERFACE:${ENGINE_ROOT_DIR}/shader/generated>)
 
 # ビルドインターフェースディレクトリにENGINE_ROOT_DIR/sourceとinclude/TARGET_NAME-PROJECT_VERSIONを追加する
 target_include_directories(

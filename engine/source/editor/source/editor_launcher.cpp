@@ -1,238 +1,141 @@
 #include "editor/include/editor_launcher.h"
 
-#include <filesystem>
+#include "common.h"
+#include "imgui/imgui.h"
 
-#include "editor/include/editor_global_context.h"
+#include "bgfx/embedded_shader.h"
 
-#include "function/ui/Widgets/Buttons/Button.h"
-#include "function/ui/Widgets/InputFields/InputText.h"
-#include "function/ui/Widgets/Layout/Columns.h"
-#include "function/ui/Widgets/Layout/Spacing.h"
-#include "function/ui/Widgets/Texts/Text.h"
-#include "function/ui/Widgets/Visual/Separator.h"
+#include "fs_mesh.bin.h"
+#include "vs_mesh.bin.h"
 
-#include "platform/path/path.h"
+#include "entry/input.h"
 
-#include "runtime/engine.h"
+static const bgfx::EmbeddedShader s_embeddedShaders[] = {BGFX_EMBEDDED_SHADER(fs_mesh),
+                                                         BGFX_EMBEDDED_SHADER(vs_mesh),
+
+                                                         BGFX_EMBEDDED_SHADER_END()};
 
 namespace LunarYue
 {
-    class ProjectHubPanel : public UI::Panels::PanelWindow
+    void cmdCreateWindow(const void* _userData) { ((EditorLauncher*)_userData)->createWindow(); }
+
+    EditorLauncher::EditorLauncher(const char* _name, const char* _description, const char* _url) : AppI(_name, _description, _url) {}
+
+    void EditorLauncher::init(int32_t _argc, const char* const* _argv, uint32_t _width, uint32_t _height)
     {
-    public:
-        ProjectHubPanel(bool& p_readyToGo, std::string& p_path, std::string& p_projectName) :
-            PanelWindow("erload - Project Hub", true), m_readyToGo(p_readyToGo), m_path(p_path), m_projectName(p_projectName)
-        {
-            resizable = false;
-            movable   = false;
-            titleBar  = false;
+        Args args(_argc, _argv);
 
-            std::filesystem::create_directories(std::string(getenv("APPDATA")) + "\\erloadTech\\Editor\\");
+        m_width  = _width;
+        m_height = _height;
+        m_debug  = BGFX_DEBUG_NONE;
+        m_reset  = BGFX_RESET_VSYNC;
 
-            SetSize({1000, 580});
-            SetPosition({0.f, 0.f});
+        bgfx::Init init;
+        init.type              = args.m_type;
+        init.vendorId          = args.m_pciId;
+        init.platformData.nwh  = entry::getNativeWindowHandle(entry::kDefaultWindowHandle);
+        init.platformData.ndt  = entry::getNativeDisplayHandle();
+        init.resolution.width  = m_width;
+        init.resolution.height = m_height;
+        init.resolution.reset  = m_reset;
+        bgfx::init(init);
 
-            auto& openProjectButton = CreateWidget<UI::Widgets::Buttons::Button>("Open Project");
-            auto& newProjectButton  = CreateWidget<UI::Widgets::Buttons::Button>("New Project");
-            auto& pathField         = CreateWidget<UI::Widgets::InputFields::InputText>("");
-            m_goButton              = &CreateWidget<UI::Widgets::Buttons::Button>("GO");
+        m_bindings = (InputBinding*)bx::alloc(entry::getAllocator(), sizeof(InputBinding) * 3);
+        m_bindings[0].set(entry::Key::KeyC, entry::Modifier::None, 1, cmdCreateWindow, this);
+        m_bindings[2].end();
 
-            pathField.ContentChangedEvent += [this, &pathField](std::string p_content) {
-                pathField.content = Path::makeWindowsStyle(p_content);
+        // Enable debug text.
+        bgfx::setDebug(m_debug);
 
-                if (pathField.content != "" && pathField.content.back() != '\\')
-                    pathField.content += '\\';
+        // Set view 0 clear state.
+        bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x303030ff, 1.0f, 0);
 
-                UpdateGoButton(pathField.content);
-            };
+        u_time = bgfx::createUniform("u_time", bgfx::UniformType::Vec4);
 
-            UpdateGoButton("");
+        bgfx::RendererType::Enum type = bgfx::getRendererType();
+        m_program                     = bgfx::createProgram(
+            bgfx::createEmbeddedShader(s_embeddedShaders, type, "vs_mesh"), bgfx::createEmbeddedShader(s_embeddedShaders, type, "fs_mesh"), true);
 
-            openProjectButton.idleBackgroundColor = {0.7f, 0.5f, 0.f};
-            newProjectButton.idleBackgroundColor  = {0.f, 0.5f, 0.0f};
+        // m_mesh = meshLoad("meshes/bunny.bin");
 
-            // openProjectButton.ClickedEvent += [this] {
-            //     Windowing::Dialogs::OpenFileDialog dialog("Open project");
-            //     dialog.AddFileType("erload Project", "*.ovproject");
-            //     dialog.Show();
+        m_timeOffset = bx::getHPCounter();
 
-            //    std::string ovProjectPath  = dialog.GetSelectedFilePath();
-            //    std::string rootFolderPath = Tools::Utils::PathParser::GetContainingFolder(ovProjectPath);
-
-            //    if (dialog.HasSucceeded())
-            //    {
-            //        RegisterProject(rootFolderPath);
-            //        OpenProject(rootFolderPath);
-            //    }
-            //};
-
-            // newProjectButton.ClickedEvent += [this, &pathField] {
-            //     Windowing::Dialogs::SaveFileDialog dialog("New project location");
-            //     dialog.DefineExtension("erload Project", "..");
-            //     dialog.Show();
-            //     if (dialog.HasSucceeded())
-            //     {
-            //         std::string result = dialog.GetSelectedFilePath();
-            //         pathField.content = std::string(result.data(), result.data() + result.size() - std::string("..").size()); // remove auto
-            //         extension pathField.content += "\\"; UpdateGoButton(pathField.content);
-            //     }
-            // };
-
-            m_goButton->ClickedEvent += [this, &pathField] {
-                CreateProject(pathField.content);
-                RegisterProject(pathField.content);
-                OpenProject(pathField.content);
-            };
-
-            openProjectButton.lineBreak = false;
-            newProjectButton.lineBreak  = false;
-            pathField.lineBreak         = false;
-
-            for (uint8_t i = 0; i < 4; ++i)
-                CreateWidget<UI::Widgets::Layout::Spacing>();
-
-            CreateWidget<UI::Widgets::Visual::Separator>();
-
-            for (uint8_t i = 0; i < 4; ++i)
-                CreateWidget<UI::Widgets::Layout::Spacing>();
-
-            auto& columns = CreateWidget<UI::Widgets::Layout::Columns<2>>();
-
-            columns.widths = {750, 500};
-
-            std::string line;
-            // std::ifstream myfile(PROJECTS_FILE);
-            // if (myfile.is_open())
-            //{
-            //     while (getline(myfile, line))
-            //     {
-            //         if (std::filesystem::exists(line)) // TODO: Delete line from the file
-            //         {
-            //             auto& text         = columns.CreateWidget<UI::Widgets::Texts::Text>(line);
-            //             auto& actions      = columns.CreateWidget<UI::Widgets::Layout::Group>();
-            //             auto& openButton   = actions.CreateWidget<UI::Widgets::Buttons::Button>("Open");
-            //             auto& deleteButton = actions.CreateWidget<UI::Widgets::Buttons::Button>("Delete");
-
-            //            openButton.idleBackgroundColor   = {0.7f, 0.5f, 0.f};
-            //            deleteButton.idleBackgroundColor = {0.5f, 0.f, 0.f};
-
-            //            openButton.ClickedEvent += [this, line] { OpenProject(line); };
-
-            //            std::string toErase = line;
-            //            deleteButton.ClickedEvent += [this, &text, &actions, toErase] {
-            //                text.Destroy();
-            //                actions.Destroy();
-
-            //                std::string   line;
-            //                std::ifstream fin(PROJECTS_FILE);
-            //                std::ofstream temp("temp");
-
-            //                while (getline(fin, line))
-            //                    if (line != toErase)
-            //                        temp << line << std::endl;
-
-            //                temp.close();
-            //                fin.close();
-
-            //                std::filesystem::remove(PROJECTS_FILE);
-            //                std::filesystem::rename("temp", PROJECTS_FILE);
-            //            };
-
-            //            openButton.lineBreak = false;
-            //            deleteButton.lineBreak;
-            //        }
-            //    }
-            //    myfile.close();
-            //}
-        }
-
-        void UpdateGoButton(const std::string& p_path)
-        {
-            bool validPath                  = p_path != "";
-            m_goButton->idleBackgroundColor = validPath ? UI::Types::Color {0.f, 0.5f, 0.0f} : UI::Types::Color {0.1f, 0.1f, 0.1f};
-            m_goButton->disabled            = !validPath;
-        }
-
-        void CreateProject(const std::string& p_path)
-        {
-            if (!std::filesystem::exists(p_path))
-            {
-                std::filesystem::create_directory(p_path);
-                std::filesystem::create_directory(p_path + "Assets\\");
-                std::filesystem::create_directory(p_path + "Scripts\\");
-                /*  std::ofstream projectFile(p_path + '\\' + Path::getElementName(std::string(p_path.data(), p_path.data() + p_path.size() - 1)) +
-                                            ".ovproject");*/
-            }
-        }
-
-        void RegisterProject(const std::string& p_path)
-        {
-            bool pathAlreadyRegistered = false;
-
-            //{
-            //    std::string   line;
-            //    std::ifstream myfile(PROJECTS_FILE);
-            //    if (myfile.is_open())
-            //    {
-            //        while (getline(myfile, line))
-            //        {
-            //            if (line == p_path)
-            //            {
-            //                pathAlreadyRegistered = true;
-            //                break;
-            //            }
-            //        }
-            //        myfile.close();
-            //    }
-            //}
-
-            // if (!pathAlreadyRegistered)
-            //{
-            //     std::ofstream projectsFile(PROJECTS_FILE, std::ios::app);
-            //     projectsFile << p_path << std::endl;
-            // }
-        }
-
-        void OpenProject(const std::string& p_path)
-        {
-            m_readyToGo = std::filesystem::exists(p_path);
-            if (!m_readyToGo)
-            {}
-            else
-            {
-                m_path        = p_path;
-                m_projectName = Path::getElementName(m_path);
-                Close();
-            }
-        }
-
-        void Draw() override
-        {
-            ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, {50.f, 50.f});
-            ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.f);
-
-            UI::Panels::PanelWindow::Draw();
-
-            ImGui::PopStyleVar(2);
-        }
-
-    private:
-        bool&                         m_readyToGo;
-        std::string&                  m_path;
-        std::string&                  m_projectName;
-        UI::Widgets::Buttons::Button* m_goButton = nullptr;
-    };
-
-    EditorLauncher::EditorLauncher() {}
-
-    void EditorLauncher::initialize()
-    {
-        m_mainPanel = std::make_unique<ProjectHubPanel>(m_readyToGo, m_projectPath, m_projectName);
-
-        g_editor_global_context.m_ui_manager->SetCanvas(m_canvas);
-
-        m_canvas.AddPanel(*m_mainPanel);
+        imguiCreate();
     }
 
-    void EditorLauncher::preRender() { g_editor_global_context.m_ui_manager->Render(); }
+    int EditorLauncher::shutdown()
+    {
+        imguiDestroy();
+
+        // meshUnload(m_mesh);
+
+        // Cleanup.
+        bgfx::destroy(m_program);
+
+        bgfx::destroy(u_time);
+
+        // Shutdown bgfx.
+        bgfx::shutdown();
+
+        return 0;
+    }
+
+    bool EditorLauncher::update()
+    {
+        if (!entry::processEvents(m_width, m_height, m_debug, m_reset, &m_mouseState))
+        {
+            imguiBeginFrame(m_mouseState.m_mx,
+                            m_mouseState.m_my,
+                            (m_mouseState.m_buttons[entry::MouseButton::Left] ? IMGUI_MBUT_LEFT : 0) |
+                                (m_mouseState.m_buttons[entry::MouseButton::Right] ? IMGUI_MBUT_RIGHT : 0) |
+                                (m_mouseState.m_buttons[entry::MouseButton::Middle] ? IMGUI_MBUT_MIDDLE : 0),
+                            m_mouseState.m_mz,
+                            uint16_t(m_width),
+                            uint16_t(m_height));
+
+            showExampleDialog(this);
+
+            imguiEndFrame();
+
+            // Set view 0 default viewport.
+            bgfx::setViewRect(0, 0, 0, uint16_t(m_width), uint16_t(m_height));
+
+            // This dummy draw call is here to make sure that view 0 is cleared
+            // if no other draw calls are submitted to view 0.
+            bgfx::touch(0);
+
+            float time = (float)((bx::getHPCounter() - m_timeOffset) / double(bx::getHPFrequency()));
+            bgfx::setUniform(u_time, &time);
+
+            const bx::Vec3 at  = {0.0f, 1.0f, 0.0f};
+            const bx::Vec3 eye = {0.0f, 1.0f, -2.5f};
+
+            // Set view and projection matrix for view 0.
+            {
+                float view[16];
+                bx::mtxLookAt(view, eye, at);
+
+                float proj[16];
+                bx::mtxProj(proj, 60.0f, float(m_width) / float(m_height), 0.1f, 100.0f, bgfx::getCaps()->homogeneousDepth);
+                bgfx::setViewTransform(0, view, proj);
+
+                // Set view 0 default viewport.
+                bgfx::setViewRect(0, 0, 0, uint16_t(m_width), uint16_t(m_height));
+            }
+
+            float mtx[16];
+            bx::mtxRotateXY(mtx, 0.0f, time * 0.37f);
+
+            // meshSubmit(m_mesh, 0, m_program, mtx);
+
+            // Advance to next frame. Rendering thread will be kicked to
+            // process submitted rendering primitives.
+            bgfx::frame();
+
+            return true;
+        }
+
+        return false;
+    }
+
 } // namespace LunarYue
