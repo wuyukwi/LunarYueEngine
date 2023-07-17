@@ -18,4 +18,6 @@ target_include_directories (OpenAL PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/openal-sof
 set_target_properties(OpenAL PROPERTIES FOLDER ${THIRD_PARTY_FOLDER}/OpenAL)
 set_target_properties(common PROPERTIES FOLDER ${THIRD_PARTY_FOLDER}/OpenAL)
 set_target_properties(ex-common PROPERTIES FOLDER ${THIRD_PARTY_FOLDER}/OpenAL)
-set_target_properties(build_version PROPERTIES FOLDER ${THIRD_PARTY_FOLDER}/OpenAL)
+if(WIN32)
+	set_target_properties(build_version PROPERTIES FOLDER ${THIRD_PARTY_FOLDER}/OpenAL)
+endif()
