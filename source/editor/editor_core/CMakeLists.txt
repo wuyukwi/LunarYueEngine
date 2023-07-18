@@ -1,4 +1,4 @@
-set(EDITOR_CORE_FOLDER ${EDITOR_FOLDER}/core)
+set(EDITOR_CORE_FOLDER ${EDITOR_FOLDER}/editor_core)
 
 add_subdirectory(mesh_import)
 add_subdirectory(nativefd)

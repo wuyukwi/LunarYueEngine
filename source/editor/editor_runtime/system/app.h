@@ -6,40 +6,40 @@
 
 namespace imguidock
 {
-class dockspace;
+    class dockspace;
 }
 class console_log;
 class render_window;
 
 namespace editor
 {
-class app : public runtime::app
-{
-public:
-	virtual ~app() = default;
+    class app final : public runtime::app
+    {
+    public:
+        ~app() override = default;
 
-	virtual void setup(cmd_line::parser& parser);
+        void setup(cmd_line::parser& parser) override;
 
-	virtual void start(cmd_line::parser& parser);
+        void start(cmd_line::parser& parser) override;
 
-	virtual void stop();
+        void stop() override;
 
-private:
-	void create_docks();
-	void register_console_commands();
-	void draw_docks(delta_t dt);
-	void draw_header(render_window& window);
-	void draw_dockspace(bool is_main, render_window& window, imguidock::dockspace& dockspace);
-	void draw_footer(render_window& window, imguidock::dockspace& dockspace);
-	void draw_start_page(render_window& window);
-	void draw_menubar(render_window& window);
-	void draw_toolbar();
-	void handle_drag_and_drop();
+    private:
+        void create_docks();
+        void register_console_commands();
+        void draw_docks(delta_t dt);
+        void draw_header(render_window& window);
+        void draw_dockspace(bool is_main, render_window& window, imguidock::dockspace& dockspace);
+        void draw_footer(render_window& window, imguidock::dockspace& dockspace);
+        void draw_start_page(render_window& window);
+        void draw_menubar(render_window& window);
+        void draw_toolbar();
+        void handle_drag_and_drop();
 
-	bool show_start_page_ = true;
-	///
-	std::shared_ptr<console_log> console_log_;
-	///
-	std::string console_dock_name_;
-};
-}
+        bool show_start_page_ = true;
+        ///
+        std::shared_ptr<console_log> console_log_;
+        ///
+        std::string console_dock_name_;
+    };
+} // namespace editor
