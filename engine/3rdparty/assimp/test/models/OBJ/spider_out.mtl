@@ -1,0 +1,68 @@
+# File produced by Open Asset Import Library (http://www.assimp.sf.net)
+# (assimp v5.2.1359521397)
+
+newmtl DefaultMaterial
+Kd 0.600000024 0.600000024 0.600000024
+Ka 0 0 0
+Ks 0 0 0
+Ke 0 0 0
+Tf 1 1 1
+d 1
+Ni 1
+illum 1
+
+newmtl Skin
+Kd 0.827450991 0.792156994 0.772548974
+Ka 0.200000003 0.200000003 0.200000003
+Ks 0 0 0
+Ke 0 0 0
+Tf 1 1 1
+d 1
+Ni 1
+illum 1
+map_Kd .\wal67ar_small.jpg
+
+newmtl Brusttex
+Kd 0.800000012 0.800000012 0.800000012
+Ka 0.200000003 0.200000003 0.200000003
+Ks 0 0 0
+Ke 0 0 0
+Tf 1 1 1
+d 1
+Ni 1
+illum 1
+map_Kd .\wal69ar_small.jpg
+
+newmtl HLeibTex
+Kd 0.690195978 0.639216006 0.615685999
+Ka 0.200000003 0.200000003 0.200000003
+Ks 0 0 0
+Ke 0 0 0
+Tf 1 1 1
+d 1
+Ni 1
+illum 1
+map_Kd .\SpiderTex.jpg
+
+newmtl BeinTex
+Kd 0.800000012 0.800000012 0.800000012
+Ka 0.200000003 0.200000003 0.200000003
+Ks 0 0 0
+Ke 0 0 0
+Tf 1 1 1
+d 1
+Ni 1
+illum 1
+map_Kd .\drkwood2.jpg
+
+newmtl Augentex
+Kd 0.800000012 0.800000012 0.800000012
+Ka 0.200000003 0.200000003 0.200000003
+Ks 0 0 0
+Ke 0 0 0
+Tf 1 1 1
+d 1
+Ni 1
+illum 1
+map_Kd .\engineflare1.jpg
+

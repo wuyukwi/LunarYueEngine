@@ -25,7 +25,7 @@ namespace runtime
         mml::video_mode desktop = mml::video_mode::get_desktop_mode();
         desktop.width           = 1280;
         desktop.height          = 720;
-        auto window             = std::make_unique<render_window>(desktop, "ETHEREAL", mml::style::standard);
+        auto window             = std::make_unique<render_window>(desktop, "LunarYue", mml::style::standard);
         window->request_focus();
         register_window(std::move(window));
         process_pending_windows();
