@@ -19,9 +19,10 @@ add_definitions(-DNOMINMAX)
 
 #enable_sanitizers("custom")
 
+set(EDITOR_NAME "LunarYueEditor")
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     add_compile_options("/MP")
-    set_property(DIRECTORY ${CMAKE_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT editor)
+    set_property(DIRECTORY ${CMAKE_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${EDITOR_NAME})
 endif()
 
 detect_platform()
