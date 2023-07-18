@@ -84,7 +84,7 @@ ipch/
 *.sap
 
 # User data
-editor_data/config/*.cfg
+data/editor_data/config/*.cfg
 
 # vscode
 .vscode/
