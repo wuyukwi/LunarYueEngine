@@ -277,11 +277,11 @@ namespace editor
 
             if (gui::BeginMenu("FILE"))
             {
-                if (gui::MenuItem("NEW SCENE", "CTRL+N", false, current_project != ""))
+                if (gui::MenuItem("NEW SCENE", "CTRL+N", false, !current_project.empty()))
                 {
                     create_new_scene();
                 }
-                if (gui::MenuItem("OPEN SCENE", "CTRL+O", false, current_project != ""))
+                if (gui::MenuItem("OPEN SCENE", "CTRL+O", false, !current_project.empty()))
                 {
                     open_scene();
                 }
@@ -297,13 +297,13 @@ namespace editor
                     io.MouseDown[2] = false;
                 }
 
-                if (gui::MenuItem("SAVE", "CTRL+S", false, es.scene != "" && current_project != ""))
+                if (gui::MenuItem("SAVE", "CTRL+S", false, !es.scene.empty() && !current_project.empty()))
                 {
                     save_scene();
                 }
                 auto& ecs = core::get_subsystem<runtime::entity_component_system>();
 
-                if (gui::MenuItem("SAVE AS..", "CTRL+SHIFT+S", false, ecs.size() > 0 && current_project != ""))
+                if (gui::MenuItem("SAVE AS..", "CTRL+SHIFT+S", false, ecs.size() > 0 && !current_project.empty()))
                 {
                     save_scene_as();
                 }

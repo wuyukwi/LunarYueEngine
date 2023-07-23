@@ -1,4 +1,3 @@
-# このプロジェクトがCMakeのバージョン3.19以上が必要であることを指定しています。もしバージョンが満たされていない場合、FATAL_ERRORオプションによってエラーメッセージが表示され、ビルドが停止されます。
 cmake_minimum_required(VERSION 3.19 FATAL_ERROR)
 
 project(LunarYue VERSION 0.1.0)
@@ -21,5 +20,4 @@ set(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/bin")
 set(BINARY_ROOT_DIR "${CMAKE_INSTALL_PREFIX}/")
 
 set(ASSET_DIR "data")
-#add_subdirectory(engine)
 add_subdirectory(source)

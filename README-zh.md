@@ -1,61 +1,25 @@
-﻿# LunarYue Engine
+﻿![LunarYue Logo](source/editor/editor_runtime/resource/LunarYueEngine.png)
 
-<p align="center">
-    <img src="engine/source/editor/resource/LunarYueEngine.png" width="400" alt="LunarYue Engineのロゴ">
-  </a>
-</p>
+此README文件有多种语言版本
 
-LunarYueEngine 是一个基于 C++ 和 Vulkan 的跨平台游戏引擎。它旨在提供用于创建现代 3D 游戏和应用程序的强大和高性能的图形渲染能力。
+- [English](README-en.md)
+- [日本語](README.md)
 
-## 主要功能
-
-- 基于 Vulkan 的高性能渲染
-- 跨平台支持（Windows, macOS, Linux）
-- Entity-Component-System（ECS）架构
-- 内置编辑器
-- 物理调试渲染器（仅限 Windows）
-- 灵活的资源管理
-
-## 语言
-
-此README文件有多种语言版本。
-
-- [英语](README-en.md)
-- [日语](README.md)
-- [中文](README-zh.md)
-
+## 注意事项
+在Ubuntu中的构建问题还在解决中，请暂时先使用Window来构建
 
 ## 预备条件
 
-要构建LunarYue，您首先需要安装以下工具：
+要构建LunarYueEngine，您首先需要安装以下工具：
 
 ### Windows 10/11
 - Visual Studio 2019（或更高版本）
 - CMake 3.19（或更高版本）
 - Git 2.1（或更高版本）
 
-### macOS >= 10.15 (x86_64)
-- Xcode 12.3（或更高版本）
-- CMake 3.19（或更高版本）
-- Git 2.1（或更高版本）
 
-### Ubuntu 20.04
-- 安装以下软件包
+### Ubuntu 
 ```
-sudo apt install libxrandr-dev
-sudo apt install libxrender-dev
-sudo apt install libxinerama-dev
-sudo apt install libxcursor-dev
-sudo apt install libxi-dev
-sudo apt install libglvnd-dev
-sudo apt install libvulkan-dev
-sudo apt install cmake
-sudo apt install clang
-sudo apt install libc++-dev
-sudo apt install libglew-dev
-sudo apt install libglfw3-dev
-sudo apt install vulkan-validationlayers
-sudo apt install mesa-vulkan-drivers
 ```
 
 <details>
@@ -65,12 +29,12 @@ sudo apt install mesa-vulkan-drivers
 
 1. 访问CMake官方网站 (https://cmake.org/download/) ，下载适用于Windows的安装程序。
 
-2. 运行下载的安装程序，安装CMake。在安装过程中，请选择“将CMake添加到所有用户的系统路径”选项，以便将CMake添加到系统的PATH中。
+2. 运行下载的安装程序，安装CMake。在安装过程中，请选择**Add CMake to the system PATH for all users**选项，以便将CMake添加到系统的PATH中。
 
 3. 安装完成后，打开命令提示符，运行'cmake --version'命令，检查CMake是否已正确安装。运行此命令后，将显示CMake的版本信息。
 
   <br>
-<b>Linux：</b>
+<b>Ubuntu：</b>
 
 1. 打开终端，运行以下命令以安装CMake：
 
@@ -97,61 +61,47 @@ sudo apt install mesa-vulkan-drivers
   <br>
 </details>
 
-## 构建LunarYue
+## 构建
+### Windows
+您可以运行 **build_windows.bat**。此批处理文件会自动生成项目并构建 **LunarYue Engine** 的 **Release** 配置。
+构建成功后，**build/bin** 目录中将创建可执行程序**LunarYueEditor**
 
-### 在Windows上构建
-您可以运行 **build_windows.bat**。此批处理文件会自动生成项目并构建 **LunarYue Engine** 的 **Release** 配置。构建成功后，**bin** 目录中将创建 **LunarYueEditor.exe**。
-
-另外，您还可以使用以下命令首先生成 **Visual Studio** 项目，然后在构建目录中打开解决方案并手动构建。
-
-### 在macOS上构建
-
-> 以下构建步骤仅在特定的x86_64硬件上进行了测试，不支持M1芯片。关于M1支持将在后续版本中发布。
-
-要编译LunarYue，您需要安装最新版本的Xcode。
-接下来，从项目根目录运行 'cmake' 以生成Xcode项目。
-
+另外，您还可以项目根目录使用以下命令来在build文件夹里生成项目
 ```
-cmake -S . -B build -G "Xcode"
+cmake -B build
 ```
-然后，您可以使用以下命令构建项目。
+使用Release来编译项目，如果要调试项目请使用Debug
 ```
 cmake --build build --config Release
 ```
 
+### Ubuntu
+您可以运行 **build_linux.sh**。此批处理文件会自动生成项目并构建 **LunarYue Engine** 的 **Release** 配置。
+构建成功后，**build/bin** 目录中将创建可执行程序**LunarYueEditor**
 
-另外，您还可以运行 build_macos.sh 来构建二进制文件。
-
-### 在Ubuntu 20.04上构建
-您可以运行 **build_linux.sh** 来构建二进制文件。
-
-## 文档
-有关文档，请参阅Wiki部分。
-
-## 附加信息
-
-### Vulkan验证层：验证错误
-尽管LunarYueEditor.exe能正常运行，但在调试过程中可能会报告Vulkan验证层：验证错误这个异常。通过安装Vulkan SDK（官方最新版本即可）可以解决此问题。
-
-### 生成编译数据库
-如果 `Unix Makefiles` 生成器可用，您可以使用以下命令构建 `compile_commands.json`。`compile_commands.json` 是 `clangd` 语言服务器所需的文件，是Emacs的cpp lsp-mode的后端。
-
-对于Windows：
-
-``` powershell
-cmake -DCMAKE_TRY_COMPILE_TARGET_TYPE="STATIC_LIBRARY" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -S . -B compile_db_temp -G "Unix Makefiles"
-copy compile_db_temp\compile_commands.json .
+另外，您还可以项目根目录使用以下命令来在build文件夹里生成项目
+```
+cmake -B build
+```
+使用Release来编译项目，如果要调试项目请使用Debug
+```
+cmake --build build --config Release
 ```
 
-### 使用物理调试渲染器
-目前，物理调试渲染器仅在Windows上可用。要生成包含调试器项目的解决方案，请使用以下命令：
+## 第三方库
+[bgfx](https://github.com/bkaradzic/bgfx) (多平台渲染)
 
-```
-cmake -S . -B build -DENABLE_PHYSICS_DEBUG_RENDERER=ON
-```
+[cereal](https://github.com/USCiLab/cereal) (序列化)
 
-注意：
-1. 在重新生成解决方案之前，请清理构建目录。在直接使用以前的CMakeCache重新生成时，曾发生过构建问题。
-2. 当启动LunarYueEditor时，物理调试渲染器将运行。两个场景的摄像机位置是同步的。然而，物理调试渲染器的初始摄像机模式是错误的。向下滚动鼠标滚轮一次，物理调试渲染器的摄像机将切换到正确的模式。
+[rttr](https://github.com/rttrorg/rttr) (运行时类型反射)
 
+[spdlog](https://github.com/gabime/spdlog) (日志)
+
+[imgui](https://github.com/ocornut/imgui) (Gui)
+
+[assimp](https://github.com/assimp/assimp) (导入3D模型)
+
+[glm](https://github.com/g-truc/glm) (数学库)
+
+[openal-soft](https://github.com/kcat/openal-soft) (3D 音频)
 

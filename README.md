@@ -1,20 +1,22 @@
-﻿![LunarYue Logo](engine/source/editor/resource/LunarYueEngine.png)
-
-
-## 主な特徴
-
-
-
-## 言語
+﻿![LunarYue Logo](source/editor/editor_runtime/resource/LunarYueEngine.png)
 
 このREADMEファイルは複数の言語で利用可能です。
 
 - [English](README-en.md)
 - [中文](README-zh.md)
 
+
+## 注意事項
+Ubuntuでのビルド問題はまだ解決中です。現時点ではWindowでのビルドをお願いします。
+
 ## 前提条件
 
-LunarYueをビルドするには、まず以下のツールをインストールする必要があります。
+LunarYueEngineをビルドするには、まず以下のツールをインストールする必要があります。
+
+### Windows 10/11
+- Visual Studio 2019（またはそれ以降のバージョン）
+- CMake 3.19（またはそれ以降のバージョン）
+- Git 2.1（またはそれ以降のバージョン）
 
 <details>
   <summary><b>CMakeインストール手順</b></summary>
@@ -28,7 +30,7 @@ LunarYueをビルドするには、まず以下のツールをインストール
 3. インストールが完了したら、コマンドプロンプトを開いて、'cmake --version'コマンドを実行して、CMakeが正しくインストールされていることを確認します。このコマンドが実行されると、CMakeのバージョン情報が表示されます。
 
   <br>
-<b>Linux:</b>
+<b>Ubuntu:</b>
 
 1. ターミナルを開いて、以下のコマンドを実行してCMakeをインストールします。
 
@@ -43,35 +45,40 @@ sudo apt-get install cmake
   <br>
 </details>
 
-### Windows 10/11
-- Visual Studio 2019（またはそれ以降のバージョン）
-- CMake 3.19（またはそれ以降のバージョン）
-- Git 2.1（またはそれ以降のバージョン）
+## ビルド
 
-## LunarYueのビルド
+### Windows
+build_windows.batを実行することができます。このバッチファイルはプロジェクトを自動生成し、LunarYueEngineの Release構成をビルドします。
+ビルドが成功すると、build/binディレクトリに実行可能なLunarYueEditorが作成されます。
 
-### Windowsでのビルド
-**build_windows.bat** を実行することができます。このバッチファイルは、プロジェクトを自動的に生成し、**LunarYue Engine** の **Release** 構成をビルドします。ビルドが成功すると、**bin** ディレクトリに **LunarYueEditor.exe** が作成されます。
-
-また、次のコマンドを使用して最初に **Visual Studio** プロジェクトを生成し、ビルドディレクトリ内のソリューションを開いて手動でビルドすることができます。
-
+また、以下のコマンドを使用して、プロジェクトのルートディレクトリにプロジェクトを生成することも可能です。
 ```
-cmake -S . -B build
+cmake -B build
+```
+Releaseでプロジェクトをコンパイルします。プロジェクトをデバッグする場合はDebugを使用してください。
+```
+cmake --build build --config Release
 ```
 
-### Ubuntu 20.04でビルド
+### Ubuntu
 
-## ドキュメント
 
-詳細なドキュメントは、[Wiki](https://github.com/wuyukwi/LunarYueEngine/wiki)ページで確認できます。
+## 外部ライブラリ
+[bgfx](https://github.com/bkaradzic/bgfx) (レンダリング)
 
-## ライセンス
+[cereal](https://github.com/USCiLab/cereal) (シリアライゼーション)
 
-LunarYueEngineは、MITライセンスの下で公開されています。詳細については、[LICENSE](LICENSE)ファイルを参照してください。
+[rttr](https://github.com/rttrorg/rttr) (ランタイム型リフレクション)
 
-## コントリビューション
+[spdlog](https://github.com/gabime/spdlog) (ログ)
 
-プルリクエストやフィードバックは大歓迎です。問題を報告する場合は、[Issue](https://github.com/wuyukwi/LunarYueEngine/issues)ページで新しい問題を作成してください。
+[imgui](https://github.com/ocornut/imgui) (Gui)
 
-## 追加情報
+[assimp](https://github.com/assimp/assimp) (3Dモデルのインポート)
+
+[glm](https://github.com/g-truc/glm) (数学ライブラリ)
+
+[openal-soft](https://github.com/kcat/openal-soft) (3D オーディオ)
+
+
 
