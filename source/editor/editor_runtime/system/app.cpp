@@ -46,7 +46,7 @@ namespace editor
             mml::video_mode desktop = mml::video_mode::get_desktop_mode();
             desktop.width           = 1280;
             desktop.height          = 720;
-            auto window             = std::make_unique<render_window>(desktop, "App", mml::style::standard);
+            auto window             = std::make_unique<render_window>(desktop, dock_name, mml::style::standard);
             window->request_focus();
 
             auto dock = std::make_unique<T>(dock_name, true, ImVec2(200.0f, 200.0f));
@@ -200,8 +200,8 @@ namespace editor
             std::string path;
             if (native::open_file_dialog("sgr", fs::resolve_protocol("app:/data").string(), path))
             {
-                auto scene_path = fs::convert_to_protocol(path);
-                auto scene      = am.load<::scene>(scene_path.string()).get();
+                auto                  scene_path = fs::convert_to_protocol(path);
+                asset_handle<::scene> scene      = am.load<::scene>(scene_path.string()).get();
                 scene->instantiate(::scene::mode::standard);
                 es.load_editor_camera();
                 es.scene = path;
@@ -212,10 +212,10 @@ namespace editor
         {
             auto&       es   = core::get_subsystem<editor::editing_system>();
             const auto& path = es.scene;
-            if (path != "")
+            if (!path.empty())
             {
                 auto entities = gather_scene_data();
-                ecs::utils::save_entities_to_file(path, std::move(entities));
+                ecs::utils::save_entities_to_file(path, entities);
                 APPLOG_INFO("Saving scene successful.");
             }
 

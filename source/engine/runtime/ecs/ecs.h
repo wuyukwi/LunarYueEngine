@@ -1,6 +1,5 @@
-#include <memory>
-
 #pragma once
+#include <memory>
 
 #include <core/common_lib/assert.hpp>
 #include <core/common_lib/hpp/type_index.hpp>
@@ -11,14 +10,9 @@
 #include <algorithm>
 #include <bitset>
 #include <cstdint>
-#include <cstdlib>
 #include <functional>
-#include <iostream>
 #include <iterator>
 #include <memory>
-#include <mutex>
-#include <new>
-#include <set>
 #include <sstream>
 #include <string>
 #include <tuple>
@@ -94,7 +88,7 @@ namespace runtime
 
         struct id_t
         {
-            id_t() : id_(0) {}
+            id_t() {}
 
             explicit id_t(std::uint64_t id) : id_(id) {}
             id_t(std::uint32_t index, std::uint32_t version) : id_(std::uint64_t(index) | std::uint64_t(version) << 32UL) {}
@@ -312,7 +306,7 @@ namespace runtime
     /**
      * Manages entity::Id creation and component assignment.
      */
-    static const std::size_t MAX_COMPONENTS = 128;
+    static constexpr std::size_t MAX_COMPONENTS = 128;
     class entity_component_system
     {
     public:
@@ -324,22 +318,16 @@ namespace runtime
         /// If All is true it will iterate over all valid entities and will ignore the
         /// entity mask.
         template<class Delegate, bool All = false>
-        class view_iterator : public std::iterator<std::input_iterator_tag, entity::id_t>
+        class view_iterator
         {
         public:
-            Delegate& operator++()
-            {
-                ++i_;
-                next();
-                return *static_cast<Delegate*>(this);
-            }
-            bool         operator==(const Delegate& rhs) const { return i_ == rhs.i_; }
-            bool         operator!=(const Delegate& rhs) const { return i_ != rhs.i_; }
-            entity       operator*() { return entity(manager_, manager_->create_id(i_)); }
-            const entity operator*() const { return entity(manager_, manager_->create_id(i_)); }
+            using iterator_category = std::input_iterator_tag;
+            using value_type        = entity::id_t;
+            using difference_type   = std::ptrdiff_t;
+            using pointer           = value_type*;
+            using reference         = value_type&;
 
-        protected:
-            view_iterator(entity_component_system* manager, std::uint32_t index) :
+            explicit view_iterator(entity_component_system* manager, std::uint32_t index) :
                 manager_(manager), i_(index), capacity_(manager_->capacity()), free_cursor_(~0UL)
             {
                 if (All)
@@ -348,6 +336,7 @@ namespace runtime
                     free_cursor_ = 0;
                 }
             }
+
             view_iterator(entity_component_system* manager, const component_mask_t mask, std::uint32_t index) :
                 manager_(manager), mask_(mask), i_(index), capacity_(manager_->capacity()), free_cursor_(~0UL)
             {
@@ -358,6 +347,20 @@ namespace runtime
                 }
             }
 
+            Delegate& operator++()
+            {
+                ++i_;
+                next();
+                return *static_cast<Delegate*>(this);
+            }
+
+            bool operator==(const Delegate& rhs) const { return i_ == rhs.i_; }
+            bool operator!=(const Delegate& rhs) const { return i_ != rhs.i_; }
+
+            entity operator*() { return entity(manager_, manager_->create_id(i_)); }
+            entity operator*() const { return entity(manager_, manager_->create_id(i_)); }
+
+        protected:
             void next()
             {
                 while (i_ < capacity_ && !predicate())
@@ -372,9 +375,9 @@ namespace runtime
                 }
             }
 
-            inline bool predicate() { return (All && valid_entity()) || (manager_->entity_component_mask_[i_] & mask_) == mask_; }
+            bool predicate() { return (All && valid_entity()) || (manager_->entity_component_mask_[i_] & mask_) == mask_; }
 
-            inline bool valid_entity()
+            bool valid_entity()
             {
                 const std::vector<std::uint32_t>& free_list = manager_->free_list_;
                 if (free_cursor_ < free_list.size() && free_list[free_cursor_] == i_)
