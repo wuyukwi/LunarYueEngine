@@ -12,7 +12,7 @@ int main(int argc, char* argv[])
     if (fs::exists(ENGINE_DIRECTORY))
         engine_path = fs::absolute(fs::path(ENGINE_DIRECTORY));
 
-    const fs::path shader_include_path = binary_path / "src";
+    const fs::path shader_include_path = SHADER_INCLUDE_DIRECTORY;
 
     const fs::path engine = engine_path / "data/engine_data";
     const fs::path editor = engine_path / "data/editor_data";

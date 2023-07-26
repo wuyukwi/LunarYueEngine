@@ -4,7 +4,7 @@ $input v_texcoord0, v_weye_dir
 
 uniform vec4 u_light_direction;
 
-float atmospheric_depth(vec3 pos, vec3 dir) 
+float atmospheric_depth(vec3 pos, vec3 dir)
 {
 	float a = dot(dir, dir);
 	float b = 2.0f * dot(dir, pos);
@@ -28,16 +28,16 @@ float phase(float alpha, float g)
 float horizon_extinction(vec3 pos, vec3 dir, float radius)
 {
 	float u = dot(dir, -pos);
-	if(u < 0.0f) 
+	if(u < 0.0f)
 	{
 		return 1.0f;
 	}
 	vec3 near = pos + u * dir;
-	if(length(near) < radius + 0.001f) 
+	if(length(near) < radius + 0.001f)
 	{
 		return 0.0f;
-	} 
-	else 
+	}
+	else
 	{
 		vec3 v2 = normalize(near) * radius - pos;
 		float diff = acos(dot(normalize(v2), dir));
@@ -45,7 +45,7 @@ float horizon_extinction(vec3 pos, vec3 dir, float radius)
 	}
 }
 
-vec3 absorb(vec3 kr, float dist, vec3 color, float factor) 
+vec3 absorb(vec3 kr, float dist, vec3 color, float factor)
 {
 	float f = factor / dist;
 	return color - color * pow(kr, vec3(f, f, f));
@@ -56,7 +56,7 @@ void main()
 {
 
 	const vec3 u_kr = vec3(0.12867780436772762f, 0.2478442963618773f, 0.6216065586417131f);
-	const vec3 u_ground_color = vec3(0.63f, 0.6f, 0.57f);	
+	const vec3 u_ground_color = vec3(0.63f, 0.6f, 0.57f);
 	const float u_rayleigh_brightness = 9.0f;
 	const float u_mie_brightness = 0.1f;
 	const float u_spot_brightness = 10.0f;
@@ -78,7 +78,7 @@ void main()
 	float rayleigh_factor = phase(alpha, -0.01) * u_rayleigh_brightness;
 	float mie_factor = phase(alpha, u_mie_distribution) * u_mie_brightness;
 	float spot = smoothstep(0.0f, u_spot_distance, phase(alpha, 0.9995f)) * u_spot_brightness;
-	
+
 	float eye_depth = atmospheric_depth(eye_pos, eye_dir);
 	float step_length = eye_depth / float(u_step_count);
 	float eye_extinction = horizon_extinction(eye_pos, eye_dir, u_surface_height - 0.05f);
@@ -86,18 +86,18 @@ void main()
 	vec3 rayleigh_collected = vec3(0.0f, 0.0f, 0.0f);
 	vec3 mie_collected = vec3(0.0f, 0.0f, 0.0f);
 
-	for(int i = 0; i < u_step_count; ++i) 
+	for(int i = 0; i < u_step_count; ++i)
 	{
 		float sample_distance = step_length * float(i);
 		vec3 pos = eye_pos + eye_dir * sample_distance;
 		float extinction = horizon_extinction(pos, -u_light_direction.xyz, u_surface_height - 0.35f);
 		float sample_depth = atmospheric_depth(pos, -u_light_direction.xyz);
 		vec3 influx = absorb(u_kr, sample_depth, vec3(u_intensity, u_intensity, u_intensity), u_scatter_strength) * extinction;
-		
+
 		rayleigh_collected += absorb(u_kr, sample_distance, u_kr * influx, u_rayleigh_strength);
 		mie_collected += absorb(u_kr, sample_distance, influx, u_mie_strength);
 	}
-    
+
 	rayleigh_collected = (rayleigh_collected * eye_extinction * pow(eye_depth, u_rayleigh_collection_power)) / float(u_step_count);
 	mie_collected = (mie_collected * eye_extinction * pow(eye_depth, u_mie_collection_power)) / float(u_step_count);
 

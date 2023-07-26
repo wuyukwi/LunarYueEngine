@@ -1,2 +1,3 @@
-!*.obj
-!*.meta
+/cache
+/meta
+/config

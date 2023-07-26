@@ -1,2 +1,2 @@
-!*.obj
-!*.meta
+/cache
+/meta
