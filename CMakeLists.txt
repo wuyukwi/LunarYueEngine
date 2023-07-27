@@ -16,8 +16,5 @@ if(PROJECT_SOURCE_DIR STREQUAL PROJECT_BINARY_DIR)
   )
 endif()
 
-set(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/bin")
-set(BINARY_ROOT_DIR "${CMAKE_INSTALL_PREFIX}/")
-
 set(ASSET_DIR "data")
 add_subdirectory(source)
