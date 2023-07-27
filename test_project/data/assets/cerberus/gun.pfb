@@ -1,0 +1,98 @@
+{
+    "data": [
+        {
+            "entity_id": 4294967297,
+            "name": "gun",
+            "components": [
+                {
+                    "locked_ptr": {
+                        "polymorphic_id": 2147483649,
+                        "polymorphic_name": "transform_component",
+                        "ptr_wrapper": {
+                            "id": 2147483649,
+                            "data": {
+                                "base_type": {
+                                    "owner": {
+                                        "entity_id": 4294967297
+                                    }
+                                },
+                                "local_transform": {
+                                    "position": {
+                                        "x": -15.716756820678711,
+                                        "y": 18.10817527770996,
+                                        "z": 14.528641700744629
+                                    },
+                                    "rotation": {
+                                        "x": 0.4940086603164673,
+                                        "y": 0.5059201121330261,
+                                        "z": -0.49401021003723147,
+                                        "w": 0.5059191584587097
+                                    },
+                                    "scale": {
+                                        "x": 0.2900007367134094,
+                                        "y": 0.2900007665157318,
+                                        "z": 0.2900007963180542
+                                    }
+                                },
+                                "children": []
+                            }
+                        }
+                    }
+                },
+                {
+                    "locked_ptr": {
+                        "polymorphic_id": 2147483650,
+                        "polymorphic_name": "model_component",
+                        "ptr_wrapper": {
+                            "id": 2147483650,
+                            "data": {
+                                "base_type": {
+                                    "owner": {
+                                        "entity_id": 4294967297
+                                    }
+                                },
+                                "static": true,
+                                "casts_shadow": true,
+                                "casts_reflection": false,
+                                "model": {
+                                    "lods": [
+                                        {
+                                            "link": {
+                                                "ptr_wrapper": {
+                                                    "id": 2147483651,
+                                                    "data": {
+                                                        "id": "app:/data/assets/cerberus/cerebrus.fbx"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    ],
+                                    "materials": [
+                                        {
+                                            "link": {
+                                                "ptr_wrapper": {
+                                                    "id": 2147483652,
+                                                    "data": {
+                                                        "id": "app:/data/assets/cerberus/cerebrus_mat.mat"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    ],
+                                    "transition_time": 0.75,
+                                    "lod_limits": [
+                                        {
+                                            "min": 0,
+                                            "max": 100
+                                        }
+                                    ]
+                                },
+                                "bone_entities": []
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    ]
+}
