@@ -77,24 +77,14 @@ cmake --build build --config Debug
 ```
 
 ### Ubuntu
+* TODO
 
+## ASSETS
+サポートされているテクスチャフォーマット: png、tga、dds、ktx、pvr
 
-## 外部ライブラリ
-[bgfx](https://github.com/bkaradzic/bgfx) (レンダリング)
+サポートされているメッシュフォーマット: obj、fbx、dae、3ds
 
-[cereal](https://github.com/USCiLab/cereal) (シリアライゼーション)
-
-[rttr](https://github.com/rttrorg/rttr) (ランタイム型リフレクション)
-
-[spdlog](https://github.com/gabime/spdlog) (ログ)
-
-[imgui](https://github.com/ocornut/imgui) (Gui)
-
-[assimp](https://github.com/assimp/assimp) (3Dモデルのインポート)
-
-[glm](https://github.com/g-truc/glm) (数学ライブラリ)
-
-[openal-soft](https://github.com/kcat/openal-soft) (3D オーディオ)
+サポートされているオーディオフォーマット: ogg、wav
 
 # エディタ操作ガイド
 
@@ -131,5 +121,38 @@ cmake --build build --config Debug
   - `マウスホイール`：カメラを前後に移動します。
 
 - すべての移動操作は、`LShift` キーを押すことでスピードアップできます。
+
+## 階層ドックの操作ガイド
+
+1. **選択したエンティティの削除**: ヒエラルキービューで特定のエンティティを選択した状態で `Delete` キーを押すと、選択したエンティティが削除されます。ただし、エディタカメラ自体を削除することはできません。
+
+2. **エンティティの複製**: `Ctrl + D` キーを押すと、選択したエンティティが複製されます。複製されたエンティティは、元のエンティティと同じ親を持ち、自動的に選択されます。エディタカメラ自体を複製することはできません。
+
+3. **エンティティのフォーカス**: `Shift + F` キーを押すと、選択したエンティティにフォーカスします。これは、エディタカメラを選択したエンティティに近づける操作です。エディタカメラ自体にフォーカスすることはできません。
+
+4. **エンティティの描画**: エディタカメラとルートエンティティは自動的に描画されます。エディタカメラは最初に描画され、その後にルートエンティティが描画されます。
+
+5. **エンティティのドラッグアンドドロップ**: エンティティをドラッグアンドドロップして位置を移動させることができます。
+
+以上が主な操作の概要です。各操作はエディタの状態や選択されたエンティティにより、実行可能かどうかが変わります。また、一部の操作はエディタカメラ自体には適用できません。
+
+
+## 外部ライブラリ
+[bgfx](https://github.com/bkaradzic/bgfx) (レンダリング)
+
+[cereal](https://github.com/USCiLab/cereal) (シリアライゼーション)
+
+[rttr](https://github.com/rttrorg/rttr) (ランタイム型リフレクション)
+
+[spdlog](https://github.com/gabime/spdlog) (ログ)
+
+[imgui](https://github.com/ocornut/imgui) (Gui)
+
+[assimp](https://github.com/assimp/assimp) (3Dモデルのインポート)
+
+[glm](https://github.com/g-truc/glm) (数学ライブラリ)
+
+[openal-soft](https://github.com/kcat/openal-soft) (3D オーディオ)
+
 
 
