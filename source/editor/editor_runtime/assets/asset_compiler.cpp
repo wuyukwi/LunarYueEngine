@@ -71,27 +71,6 @@ namespace asset_compiler
             err = std::string(error.getMessage().getPtr());
             return false;
         }
-        // else
-        //{
-        //	std::array<char, 2048> buffer;
-        //	buffer.fill(0);
-        //	int32_t sz = process_reader.read(buffer.data(), static_cast<std::int32_t>(buffer.size()), &error);
-
-        //	process_reader.close();
-        //	int32_t result = process_reader.getExitCode();
-
-        //	if(0 != result)
-        //	{
-        //		err = std::string(error.getMessage().getPtr());
-        //		if(sz > 0)
-        //		{
-        //			err += " " + std::string(buffer.data());
-        //		}
-        //		return false;
-        //	}
-
-        //	return true;
-        //}
         else
         {
             std::array<char, 2048> buffer;

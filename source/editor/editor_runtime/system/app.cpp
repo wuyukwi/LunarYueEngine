@@ -310,6 +310,7 @@ namespace editor
 
                 gui::EndMenu();
             }
+            // TODO
             if (gui::BeginMenu("EDIT"))
             {
                 if (gui::MenuItem("UNDO", "CTRL+Z"))
@@ -403,6 +404,7 @@ namespace editor
             es.wireframe_selection = !es.wireframe_selection;
         }
 
+        // TODO
         gui::SameLine(width / 2.0f - 36.0f);
         if (gui::ToolbarButton(icons["play"].get(), "PLAY", false))
         {}
@@ -465,9 +467,8 @@ namespace editor
         dockspace.dock_with(game.get(), scene.get(), imguidock::slot::tab, 300, false);
         dockspace.dock_with(inspector.get(), scene.get(), imguidock::slot::right, 400, true);
         dockspace.dock_with(hierarchy.get(), scene.get(), imguidock::slot::left, 300, true);
-        dockspace.dock_to(console.get(), imguidock::slot::bottom, 300, true);
+        dockspace.dock_with(console.get(), scene.get(), imguidock::slot::bottom, 300, true);
         dockspace.dock_with(project.get(), console.get(), imguidock::slot::tab, 250, true);
-        dockspace.dock_with(style.get(), project.get(), imguidock::slot::right, 400, true);
 
         docking.register_dock(std::move(scene));
         docking.register_dock(std::move(game));
