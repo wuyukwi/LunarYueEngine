@@ -79,6 +79,9 @@ cmake --build build --config Debug
 ### Ubuntu
 * TODO
 
+## Releases
+https://github.com/wuyukwi/LunarYueEngine/releases
+
 ## ASSETS
 サポートされているテクスチャフォーマット: png、tga、dds、ktx、pvr
 
