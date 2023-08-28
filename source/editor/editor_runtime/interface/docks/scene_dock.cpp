@@ -463,7 +463,7 @@ void handle_camera_movement()
     auto  dt            = sim.get_delta_time().count();
 
     auto  transform      = editor_camera.get_component<transform_component>().lock();
-    float movement_speed = 5.0f;
+    float movement_speed = 10.0f;
     float rotation_speed = 0.2f;
     float multiplier     = 5.0f;
     auto  delta_move     = input.get_cursor_delta_move();
@@ -553,10 +553,10 @@ void handle_camera_movement()
             transform->rotate(0.0f, dx, 0.0f);
             transform->rotate_local(dy, 0.0f, 0.0f);
         }
-
-        float delta_wheel = input.get_mouse_wheel_scroll_delta_move();
-        transform->move_local({0.0f, 0.0f, 14.0f * movement_speed * delta_wheel * dt});
     }
+
+    float delta_wheel = input.get_mouse_wheel_scroll_delta_move();
+    transform->move_local({0.0f, 0.0f, 14.0f * movement_speed * delta_wheel * dt});
 }
 
 static void process_drag_drop_target(const std::shared_ptr<camera_component>& camera_comp)
