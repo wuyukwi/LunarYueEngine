@@ -27,7 +27,6 @@ namespace editor
         icons["global"]    = am.load<gfx::texture>("editor:/data/icons/global.png").get();
         icons["play"]      = am.load<gfx::texture>("editor:/data/icons/play.png").get();
         icons["pause"]     = am.load<gfx::texture>("editor:/data/icons/pause.png").get();
-        icons["stop"]      = am.load<gfx::texture>("editor:/data/icons/stop.png").get();
         icons["next"]      = am.load<gfx::texture>("editor:/data/icons/next.png").get();
         icons["material"]  = am.load<gfx::texture>("editor:/data/icons/material.png").get();
         icons["mesh"]      = am.load<gfx::texture>("editor:/data/icons/mesh.png").get();
