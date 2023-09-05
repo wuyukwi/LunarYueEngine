@@ -82,6 +82,9 @@ cmake --build build --config Debug
 ## Releases
 https://github.com/wuyukwi/LunarYueEngine/releases
 
+## 動画
+https://youtu.be/s0FjpcxClfQ
+
 ## ASSETS
 サポートされているテクスチャフォーマット: png、tga、dds、ktx、pvr
 
@@ -157,6 +160,9 @@ https://github.com/wuyukwi/LunarYueEngine/releases
 [glm](https://github.com/g-truc/glm) (数学ライブラリ)
 
 [openal-soft](https://github.com/kcat/openal-soft) (3D オーディオ)
+
+## icon 
+www.flaticon.com
 
 
 
