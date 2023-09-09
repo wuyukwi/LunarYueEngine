@@ -83,7 +83,7 @@ cmake --build build --config Debug
 https://github.com/wuyukwi/LunarYueEngine/releases
 
 ## 動画
-https://youtu.be/s0FjpcxClfQ
+https://youtu.be/PNWrLfyQd14
 
 ## ASSETS
 サポートされているテクスチャフォーマット: png、tga、dds、ktx、pvr
