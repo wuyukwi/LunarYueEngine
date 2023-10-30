@@ -8,4 +8,4 @@ namespace audio
     {
         using std::runtime_error::runtime_error;
     };
-}
+} // namespace audio

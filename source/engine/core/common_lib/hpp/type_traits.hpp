@@ -8,19 +8,16 @@
 namespace hpp
 {
 
-inline bool check_all_true()
-{
-	return true;
-}
+    inline bool check_all_true() { return true; }
 
-template <typename... BoolArgs>
-inline bool check_all_true(bool arg1, BoolArgs... args)
-{
-	return arg1 & check_all_true(args...);
-}
+    template<typename... BoolArgs>
+    inline bool check_all_true(bool arg1, BoolArgs... args)
+    {
+        return arg1 & check_all_true(args...);
+    }
 
-template <bool...>
-struct bool_pack;
-template <bool... v>
-using all_true = std::is_same<bool_pack<true, v...>, bool_pack<v..., true>>;
+    template<bool...>
+    struct bool_pack;
+    template<bool... v>
+    using all_true = std::is_same<bool_pack<true, v...>, bool_pack<v..., true>>;
 } // namespace hpp

@@ -2,5 +2,5 @@
 
 namespace runtime
 {
-void setup_asset_manager();
+    void setup_asset_manager();
 }

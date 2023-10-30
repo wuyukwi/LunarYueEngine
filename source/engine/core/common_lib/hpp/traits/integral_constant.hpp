@@ -3,7 +3,7 @@
 
 namespace hpp
 {
-/// BOOL CONSTANT
-template <bool B>
-using bool_constant = std::integral_constant<bool, B>;
-}
+    /// BOOL CONSTANT
+    template<bool B>
+    using bool_constant = std::integral_constant<bool, B>;
+} // namespace hpp

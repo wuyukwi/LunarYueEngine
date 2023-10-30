@@ -20,17 +20,11 @@ inline void checked_array_delete(T*& x)
 template<typename T>
 struct checked_deleter
 {
-    void operator()(T*& x) const
-    {
-        checked_delete(x);
-    }
+    void operator()(T*& x) const { checked_delete(x); }
 };
 
 template<typename T>
 struct checked_array_deleter
 {
-    void operator()(T*& x) const
-    {
-        checked_array_delete(x);
-    }
+    void operator()(T*& x) const { checked_array_delete(x); }
 };

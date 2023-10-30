@@ -5,5 +5,5 @@
 
 namespace audio
 {
-using float3 = std::array<float, 3>;
+    using float3 = std::array<float, 3>;
 }

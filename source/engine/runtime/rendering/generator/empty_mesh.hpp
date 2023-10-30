@@ -8,42 +8,42 @@
 namespace generator
 {
 
-/// Empty Mesh with zero vertices and triangles.
-class empty_mesh
-{
-public:
-	class triangles_t
-	{
-	public:
-		triangle_t generate() const;
-		bool done() const noexcept;
-		void next();
+    /// Empty Mesh with zero vertices and triangles.
+    class empty_mesh
+    {
+    public:
+        class triangles_t
+        {
+        public:
+            triangle_t generate() const;
+            bool       done() const noexcept;
+            void       next();
 
-	private:
-		triangles_t();
+        private:
+            triangles_t();
 
-		friend class empty_mesh;
-	};
+            friend class empty_mesh;
+        };
 
-	class vertices_t
-	{
-	public:
-		mesh_vertex_t generate() const;
-		bool done() const noexcept;
-		void next();
+        class vertices_t
+        {
+        public:
+            mesh_vertex_t generate() const;
+            bool          done() const noexcept;
+            void          next();
 
-	private:
-		vertices_t();
+        private:
+            vertices_t();
 
-		friend class empty_mesh;
-	};
+            friend class empty_mesh;
+        };
 
-	empty_mesh();
+        empty_mesh();
 
-	triangles_t triangles() const noexcept;
+        triangles_t triangles() const noexcept;
 
-	vertices_t vertices() const noexcept;
-};
-}
+        vertices_t vertices() const noexcept;
+    };
+} // namespace generator
 
 #endif

@@ -4,6 +4,5 @@
 
 namespace importer
 {
-bool load_mesh_data_from_file(const std::string& path, mesh::load_data& load_data,
-							  std::vector<runtime::animation>& animations);
+    bool load_mesh_data_from_file(const std::string& path, mesh::load_data& load_data, std::vector<runtime::animation>& animations);
 }

@@ -48,13 +48,12 @@ auto init()
 
 namespace hpp
 {
-namespace pipeline
-{
-    template<typename T, typename Callable>
-    auto operator|( T&& val, Callable&& fn ) ->
-    typename std::result_of<Callable(T)>::type
+    namespace pipeline
     {
-        return std::forward<Callable>(fn)( std::forward<T>(val) );
-    }
-}
-}
+        template<typename T, typename Callable>
+        auto operator|(T&& val, Callable&& fn) -> typename std::result_of<Callable(T)>::type
+        {
+            return std::forward<Callable>(fn)(std::forward<T>(val));
+        }
+    } // namespace pipeline
+} // namespace hpp

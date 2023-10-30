@@ -6,22 +6,16 @@
 namespace generator
 {
 
-class triangle_t
-{
-public:
-	/// Zero based indices of the triangle vertices in counterclockwise order.
-	gml::ivec3 vertices;
+    class triangle_t
+    {
+    public:
+        /// Zero based indices of the triangle vertices in counterclockwise order.
+        gml::ivec3 vertices;
 
-	triangle_t() noexcept
-		: vertices{}
-	{
-	}
+        triangle_t() noexcept : vertices {} {}
 
-	explicit triangle_t(const gml::ivec3& vertices) noexcept
-		: vertices{vertices}
-	{
-	}
-};
-}
+        explicit triangle_t(const gml::ivec3& vertices) noexcept : vertices {vertices} {}
+    };
+} // namespace generator
 
 #endif

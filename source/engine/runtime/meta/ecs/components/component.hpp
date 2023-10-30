@@ -6,7 +6,7 @@
 
 namespace runtime
 {
-REFLECT_EXTERN(component);
-SAVE_EXTERN(component);
-LOAD_EXTERN(component);
-}
+    REFLECT_EXTERN(component);
+    SAVE_EXTERN(component);
+    LOAD_EXTERN(component);
+} // namespace runtime

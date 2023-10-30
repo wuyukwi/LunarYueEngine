@@ -6,24 +6,18 @@
 
 namespace runtime
 {
-REFLECT(component)
-{
-	rttr::registration::class_<component>("component");
-}
+    REFLECT(component) { rttr::registration::class_<component>("component"); }
 
-SAVE(component)
-{
-	try_save(ar, cereal::make_nvp("owner", obj.entity_));
-}
-SAVE_INSTANTIATE(component, cereal::oarchive_associative_t);
-SAVE_INSTANTIATE(component, cereal::oarchive_binary_t);
+    SAVE(component) { try_save(ar, cereal::make_nvp("owner", obj.entity_)); }
+    SAVE_INSTANTIATE(component, cereal::oarchive_associative_t);
+    SAVE_INSTANTIATE(component, cereal::oarchive_binary_t);
 
-LOAD(component)
-{
-	try_load(ar, cereal::make_nvp("owner", obj.entity_));
+    LOAD(component)
+    {
+        try_load(ar, cereal::make_nvp("owner", obj.entity_));
 
-	obj.touch();
-}
-LOAD_INSTANTIATE(component, cereal::iarchive_associative_t);
-LOAD_INSTANTIATE(component, cereal::iarchive_binary_t);
-}
+        obj.touch();
+    }
+    LOAD_INSTANTIATE(component, cereal::iarchive_associative_t);
+    LOAD_INSTANTIATE(component, cereal::iarchive_binary_t);
+} // namespace runtime

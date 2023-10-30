@@ -6,6 +6,6 @@
 
 namespace editor
 {
-SAVE_EXTERN(project_manager::options);
-LOAD_EXTERN(project_manager::options);
-}
+    SAVE_EXTERN(project_manager::options);
+    LOAD_EXTERN(project_manager::options);
+} // namespace editor

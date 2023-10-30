@@ -87,7 +87,8 @@ namespace imguidock
                 current_container->splits[1]->always_auto_resize = false;
             }
             else if (size == 0.0f)
-            {}
+            {
+            }
             else
             {
                 current_container->splits[0]->always_auto_resize = false;
@@ -505,7 +506,8 @@ namespace imguidock
             else if (current_dock_action_ == eDrag)
             {
                 if (!current_dock_to_->draging)
-                {}
+                {
+                }
                 current_dock_to_->draging = true;
             }
             else if (current_dock_action_ == eClose)

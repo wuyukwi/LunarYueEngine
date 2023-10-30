@@ -314,16 +314,21 @@ namespace editor
             if (gui::BeginMenu("EDIT"))
             {
                 if (gui::MenuItem("UNDO", "CTRL+Z"))
-                {}
+                {
+                }
                 if (gui::MenuItem("REDO", "CTRL+Y", false, false))
-                {}
+                {
+                }
                 gui::Separator();
                 if (gui::MenuItem("CUT", "CTRL+X"))
-                {}
+                {
+                }
                 if (gui::MenuItem("COPY", "CTRL+C"))
-                {}
+                {
+                }
                 if (gui::MenuItem("PASTE", "CTRL+V"))
-                {}
+                {
+                }
                 gui::EndMenu();
             }
             if (gui::BeginMenu("WINDOWS"))
@@ -407,13 +412,16 @@ namespace editor
         // TODO
         gui::SameLine(width / 2.0f - 36.0f);
         if (gui::ToolbarButton(icons["play"].get(), "PLAY", false))
-        {}
+        {
+        }
         gui::SameLine(0.0f);
         if (gui::ToolbarButton(icons["pause"].get(), "PAUSE", false))
-        {}
+        {
+        }
         gui::SameLine(0.0f);
         if (gui::ToolbarButton(icons["next"].get(), "STEP", false))
-        {}
+        {
+        }
     }
 
     //-----------------------------------------------------------------------------

@@ -3,5 +3,5 @@
 
 namespace math
 {
-using transform = transform_t<float>;
+    using transform = transform_t<float>;
 }

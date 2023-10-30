@@ -4,5 +4,5 @@
 
 namespace gfx
 {
-REFLECT_EXTERN(texture_info);
+    REFLECT_EXTERN(texture_info);
 }
