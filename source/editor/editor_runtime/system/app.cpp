@@ -371,55 +371,58 @@ namespace editor
         auto& icons = es.icons;
 
         float width = gui::GetContentRegionAvail().x;
-        if (gui::ToolbarButton(icons["translate"].get(), "TRANSLATE", es.operation == imguizmo::operation::translate))
+        if (gui::ToolbarButton("translate", icons["translate"].get(), "TRANSLATE", es.operation == imguizmo::operation::translate))
         {
             es.operation = imguizmo::operation::translate;
         }
         gui::SameLine(0.0f);
-        if (gui::ToolbarButton(icons["rotate"].get(), "ROTATE", es.operation == imguizmo::operation::rotate))
+        if (gui::ToolbarButton("rotate", icons["rotate"].get(), "ROTATE", es.operation == imguizmo::operation::rotate))
         {
             es.operation = imguizmo::operation::rotate;
         }
         gui::SameLine(0.0f);
-        if (gui::ToolbarButton(icons["scale"].get(), "SCALE", es.operation == imguizmo::operation::scale))
+        if (gui::ToolbarButton("scale", icons["scale"].get(), "SCALE", es.operation == imguizmo::operation::scale))
         {
             es.operation = imguizmo::operation::scale;
             es.mode      = imguizmo::mode::local;
         }
         gui::SameLine(0.0f, 50.0f);
 
-        if (gui::ToolbarButton(icons["local"].get(), "LOCAL COORDINATE SYSTEM", es.mode == imguizmo::mode::local))
+        if (gui::ToolbarButton("local", icons["local"].get(), "LOCAL COORDINATE SYSTEM", es.mode == imguizmo::mode::local))
         {
             es.mode = imguizmo::mode::local;
         }
         gui::SameLine(0.0f);
-        if (gui::ToolbarButton(
-                icons["global"].get(), "GLOBAL COORDINATE SYSTEM", es.mode == imguizmo::mode::world, es.operation != imguizmo::operation::scale))
+        if (gui::ToolbarButton("global",
+                               icons["global"].get(),
+                               "GLOBAL COORDINATE SYSTEM",
+                               es.mode == imguizmo::mode::world,
+                               es.operation != imguizmo::operation::scale))
         {
             es.mode = imguizmo::mode::world;
         }
         gui::SameLine(0.0f);
-        if (gui::ToolbarButton(icons["grid"].get(), "SHOW GRID", es.show_grid))
+        if (gui::ToolbarButton("grid", icons["grid"].get(), "SHOW GRID", es.show_grid))
         {
             es.show_grid = !es.show_grid;
         }
         gui::SameLine(0.0f);
-        if (gui::ToolbarButton(icons["wireframe"].get(), "WIREFRAME SELECTION", es.wireframe_selection))
+        if (gui::ToolbarButton("wireframe", icons["wireframe"].get(), "WIREFRAME SELECTION", es.wireframe_selection))
         {
             es.wireframe_selection = !es.wireframe_selection;
         }
 
         // TODO
         gui::SameLine(width / 2.0f - 36.0f);
-        if (gui::ToolbarButton(icons["play"].get(), "PLAY", false))
+        if (gui::ToolbarButton("play", icons["play"].get(), "PLAY", false))
         {
         }
         gui::SameLine(0.0f);
-        if (gui::ToolbarButton(icons["pause"].get(), "PAUSE", false))
+        if (gui::ToolbarButton("pause", icons["pause"].get(), "PAUSE", false))
         {
         }
         gui::SameLine(0.0f);
-        if (gui::ToolbarButton(icons["next"].get(), "STEP", false))
+        if (gui::ToolbarButton("next", icons["next"].get(), "STEP", false))
         {
         }
     }

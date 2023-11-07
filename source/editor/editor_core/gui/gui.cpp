@@ -27,7 +27,8 @@ namespace gui
         ImGui::Image(info.texture.get(), _size, uv0, uv1, _tintCol, _borderCol);
     }
 
-    bool ImageButton(texture_info  info,
+    bool ImageButton(const char*   id,
+                     texture_info  info,
                      const ImVec2& _size,
                      const ImVec2& _uv0 /*= ImVec2(0.0f, 0.0f) */,
                      const ImVec2& _uv1 /*= ImVec2(1.0f, 1.0f) */,
@@ -49,13 +50,13 @@ namespace gui
             }
         }
 
-        return ImGui::ImageButton(info.texture.get(), _size, uv0, uv1, _framePadding, _bgCol, _tintCol);
+        return ImGui::ImageButton(id, info.texture.get(), _size, uv0, uv1, _bgCol, _tintCol);
     }
 
-    bool ImageButtonEx(texture_info info, const ImVec2& size, const char* tooltip, bool selected, bool enabled)
+    bool ImageButtonEx(const char* id, texture_info info, const ImVec2& size, const char* tooltip, bool selected, bool enabled)
     {
         s_textures.push_back(info.texture);
-        return ImGui::ImageButtonEx(info.texture.get(), size, tooltip, selected, enabled);
+        return ImGui::ImageButtonEx(id, info.texture.get(), size, tooltip, selected, enabled);
     }
 
     void ImageWithAspect(texture_info  info,

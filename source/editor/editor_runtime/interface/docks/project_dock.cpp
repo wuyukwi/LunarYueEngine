@@ -183,15 +183,23 @@ static bool draw_entry(const asset_handle<gfx::texture>&              icon,
     gui::PushID(name.c_str());
     if (is_selected && !gui::IsAnyItemActive() && gui::IsWindowFocused())
     {
-        if (gui::IsKeyPressed(mml::keyboard::F2))
+        // if (gui::IsKeyPressed(mml::keyboard::F2))
+        //{
+        //     open_rename_menu = true;
+        // }
+        if (gui::IsKeyPressed(ImGuiKey_F2))
         {
             open_rename_menu = true;
         }
-
-        if (gui::IsKeyPressed(mml::keyboard::Delete))
+        if (gui::IsKeyPressed(ImGuiKey_Delete))
         {
             action = entry_action::deleted;
         }
+
+        // if (gui::IsKeyPressed(mml::keyboard::Delete))
+        //{
+        //     action = entry_action::deleted;
+        // }
     }
 
     ImVec2 item_size    = {size, size};
@@ -238,7 +246,9 @@ static bool draw_entry(const asset_handle<gfx::texture>&              icon,
         }
     }
 
-    if (is_selected && gui::GetNavInputAmount(ImGuiNavInput_Input, ImGuiInputReadMode_Pressed) > 0.0f)
+    if (is_selected
+        //        && gui::GetNavInputAmount(ImGuiNavInput_Input, ImGuiInputReadMode_Pressed) > 0.0f
+    )
     {
         action = entry_action::double_clicked;
     }
@@ -288,7 +298,7 @@ static bool draw_entry(const asset_handle<gfx::texture>&              icon,
 
         if (open_rename_menu)
         {
-            gui::ActivateItem(gui::GetItemID());
+            gui::ActivateItemByID(gui::GetItemID());
         }
         gui::PopItemWidth();
         gui::EndPopup();

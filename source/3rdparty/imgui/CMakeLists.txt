@@ -1,20 +1,15 @@
-set(libsrc 
-imgui/imgui_internal.h
-imgui/imconfig.h
-imgui/imgui.cpp
-imgui/imgui.h
-imgui/imgui_widgets.cpp
-imgui/imgui_tables.cpp
-imgui/imgui_draw.cpp
-imgui/imgui_demo.cpp
-imgui_user/imgui_user.cpp
-imgui_user/imgui_user.h
-imgui_user/imgui_date_picker.cpp
-imgui_user/imgui_date_picker.h
-imguizmo/imguizmo.cpp
-imguizmo/imguizmo.h)
+file(
+	GLOB 
+	IMGUI_SOURCES 
+	imgui/*.cpp 
+	imgui/*.h 
+	imgui_user/*.cpp 
+	imgui_user/*.h 	
+	imguizmo/*.cpp 
+	imguizmo/*.h 
+)
 
-add_library (imgui ${libsrc})
+add_library (imgui ${IMGUI_SOURCES})
 
 if(MSVC)
 set(imgui_flags

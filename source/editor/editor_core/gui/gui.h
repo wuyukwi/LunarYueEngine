@@ -1,8 +1,8 @@
 #pragma once
 
-#include "imgui/imgui.h"
-#define IMGUI_DEFINE_MATH_OPERATORS
 #include "embedded/icons_font_awesome.h"
+#define IMGUI_DEFINE_MATH_OPERATORS
+#include "imgui/imgui.h"
 #include "imgui/imgui_internal.h"
 #include "imgui_user/imgui_date_picker.h"
 #include "imgui_user/imgui_user.h"
@@ -30,7 +30,8 @@ namespace gui
                const ImVec4& _borderCol = ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
 
     // Helper function for passing Texture to ImGui::ImageButton.
-    bool ImageButton(texture_info  info,
+    bool ImageButton(const char*   id,
+                     texture_info  info,
                      const ImVec2& _size,
                      const ImVec2& _uv0          = ImVec2(0.0f, 0.0f),
                      const ImVec2& _uv1          = ImVec2(1.0f, 1.0f),

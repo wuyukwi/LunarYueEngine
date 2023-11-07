@@ -428,7 +428,7 @@ namespace imguidock
                                      !container->vertical_split ? splitter_button_width : size.y + splitter_button_width));
 
                 ImGui::PopStyleColor(3);
-                ImGui::SetItemAllowOverlap(); // This is to allow having other buttons OVER our splitter.
+                // ImGui::SetItemAllowOverlap(); // This is to allow having other buttons OVER our splitter.
 
                 if (ImGui::IsItemActive())
                 {
@@ -906,7 +906,7 @@ namespace imguidock
                 }
 
                 ImGui::SameLine(0, 0);
-                ImGui::SetItemAllowOverlap();
+                // ImGui::SetItemAllowOverlap();
                 ImVec2 backupCursorPos = ImGui::GetCursorScreenPos();
                 ImGui::SetCursorPosX(backupCursorPos.x - close_sz.x);
                 ImGui::PushID(dockTitle.c_str());

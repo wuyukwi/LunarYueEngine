@@ -160,6 +160,7 @@ add_subdirectory( assimp )
 set_target_properties(assimp PROPERTIES FOLDER ${THIRD_PARTY_FOLDER}/assimp)
 set_target_properties(uninstall PROPERTIES FOLDER ${THIRD_PARTY_FOLDER}/assimp)
 set_target_properties(zlibstatic PROPERTIES FOLDER ${THIRD_PARTY_FOLDER}/assimp)
+
 if(WIN32)
     set_target_properties(UpdateAssimpLibsDebugSymbolsAndDLLs PROPERTIES FOLDER ${THIRD_PARTY_FOLDER}/assimp)
 endif()

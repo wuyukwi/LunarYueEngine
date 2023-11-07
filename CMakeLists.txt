@@ -21,6 +21,7 @@ if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=implicit-const-int-float-conversion")
 endif()
 
-
 set(ASSET_DIR "data")
+set(EDITOR_NAME "LunarYueEditor")
+
 add_subdirectory(source)
