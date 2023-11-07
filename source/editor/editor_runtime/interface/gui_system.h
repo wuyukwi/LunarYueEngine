@@ -40,7 +40,7 @@ struct gui_system
     void pop_context();
 
 private:
-    void platform_events(const window_info& info, const std::vector<mml::platform_event>&);
+    void platform_events(const std::pair<std::uint32_t, bool>& info, const std::vector<mml::platform_event>&);
 
     std::map<uint32_t, ImGuiContext*> contexts_;
     ImFontAtlas                       atlas_;

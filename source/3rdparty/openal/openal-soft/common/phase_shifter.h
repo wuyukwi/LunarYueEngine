@@ -9,10 +9,13 @@
 
 #include <array>
 #include <stddef.h>
+#include <type_traits>
 
 #include "alcomplex.h"
 #include "alspan.h"
 
+
+struct NoInit { };
 
 /* Implements a wide-band +90 degree phase-shift. Note that this should be
  * given one sample less of a delay (FilterSize/2 - 1) compared to the direct
@@ -53,14 +56,16 @@ struct PhaseShifterT {
         std::fill_n(fftBuffer.get(), fft_size, complex_d{});
         fftBuffer[half_size] = 1.0;
 
-        forward_fft(al::as_span(fftBuffer.get(), fft_size));
-        for(size_t i{0};i < half_size+1;++i)
+        forward_fft(al::span{fftBuffer.get(), fft_size});
+        fftBuffer[0] *= std::numeric_limits<double>::epsilon();
+        for(size_t i{1};i < half_size;++i)
             fftBuffer[i] = complex_d{-fftBuffer[i].imag(), fftBuffer[i].real()};
+        fftBuffer[half_size] *= std::numeric_limits<double>::epsilon();
         for(size_t i{half_size+1};i < fft_size;++i)
             fftBuffer[i] = std::conj(fftBuffer[fft_size - i]);
-        inverse_fft(al::as_span(fftBuffer.get(), fft_size));
+        inverse_fft(al::span{fftBuffer.get(), fft_size});
 
-        auto fftiter = fftBuffer.get() + half_size + (FilterSize/2 - 1);
+        auto fftiter = fftBuffer.get() + fft_size - 1;
         for(float &coeff : mCoeffs)
         {
             coeff = static_cast<float>(fftiter->real() / double{fft_size});
@@ -68,29 +73,12 @@ struct PhaseShifterT {
         }
     }
 
+    PhaseShifterT(NoInit) { }
+
     void process(al::span<float> dst, const float *RESTRICT src) const;
 
 private:
 #if defined(HAVE_NEON)
-    /* There doesn't seem to be NEON intrinsics to do this kind of stipple
-     * shuffling, so there's two custom methods for it.
-     */
-    static auto shuffle_2020(float32x4_t a, float32x4_t b)
-    {
-        float32x4_t ret{vmovq_n_f32(vgetq_lane_f32(a, 0))};
-        ret = vsetq_lane_f32(vgetq_lane_f32(a, 2), ret, 1);
-        ret = vsetq_lane_f32(vgetq_lane_f32(b, 0), ret, 2);
-        ret = vsetq_lane_f32(vgetq_lane_f32(b, 2), ret, 3);
-        return ret;
-    }
-    static auto shuffle_3131(float32x4_t a, float32x4_t b)
-    {
-        float32x4_t ret{vmovq_n_f32(vgetq_lane_f32(a, 1))};
-        ret = vsetq_lane_f32(vgetq_lane_f32(a, 3), ret, 1);
-        ret = vsetq_lane_f32(vgetq_lane_f32(b, 1), ret, 2);
-        ret = vsetq_lane_f32(vgetq_lane_f32(b, 3), ret, 3);
-        return ret;
-    }
     static auto unpacklo(float32x4_t a, float32x4_t b)
     {
         float32x2x2_t result{vzip_f32(vget_low_f32(a), vget_low_f32(b))};
@@ -171,9 +159,10 @@ inline void PhaseShifterT<S>::process(al::span<float> dst, const float *RESTRICT
                 const float32x4_t coeffs{vld1q_f32(&mCoeffs[j])};
                 const float32x4_t s0{vld1q_f32(&src[j*2])};
                 const float32x4_t s1{vld1q_f32(&src[j*2 + 4])};
+                const float32x4x2_t values{vuzpq_f32(s0, s1)};
 
-                r04 = vmlaq_f32(r04, shuffle_2020(s0, s1), coeffs);
-                r14 = vmlaq_f32(r14, shuffle_3131(s0, s1), coeffs);
+                r04 = vmlaq_f32(r04, values.val[0], coeffs);
+                r14 = vmlaq_f32(r14, values.val[1], coeffs);
             }
             src += 2;
 

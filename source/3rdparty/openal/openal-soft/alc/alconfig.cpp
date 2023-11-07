@@ -45,6 +45,13 @@
 #include "strutils.h"
 #include "vector.h"
 
+#if defined(ALSOFT_UWP)
+#include <winrt/Windows.Media.Core.h> // !!This is important!!
+#include <winrt/Windows.Storage.h>
+#include <winrt/Windows.Foundation.h>
+#include <winrt/Windows.Foundation.Collections.h>
+using namespace winrt;
+#endif
 
 namespace {
 
@@ -52,7 +59,7 @@ struct ConfigEntry {
     std::string key;
     std::string value;
 };
-al::vector<ConfigEntry> ConfOpts;
+std::vector<ConfigEntry> ConfOpts;
 
 
 std::string &lstrip(std::string &line)
@@ -258,7 +265,7 @@ void LoadConfigFromFile(std::istream &f)
             }
         }
 
-        TRACE(" found '%s' = '%s'\n", fullKey.c_str(), value.c_str());
+        TRACE(" setting '%s' = '%s'\n", fullKey.c_str(), value.c_str());
 
         /* Check if we already have this option set */
         auto find_key = [&fullKey](const ConfigEntry &entry) -> bool
@@ -309,17 +316,14 @@ const char *GetConfigValue(const char *devName, const char *blockName, const cha
         { return entry.key == key; });
     if(iter != ConfOpts.cend())
     {
-        TRACE("Found %s = \"%s\"\n", key.c_str(), iter->value.c_str());
+        TRACE("Found option %s = \"%s\"\n", key.c_str(), iter->value.c_str());
         if(!iter->value.empty())
             return iter->value.c_str();
         return nullptr;
     }
 
     if(!devName)
-    {
-        TRACE("Key %s not found\n", key.c_str());
         return nullptr;
-    }
     return GetConfigValue(nullptr, blockName, keyName);
 }
 
@@ -329,9 +333,16 @@ const char *GetConfigValue(const char *devName, const char *blockName, const cha
 #ifdef _WIN32
 void ReadALConfig()
 {
-    WCHAR buffer[MAX_PATH];
-    if(SHGetSpecialFolderPathW(nullptr, buffer, CSIDL_APPDATA, FALSE) != FALSE)
+#if !defined(_GAMING_XBOX)
     {
+#if !defined(ALSOFT_UWP)
+        WCHAR buffer[MAX_PATH];
+        if (!SHGetSpecialFolderPathW(nullptr, buffer, CSIDL_APPDATA, FALSE))
+            return;
+#else
+        winrt::Windows::Storage::ApplicationDataContainer localSettings = winrt::Windows::Storage::ApplicationData::Current().LocalSettings();
+        auto buffer = Windows::Storage::ApplicationData::Current().RoamingFolder().Path();
+#endif
         std::string filepath{wstr_to_utf8(buffer)};
         filepath += "\\alsoft.ini";
 
@@ -340,6 +351,8 @@ void ReadALConfig()
         if(f.is_open())
             LoadConfigFromFile(f);
     }
+#endif
+
 
     std::string ppath{GetProcBinary().path};
     if(!ppath.empty())
@@ -483,40 +496,40 @@ void ReadALConfig()
 }
 #endif
 
-al::optional<std::string> ConfigValueStr(const char *devName, const char *blockName, const char *keyName)
+std::optional<std::string> ConfigValueStr(const char *devName, const char *blockName, const char *keyName)
 {
     if(const char *val{GetConfigValue(devName, blockName, keyName)})
         return val;
-    return al::nullopt;
+    return std::nullopt;
 }
 
-al::optional<int> ConfigValueInt(const char *devName, const char *blockName, const char *keyName)
+std::optional<int> ConfigValueInt(const char *devName, const char *blockName, const char *keyName)
 {
     if(const char *val{GetConfigValue(devName, blockName, keyName)})
         return static_cast<int>(std::strtol(val, nullptr, 0));
-    return al::nullopt;
+    return std::nullopt;
 }
 
-al::optional<unsigned int> ConfigValueUInt(const char *devName, const char *blockName, const char *keyName)
+std::optional<unsigned int> ConfigValueUInt(const char *devName, const char *blockName, const char *keyName)
 {
     if(const char *val{GetConfigValue(devName, blockName, keyName)})
         return static_cast<unsigned int>(std::strtoul(val, nullptr, 0));
-    return al::nullopt;
+    return std::nullopt;
 }
 
-al::optional<float> ConfigValueFloat(const char *devName, const char *blockName, const char *keyName)
+std::optional<float> ConfigValueFloat(const char *devName, const char *blockName, const char *keyName)
 {
     if(const char *val{GetConfigValue(devName, blockName, keyName)})
         return std::strtof(val, nullptr);
-    return al::nullopt;
+    return std::nullopt;
 }
 
-al::optional<bool> ConfigValueBool(const char *devName, const char *blockName, const char *keyName)
+std::optional<bool> ConfigValueBool(const char *devName, const char *blockName, const char *keyName)
 {
     if(const char *val{GetConfigValue(devName, blockName, keyName)})
         return al::strcasecmp(val, "on") == 0 || al::strcasecmp(val, "yes") == 0
             || al::strcasecmp(val, "true")==0 || atoi(val) != 0;
-    return al::nullopt;
+    return std::nullopt;
 }
 
 bool GetConfigValueBool(const char *devName, const char *blockName, const char *keyName, bool def)

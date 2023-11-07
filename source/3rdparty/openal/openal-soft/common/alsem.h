@@ -1,30 +1,25 @@
-#ifndef AL_THREADS_H
-#define AL_THREADS_H
-
-#if defined(__GNUC__) && defined(__i386__)
-/* force_align_arg_pointer is required for proper function arguments aligning
- * when SSE code is used. Some systems (Windows, QNX) do not guarantee our
- * thread functions will be properly aligned on the stack, even though GCC may
- * generate code with the assumption that it is. */
-#define FORCE_ALIGN __attribute__((force_align_arg_pointer))
-#else
-#define FORCE_ALIGN
-#endif
+#ifndef COMMON_ALSEM_H
+#define COMMON_ALSEM_H
 
 #if defined(__APPLE__)
+#include <AvailabilityMacros.h>
+#include <TargetConditionals.h>
+#if (((MAC_OS_X_VERSION_MIN_REQUIRED > 1050) && !defined(__ppc__)) || TARGET_OS_IOS || TARGET_OS_TV)
 #include <dispatch/dispatch.h>
+#define AL_APPLE_HAVE_DISPATCH 1
+#else
+#include <semaphore.h> /* Fallback option for Apple without a working libdispatch */
+#endif
 #elif !defined(_WIN32)
 #include <semaphore.h>
 #endif
-
-void althrd_setname(const char *name);
 
 namespace al {
 
 class semaphore {
 #ifdef _WIN32
     using native_type = void*;
-#elif defined(__APPLE__)
+#elif defined(AL_APPLE_HAVE_DISPATCH)
     using native_type = dispatch_semaphore_t;
 #else
     using native_type = sem_t;
@@ -45,4 +40,4 @@ public:
 
 } // namespace al
 
-#endif /* AL_THREADS_H */
+#endif /* COMMON_ALSEM_H */

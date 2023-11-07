@@ -33,11 +33,10 @@
 #include <iterator>
 #include <limits>
 #include <memory>
-#include <cstdarg>
+#include <optional>
 #include <vector>
 
 #include "alfstream.h"
-#include "aloptional.h"
 #include "alspan.h"
 #include "alstring.h"
 #include "makemhr.h"
@@ -1451,7 +1450,7 @@ static int ProcessMetrics(TokenReaderT *tr, const uint fftSize, const uint trunc
     }
     if(hData->mChannelType == CT_NONE)
         hData->mChannelType = CT_MONO;
-    const auto azs = al::as_span(azCounts).first<MAX_FD_COUNT>();
+    const auto azs = al::span{azCounts}.first<MAX_FD_COUNT>();
     if(!PrepareHrirData({distances, fdCount}, evCounts, azs, hData))
     {
         fprintf(stderr, "Error:  Out of memory.\n");
@@ -1755,7 +1754,7 @@ static int ProcessSources(TokenReaderT *tr, HrirDataT *hData, const uint outRate
     PPhaseResampler onsetResampler;
     onsetResampler.init(hData->mIrRate, OnsetRateMultiple*hData->mIrRate);
 
-    al::optional<PPhaseResampler> resampler;
+    std::optional<PPhaseResampler> resampler;
     if(outRate && outRate != hData->mIrRate)
         resampler.emplace().init(hData->mIrRate, outRate);
     const double rateScale{outRate ? static_cast<double>(outRate) / hData->mIrRate : 1.0};

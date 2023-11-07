@@ -1,14 +1,13 @@
 #ifndef CORE_DEVICE_H
 #define CORE_DEVICE_H
 
-#include <stddef.h>
-
 #include <array>
 #include <atomic>
 #include <bitset>
 #include <chrono>
 #include <memory>
-#include <mutex>
+#include <stddef.h>
+#include <stdint.h>
 #include <string>
 
 #include "almalloc.h"
@@ -43,20 +42,20 @@ using uint = unsigned int;
 #define DEFAULT_NUM_UPDATES  3
 
 
-enum class DeviceType : unsigned char {
+enum class DeviceType : uint8_t {
     Playback,
     Capture,
     Loopback
 };
 
 
-enum class RenderMode : unsigned char {
+enum class RenderMode : uint8_t {
     Normal,
     Pairwise,
     Hrtf
 };
 
-enum class StereoEncoding : unsigned char {
+enum class StereoEncoding : uint8_t {
     Basic,
     Uhj,
     Hrtf,
@@ -95,7 +94,7 @@ struct DistanceComp {
 };
 
 
-constexpr uint InvalidChannelIndex{~0u};
+constexpr uint8_t InvalidChannelIndex{static_cast<uint8_t>(~0u)};
 
 struct BFChannelConfig {
     float Scale;
@@ -113,8 +112,8 @@ struct MixParams {
      * source is expected to be a 3D ACN/N3D ambisonic buffer, and for each
      * channel [0...count), the given functor is called with the source channel
      * index, destination channel index, and the gain for that channel. If the
-     * destination channel is INVALID_CHANNEL_INDEX, the given source channel
-     * is not used for output.
+     * destination channel is InvalidChannelIndex, the given source channel is
+     * not used for output.
      */
     template<typename F>
     void setAmbiMixParams(const MixParams &inmix, const float gainbase, F func) const
@@ -123,14 +122,14 @@ struct MixParams {
         const size_t numOut{Buffer.size()};
         for(size_t i{0};i < numIn;++i)
         {
-            auto idx = InvalidChannelIndex;
-            auto gain = 0.0f;
+            uint8_t idx{InvalidChannelIndex};
+            float gain{0.0f};
 
             for(size_t j{0};j < numOut;++j)
             {
                 if(AmbiMap[j].Index == inmix.AmbiMap[i].Index)
                 {
-                    idx = static_cast<uint>(j);
+                    idx = static_cast<uint8_t>(j);
                     gain = AmbiMap[j].Scale * gainbase;
                     break;
                 }
@@ -142,7 +141,7 @@ struct MixParams {
 
 struct RealMixParams {
     al::span<const InputRemixMap> RemixMap;
-    std::array<uint,MaxChannels> ChannelIndex{};
+    std::array<uint8_t,MaxChannels> ChannelIndex{};
 
     al::span<FloatBufferLine> Buffer;
 };
@@ -165,6 +164,11 @@ enum {
     // Specifies if the output plays directly on/in ears (headphones, headset,
     // ear buds, etc).
     DirectEar,
+
+    /* Specifies if output is using speaker virtualization (e.g. Windows
+     * Spatial Audio).
+     */
+    Virtualization,
 
     DeviceFlagsCount
 };
@@ -325,9 +329,9 @@ struct DeviceBase {
 
     /**
      * Returns the index for the given channel name (e.g. FrontCenter), or
-     * INVALID_CHANNEL_INDEX if it doesn't exist.
+     * InvalidChannelIndex if it doesn't exist.
      */
-    uint channelIdxByName(Channel chan) const noexcept
+    uint8_t channelIdxByName(Channel chan) const noexcept
     { return RealOut.ChannelIndex[chan]; }
 
     DISABLE_ALLOC()

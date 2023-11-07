@@ -31,22 +31,22 @@
 #include <exception>
 #include <functional>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <thread>
 #include <utility>
+#include <vector>
 
-#include "albyte.h"
+#include "albit.h"
 #include "alc/alconfig.h"
 #include "almalloc.h"
 #include "alnumeric.h"
-#include "aloptional.h"
+#include "althrd_setname.h"
 #include "core/device.h"
 #include "core/helpers.h"
 #include "core/logging.h"
 #include "dynload.h"
 #include "ringbuffer.h"
-#include "threads.h"
-#include "vector.h"
 
 #include <alsa/asoundlib.h>
 
@@ -248,8 +248,8 @@ struct DevMap {
     { }
 };
 
-al::vector<DevMap> PlaybackDevices;
-al::vector<DevMap> CaptureDevices;
+std::vector<DevMap> PlaybackDevices;
+std::vector<DevMap> CaptureDevices;
 
 
 const char *prefix_name(snd_pcm_stream_t stream)
@@ -258,9 +258,9 @@ const char *prefix_name(snd_pcm_stream_t stream)
     return (stream==SND_PCM_STREAM_PLAYBACK) ? "device-prefix" : "capture-prefix";
 }
 
-al::vector<DevMap> probe_devices(snd_pcm_stream_t stream)
+std::vector<DevMap> probe_devices(snd_pcm_stream_t stream)
 {
-    al::vector<DevMap> devlist;
+    std::vector<DevMap> devlist;
 
     snd_ctl_card_info_t *info;
     snd_ctl_card_info_malloc(&info);
@@ -427,7 +427,7 @@ struct AlsaPlayback final : public BackendBase {
     int mixerProc();
     int mixerNoMMapProc();
 
-    void open(const char *name) override;
+    void open(std::string_view name) override;
     bool reset() override;
     void start() override;
     void stop() override;
@@ -439,7 +439,7 @@ struct AlsaPlayback final : public BackendBase {
     std::mutex mMutex;
 
     uint mFrameStep{};
-    al::vector<al::byte> mBuffer;
+    std::vector<std::byte> mBuffer;
 
     std::atomic<bool> mKillNow{true};
     std::thread mThread;
@@ -585,7 +585,7 @@ int AlsaPlayback::mixerNoMMapProc()
             continue;
         }
 
-        al::byte *WritePtr{mBuffer.data()};
+        std::byte *WritePtr{mBuffer.data()};
         avail = snd_pcm_bytes_to_frames(mPcmHandle, static_cast<ssize_t>(mBuffer.size()));
         std::lock_guard<std::mutex> _{mMutex};
         mDevice->renderSamples(WritePtr, static_cast<uint>(avail), mFrameStep);
@@ -626,10 +626,10 @@ int AlsaPlayback::mixerNoMMapProc()
 }
 
 
-void AlsaPlayback::open(const char *name)
+void AlsaPlayback::open(std::string_view name)
 {
     std::string driver{"default"};
-    if(name)
+    if(!name.empty())
     {
         if(PlaybackDevices.empty())
             PlaybackDevices = probe_devices(SND_PCM_STREAM_PLAYBACK);
@@ -638,7 +638,7 @@ void AlsaPlayback::open(const char *name)
             [name](const DevMap &entry) -> bool { return entry.name == name; });
         if(iter == PlaybackDevices.cend())
             throw al::backend_exception{al::backend_error::NoDevice,
-                "Device name \"%s\" not found", name};
+                "Device name \"%.*s\" not found", static_cast<int>(name.length()), name.data()};
         driver = iter->device_name;
     }
     else
@@ -871,16 +871,16 @@ struct AlsaCapture final : public BackendBase {
     AlsaCapture(DeviceBase *device) noexcept : BackendBase{device} { }
     ~AlsaCapture() override;
 
-    void open(const char *name) override;
+    void open(std::string_view name) override;
     void start() override;
     void stop() override;
-    void captureSamples(al::byte *buffer, uint samples) override;
+    void captureSamples(std::byte *buffer, uint samples) override;
     uint availableSamples() override;
     ClockLatency getClockLatency() override;
 
     snd_pcm_t *mPcmHandle{nullptr};
 
-    al::vector<al::byte> mBuffer;
+    std::vector<std::byte> mBuffer;
 
     bool mDoCapture{false};
     RingBufferPtr mRing{nullptr};
@@ -898,10 +898,10 @@ AlsaCapture::~AlsaCapture()
 }
 
 
-void AlsaCapture::open(const char *name)
+void AlsaCapture::open(std::string_view name)
 {
     std::string driver{"default"};
-    if(name)
+    if(!name.empty())
     {
         if(CaptureDevices.empty())
             CaptureDevices = probe_devices(SND_PCM_STREAM_CAPTURE);
@@ -910,7 +910,7 @@ void AlsaCapture::open(const char *name)
             [name](const DevMap &entry) -> bool { return entry.name == name; });
         if(iter == CaptureDevices.cend())
             throw al::backend_exception{al::backend_error::NoDevice,
-                "Device name \"%s\" not found", name};
+                "Device name \"%.*s\" not found", static_cast<int>(name.length()), name.data()};
         driver = iter->device_name;
     }
     else
@@ -1024,7 +1024,7 @@ void AlsaCapture::stop()
         /* The ring buffer implicitly captures when checking availability.
          * Direct access needs to explicitly capture it into temp storage.
          */
-        auto temp = al::vector<al::byte>(
+        auto temp = std::vector<std::byte>(
             static_cast<size_t>(snd_pcm_frames_to_bytes(mPcmHandle, avail)));
         captureSamples(temp.data(), avail);
         mBuffer = std::move(temp);
@@ -1035,7 +1035,7 @@ void AlsaCapture::stop()
     mDoCapture = false;
 }
 
-void AlsaCapture::captureSamples(al::byte *buffer, uint samples)
+void AlsaCapture::captureSamples(std::byte *buffer, uint samples)
 {
     if(mRing)
     {
@@ -1093,7 +1093,7 @@ void AlsaCapture::captureSamples(al::byte *buffer, uint samples)
     }
     if(samples > 0)
         std::fill_n(buffer, snd_pcm_frames_to_bytes(mPcmHandle, samples),
-            al::byte((mDevice->FmtType == DevFmtUByte) ? 0x80 : 0));
+            std::byte((mDevice->FmtType == DevFmtUByte) ? 0x80 : 0));
 }
 
 uint AlsaCapture::availableSamples()
@@ -1205,7 +1205,7 @@ bool AlsaBackendFactory::init()
 
         error = false;
 #define LOAD_FUNC(f) do {                                                     \
-    p##f = reinterpret_cast<decltype(p##f)>(GetSymbol(alsa_handle, #f));      \
+    p##f = al::bit_cast<decltype(p##f)>(GetSymbol(alsa_handle, #f));          \
     if(p##f == nullptr) {                                                     \
         error = true;                                                         \
         missing_funcs += "\n" #f;                                             \

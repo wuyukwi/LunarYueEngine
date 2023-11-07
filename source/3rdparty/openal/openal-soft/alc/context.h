@@ -6,8 +6,11 @@
 #include <memory>
 #include <mutex>
 #include <stdint.h>
+#include <string>
+#include <string_view>
 #include <unordered_map>
 #include <utility>
+#include <vector>
 
 #include "AL/al.h"
 #include "AL/alc.h"
@@ -20,7 +23,6 @@
 #include "core/context.h"
 #include "inprogext.h"
 #include "intrusive_ptr.h"
-#include "vector.h"
 
 #ifdef ALSOFT_EAX
 #include "al/eax/call.h"
@@ -33,42 +35,22 @@
 struct ALeffect;
 struct ALeffectslot;
 struct ALsource;
+struct DebugGroup;
+
+enum class DebugSource : uint8_t;
+enum class DebugType : uint8_t;
+enum class DebugSeverity : uint8_t;
 
 using uint = unsigned int;
 
 
-constexpr uint DebugSourceBase{0};
-enum class DebugSource : uint8_t {
-    API = 0,
-    System,
-    ThirdParty,
-    Application,
-    Other,
+enum ContextFlags {
+    DebugBit = 0, /* ALC_CONTEXT_DEBUG_BIT_EXT */
 };
-constexpr uint DebugSourceCount{5};
+using ContextFlagBitset = std::bitset<sizeof(ALuint)*8>;
 
-constexpr uint DebugTypeBase{DebugSourceBase + DebugSourceCount};
-enum class DebugType : uint8_t {
-    Error = 0,
-    DeprecatedBehavior,
-    UndefinedBehavior,
-    Portability,
-    Performance,
-    Marker,
-    Other,
-};
-constexpr uint DebugTypeCount{7};
 
-constexpr uint DebugSeverityBase{DebugTypeBase + DebugTypeCount};
-enum class DebugSeverity : uint8_t {
-    High = 0,
-    Medium,
-    Low,
-    Notification,
-};
-constexpr uint DebugSeverityCount{4};
-
-struct LogEntry {
+struct DebugLogEntry {
     const DebugSource mSource;
     const DebugType mType;
     const DebugSeverity mSeverity;
@@ -77,12 +59,12 @@ struct LogEntry {
     std::string mMessage;
 
     template<typename T>
-    LogEntry(DebugSource source, DebugType type, uint id, DebugSeverity severity, T&& message)
+    DebugLogEntry(DebugSource source, DebugType type, uint id, DebugSeverity severity, T&& message)
         : mSource{source}, mType{type}, mSeverity{severity}, mId{id}
         , mMessage{std::forward<T>(message)}
     { }
-    LogEntry(const LogEntry&) = default;
-    LogEntry(LogEntry&&) = default;
+    DebugLogEntry(const DebugLogEntry&) = default;
+    DebugLogEntry(DebugLogEntry&&) = default;
 };
 
 
@@ -128,6 +110,7 @@ struct ALCcontext : public al::intrusive_ref<ALCcontext>, ContextBase {
 
     std::atomic<ALenum> mLastError{AL_NO_ERROR};
 
+    const ContextFlagBitset mContextFlags;
     std::atomic<bool> mDebugEnabled{false};
 
     DistanceModel mDistanceModel{DistanceModel::Default};
@@ -143,31 +126,31 @@ struct ALCcontext : public al::intrusive_ref<ALCcontext>, ContextBase {
     void *mEventParam{nullptr};
 
     std::mutex mDebugCbLock;
-    ALDEBUGPROCSOFT mDebugCb{};
+    ALDEBUGPROCEXT mDebugCb{};
     void *mDebugParam{nullptr};
-    std::vector<uint> mDebugFilters;
-    std::unordered_map<uint,std::vector<uint>> mDebugIdFilters;
-    std::deque<LogEntry> mDebugLog;
+    std::vector<DebugGroup> mDebugGroups;
+    std::deque<DebugLogEntry> mDebugLog;
 
     ALlistener mListener{};
 
-    al::vector<SourceSubList> mSourceList;
+    std::vector<SourceSubList> mSourceList;
     ALuint mNumSources{0};
     std::mutex mSourceLock;
 
-    al::vector<EffectSlotSubList> mEffectSlotList;
+    std::vector<EffectSlotSubList> mEffectSlotList;
     ALuint mNumEffectSlots{0u};
     std::mutex mEffectSlotLock;
 
     /* Default effect slot */
     std::unique_ptr<ALeffectslot> mDefaultSlot;
 
-    const char *mExtensionList{nullptr};
+    std::vector<std::string_view> mExtensions;
+    std::string mExtensionsString{};
 
-    std::string mExtensionListOverride{};
+    std::unordered_map<ALuint,std::string> mSourceNames;
+    std::unordered_map<ALuint,std::string> mEffectSlotNames;
 
-
-    ALCcontext(al::intrusive_ptr<ALCdevice> device);
+    ALCcontext(al::intrusive_ptr<ALCdevice> device, ContextFlagBitset flags);
     ALCcontext(const ALCcontext&) = delete;
     ALCcontext& operator=(const ALCcontext&) = delete;
     ~ALCcontext();
@@ -210,15 +193,16 @@ struct ALCcontext : public al::intrusive_ref<ALCcontext>, ContextBase {
 #endif
     void setError(ALenum errorCode, const char *msg, ...);
 
-    void sendDebugMessage(DebugSource source, DebugType type, ALuint id, DebugSeverity severity,
-        ALsizei length, const char *message);
+    void sendDebugMessage(std::unique_lock<std::mutex> &debuglock, DebugSource source,
+        DebugType type, ALuint id, DebugSeverity severity, std::string_view message);
 
     void debugMessage(DebugSource source, DebugType type, ALuint id, DebugSeverity severity,
-        ALsizei length, const char *message)
+        std::string_view message)
     {
         if(!mDebugEnabled.load(std::memory_order_relaxed)) LIKELY
             return;
-        sendDebugMessage(source, type, id, severity, length, message);
+        std::unique_lock<std::mutex> debuglock{mDebugCbLock};
+        sendDebugMessage(debuglock, source, type, id, severity, message);
     }
 
     /* Process-wide current context */
@@ -227,7 +211,7 @@ struct ALCcontext : public al::intrusive_ref<ALCcontext>, ContextBase {
 
 private:
     /* Thread-local current context. */
-    static thread_local ALCcontext *sLocalContext;
+    static inline thread_local ALCcontext *sLocalContext{};
 
     /* Thread-local context handling. This handles attempting to release the
      * context which may have been left current when the thread is destroyed.
@@ -240,17 +224,8 @@ private:
     static thread_local ThreadCtx sThreadContext;
 
 public:
-    /* HACK: MinGW generates bad code when accessing an extern thread_local
-     * object. Add a wrapper function for it that only accesses it where it's
-     * defined.
-     */
-#ifdef __MINGW32__
-    static ALCcontext *getThreadContext() noexcept;
-    static void setThreadContext(ALCcontext *context) noexcept;
-#else
     static ALCcontext *getThreadContext() noexcept { return sLocalContext; }
     static void setThreadContext(ALCcontext *context) noexcept { sThreadContext.set(context); }
-#endif
 
     /* Default effect that applies to sources that don't have an effect on send 0. */
     static ALeffect sDefaultEffect;

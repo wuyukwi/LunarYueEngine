@@ -4,6 +4,7 @@
 #include "alcomplex.h"
 
 #include <algorithm>
+#include <array>
 #include <cassert>
 #include <cmath>
 #include <cstddef>
@@ -20,6 +21,7 @@ namespace {
 
 using ushort = unsigned short;
 using ushort2 = std::pair<ushort,ushort>;
+using complex_d = std::complex<double>;
 
 constexpr size_t BitReverseCounter(size_t log2_size) noexcept
 {
@@ -34,7 +36,7 @@ template<size_t N>
 struct BitReverser {
     static_assert(N <= sizeof(ushort)*8, "Too many bits for the bit-reversal table.");
 
-    ushort2 mData[BitReverseCounter(N)]{};
+    std::array<ushort2,BitReverseCounter(N)> mData{};
 
     constexpr BitReverser()
     {
@@ -44,12 +46,13 @@ struct BitReverser {
         /* Bit-reversal permutation applied to a sequence of fftsize items. */
         for(size_t idx{1u};idx < fftsize-1;++idx)
         {
-            size_t revidx{0u}, imask{idx};
-            for(size_t i{0};i < N;++i)
-            {
-                revidx = (revidx<<1) | (imask&1);
-                imask >>= 1;
-            }
+            size_t revidx{idx};
+            revidx = ((revidx&0xaaaaaaaa) >> 1) | ((revidx&0x55555555) << 1);
+            revidx = ((revidx&0xcccccccc) >> 2) | ((revidx&0x33333333) << 2);
+            revidx = ((revidx&0xf0f0f0f0) >> 4) | ((revidx&0x0f0f0f0f) << 4);
+            revidx = ((revidx&0xff00ff00) >> 8) | ((revidx&0x00ff00ff) << 8);
+            revidx = (revidx >> 16) | ((revidx&0x0000ffff) << 16);
+            revidx >>= 32-N;
 
             if(idx < revidx)
             {
@@ -58,14 +61,13 @@ struct BitReverser {
                 ++ret_i;
             }
         }
-        assert(ret_i == al::size(mData));
+        assert(ret_i == std::size(mData));
     }
 };
 
-/* These bit-reversal swap tables support up to 10-bit indices (1024 elements),
- * which is the largest used by OpenAL Soft's filters and effects. Larger FFT
- * requests, used by some utilities where performance is less important, will
- * use a slower table-less path.
+/* These bit-reversal swap tables support up to 11-bit indices (2048 elements),
+ * which is large enough for the filters and effects in OpenAL Soft. Larger FFT
+ * requests will use a slower table-less path.
  */
 constexpr BitReverser<2> BitReverser2{};
 constexpr BitReverser<3> BitReverser3{};
@@ -76,7 +78,8 @@ constexpr BitReverser<7> BitReverser7{};
 constexpr BitReverser<8> BitReverser8{};
 constexpr BitReverser<9> BitReverser9{};
 constexpr BitReverser<10> BitReverser10{};
-constexpr std::array<al::span<const ushort2>,11> gBitReverses{{
+constexpr BitReverser<11> BitReverser11{};
+constexpr std::array<al::span<const ushort2>,12> gBitReverses{{
     {}, {},
     BitReverser2.mData,
     BitReverser3.mData,
@@ -86,14 +89,29 @@ constexpr std::array<al::span<const ushort2>,11> gBitReverses{{
     BitReverser7.mData,
     BitReverser8.mData,
     BitReverser9.mData,
-    BitReverser10.mData
+    BitReverser10.mData,
+    BitReverser11.mData
+}};
+
+/* Lookup table for std::polar(1, pi / (1<<index)); */
+template<typename T>
+constexpr std::array<std::complex<T>,gBitReverses.size()-1> gArgAngle{{
+    {static_cast<T>(-1.00000000000000000e+00), static_cast<T>(0.00000000000000000e+00)},
+    {static_cast<T>( 0.00000000000000000e+00), static_cast<T>(1.00000000000000000e+00)},
+    {static_cast<T>( 7.07106781186547524e-01), static_cast<T>(7.07106781186547524e-01)},
+    {static_cast<T>( 9.23879532511286756e-01), static_cast<T>(3.82683432365089772e-01)},
+    {static_cast<T>( 9.80785280403230449e-01), static_cast<T>(1.95090322016128268e-01)},
+    {static_cast<T>( 9.95184726672196886e-01), static_cast<T>(9.80171403295606020e-02)},
+    {static_cast<T>( 9.98795456205172393e-01), static_cast<T>(4.90676743274180143e-02)},
+    {static_cast<T>( 9.99698818696204220e-01), static_cast<T>(2.45412285229122880e-02)},
+    {static_cast<T>( 9.99924701839144541e-01), static_cast<T>(1.22715382857199261e-02)},
+    {static_cast<T>( 9.99981175282601143e-01), static_cast<T>(6.13588464915447536e-03)},
+    {static_cast<T>( 9.99995293809576172e-01), static_cast<T>(3.06795676296597627e-03)}
 }};
 
 } // namespace
 
-template<typename Real>
-std::enable_if_t<std::is_floating_point<Real>::value>
-complex_fft(const al::span<std::complex<Real>> buffer, const al::type_identity_t<Real> sign)
+void complex_fft(const al::span<std::complex<double>> buffer, const double sign)
 {
     const size_t fftsize{buffer.size()};
     /* Get the number of bits used for indexing. Simplifies bit-reversal and
@@ -101,48 +119,82 @@ complex_fft(const al::span<std::complex<Real>> buffer, const al::type_identity_t
      */
     const size_t log2_size{static_cast<size_t>(al::countr_zero(fftsize))};
 
-    if(log2_size >= gBitReverses.size()) UNLIKELY
+    if(log2_size < gBitReverses.size()) LIKELY
     {
-        for(size_t idx{1u};idx < fftsize-1;++idx)
+        for(auto &rev : gBitReverses[log2_size])
+            std::swap(buffer[rev.first], buffer[rev.second]);
+
+        /* Iterative form of Danielson-Lanczos lemma */
+        for(size_t i{0};i < log2_size;++i)
         {
-            size_t revidx{0u}, imask{idx};
-            for(size_t i{0};i < log2_size;++i)
+            const size_t step2{1_uz << i};
+            const size_t step{2_uz << i};
+            /* The first iteration of the inner loop would have u=1, which we
+             * can simplify to remove a number of complex multiplies.
+             */
+            for(size_t k{0};k < fftsize;k+=step)
             {
-                revidx = (revidx<<1) | (imask&1);
-                imask >>= 1;
-            }
-
-            if(idx < revidx)
-                std::swap(buffer[idx], buffer[revidx]);
-        }
-    }
-    else for(auto &rev : gBitReverses[log2_size])
-        std::swap(buffer[rev.first], buffer[rev.second]);
-
-    /* Iterative form of Danielson-Lanczos lemma */
-    const Real pi{al::numbers::pi_v<Real> * sign};
-    size_t step2{1u};
-    for(size_t i{0};i < log2_size;++i)
-    {
-        const Real arg{pi / static_cast<Real>(step2)};
-
-        /* TODO: Would std::polar(1.0, arg) be any better? */
-        const std::complex<Real> w{std::cos(arg), std::sin(arg)};
-        std::complex<Real> u{1.0, 0.0};
-        const size_t step{step2 << 1};
-        for(size_t j{0};j < step2;j++)
-        {
-            for(size_t k{j};k < fftsize;k+=step)
-            {
-                std::complex<Real> temp{buffer[k+step2] * u};
+                const complex_d temp{buffer[k+step2]};
                 buffer[k+step2] = buffer[k] - temp;
                 buffer[k] += temp;
             }
 
-            u *= w;
+            const complex_d w{gArgAngle<double>[i].real(), gArgAngle<double>[i].imag()*sign};
+            complex_d u{w};
+            for(size_t j{1};j < step2;j++)
+            {
+                for(size_t k{j};k < fftsize;k+=step)
+                {
+                    const complex_d temp{buffer[k+step2] * u};
+                    buffer[k+step2] = buffer[k] - temp;
+                    buffer[k] += temp;
+                }
+                u *= w;
+            }
+        }
+    }
+    else
+    {
+        for(size_t idx{1u};idx < fftsize-1;++idx)
+        {
+            size_t revidx{idx};
+            revidx = ((revidx&0xaaaaaaaa) >> 1) | ((revidx&0x55555555) << 1);
+            revidx = ((revidx&0xcccccccc) >> 2) | ((revidx&0x33333333) << 2);
+            revidx = ((revidx&0xf0f0f0f0) >> 4) | ((revidx&0x0f0f0f0f) << 4);
+            revidx = ((revidx&0xff00ff00) >> 8) | ((revidx&0x00ff00ff) << 8);
+            revidx = (revidx >> 16) | ((revidx&0x0000ffff) << 16);
+            revidx >>= 32-log2_size;
+
+            if(idx < revidx)
+                std::swap(buffer[idx], buffer[revidx]);
         }
 
-        step2 <<= 1;
+        const double pi{al::numbers::pi * sign};
+        for(size_t i{0};i < log2_size;++i)
+        {
+            const size_t step2{1_uz << i};
+            const size_t step{2_uz << i};
+            for(size_t k{0};k < fftsize;k+=step)
+            {
+                const complex_d temp{buffer[k+step2]};
+                buffer[k+step2] = buffer[k] - temp;
+                buffer[k] += temp;
+            }
+
+            const double arg{pi / static_cast<double>(step2)};
+            const complex_d w{std::polar(1.0, arg)};
+            complex_d u{w};
+            for(size_t j{1};j < step2;j++)
+            {
+                for(size_t k{j};k < fftsize;k+=step)
+                {
+                    const complex_d temp{buffer[k+step2] * u};
+                    buffer[k+step2] = buffer[k] - temp;
+                    buffer[k] += temp;
+                }
+                u *= w;
+            }
+        }
     }
 }
 
@@ -165,7 +217,3 @@ void complex_hilbert(const al::span<std::complex<double>> buffer)
 
     forward_fft(buffer);
 }
-
-
-template void complex_fft<>(const al::span<std::complex<float>> buffer, const float sign);
-template void complex_fft<>(const al::span<std::complex<double>> buffer, const double sign);

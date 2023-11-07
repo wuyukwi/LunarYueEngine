@@ -1,9 +1,9 @@
 #ifndef CORE_EFFECTS_BASE_H
 #define CORE_EFFECTS_BASE_H
 
+#include <array>
 #include <stddef.h>
 
-#include "albyte.h"
 #include "almalloc.h"
 #include "alspan.h"
 #include "atomic.h"
@@ -166,6 +166,11 @@ union EffectProps {
     struct {
         float Gain;
     } Dedicated;
+
+    struct {
+        std::array<float,3> OrientAt;
+        std::array<float,3> OrientUp;
+    } Convolution;
 };
 
 

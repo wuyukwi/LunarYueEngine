@@ -25,8 +25,8 @@
 #include "config.h"
 
 #include <array>
+#include <cinttypes>
 #include <cstring>
-#include <inttypes.h>
 #include <memory>
 #include <stddef.h>
 #include <string>
@@ -325,7 +325,7 @@ int main(int argc, char **argv)
                     return false;
                 for(const int id : a)
                 {
-                    if(std::find(b.begin(), b.end(), id) != b.end())
+                    if(std::find(b.begin(), b.end(), id) == b.end())
                         return false;
                 }
                 return true;
@@ -502,11 +502,9 @@ int main(int argc, char **argv)
             got -= LeadIn;
             for(size_t c{0};c < uhjchans;++c)
             {
-                constexpr float max_val{8388607.0f / 8388608.0f};
-                auto clamp = [](float v, float mn, float mx) noexcept
-                { return std::min(std::max(v, mn), mx); };
+                static constexpr float max_val{8388607.0f / 8388608.0f};
                 for(size_t i{0};i < got;++i)
-                    outmem[i*uhjchans + c] = clamp(encmem[c][LeadIn+i], -1.0f, max_val);
+                    outmem[i*uhjchans + c] = std::clamp(encmem[c][LeadIn+i], -1.0f, max_val);
             }
             LeadIn = 0;
 

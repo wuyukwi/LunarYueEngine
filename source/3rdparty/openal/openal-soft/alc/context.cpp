@@ -11,6 +11,7 @@
 #include <numeric>
 #include <stddef.h>
 #include <stdexcept>
+#include <string_view>
 #include <utility>
 
 #include "AL/efx.h"
@@ -32,7 +33,6 @@
 #include "core/voice_change.h"
 #include "device.h"
 #include "ringbuffer.h"
-#include "threads.h"
 #include "vecmat.h"
 
 #ifdef ALSOFT_EAX
@@ -48,48 +48,53 @@ using namespace std::placeholders;
 using voidp = void*;
 
 /* Default context extensions */
-constexpr ALchar alExtList[] =
-    "AL_EXT_ALAW "
-    "AL_EXT_BFORMAT "
-    "AL_EXT_DOUBLE "
-    "AL_EXT_EXPONENT_DISTANCE "
-    "AL_EXT_FLOAT32 "
-    "AL_EXT_IMA4 "
-    "AL_EXT_LINEAR_DISTANCE "
-    "AL_EXT_MCFORMATS "
-    "AL_EXT_MULAW "
-    "AL_EXT_MULAW_BFORMAT "
-    "AL_EXT_MULAW_MCFORMATS "
-    "AL_EXT_OFFSET "
-    "AL_EXT_source_distance_model "
-    "AL_EXT_SOURCE_RADIUS "
-    "AL_EXT_STATIC_BUFFER "
-    "AL_EXT_STEREO_ANGLES "
-    "AL_LOKI_quadriphonic "
-    "AL_SOFT_bformat_ex "
-    "AL_SOFTX_bformat_hoa "
-    "AL_SOFT_block_alignment "
-    "AL_SOFT_buffer_length_query "
-    "AL_SOFT_callback_buffer "
-    "AL_SOFTX_convolution_reverb "
-    "AL_SOFTX_debug "
-    "AL_SOFT_deferred_updates "
-    "AL_SOFT_direct_channels "
-    "AL_SOFT_direct_channels_remix "
-    "AL_SOFT_effect_target "
-    "AL_SOFT_events "
-    "AL_SOFT_gain_clamp_ex "
-    "AL_SOFTX_hold_on_disconnect "
-    "AL_SOFT_loop_points "
-    "AL_SOFTX_map_buffer "
-    "AL_SOFT_MSADPCM "
-    "AL_SOFT_source_latency "
-    "AL_SOFT_source_length "
-    "AL_SOFT_source_resampler "
-    "AL_SOFT_source_spatialize "
-    "AL_SOFT_source_start_delay "
-    "AL_SOFT_UHJ "
-    "AL_SOFT_UHJ_ex";
+std::vector<std::string_view> getContextExtensions() noexcept
+{
+    return std::vector<std::string_view>{
+        "AL_EXT_ALAW",
+        "AL_EXT_BFORMAT",
+        "AL_EXT_debug",
+        "AL_EXTX_direct_context",
+        "AL_EXT_DOUBLE",
+        "AL_EXT_EXPONENT_DISTANCE",
+        "AL_EXT_FLOAT32",
+        "AL_EXT_IMA4",
+        "AL_EXT_LINEAR_DISTANCE",
+        "AL_EXT_MCFORMATS",
+        "AL_EXT_MULAW",
+        "AL_EXT_MULAW_BFORMAT",
+        "AL_EXT_MULAW_MCFORMATS",
+        "AL_EXT_OFFSET",
+        "AL_EXT_source_distance_model",
+        "AL_EXT_SOURCE_RADIUS",
+        "AL_EXT_STATIC_BUFFER",
+        "AL_EXT_STEREO_ANGLES",
+        "AL_LOKI_quadriphonic",
+        "AL_SOFT_bformat_ex",
+        "AL_SOFTX_bformat_hoa",
+        "AL_SOFT_block_alignment",
+        "AL_SOFT_buffer_length_query",
+        "AL_SOFT_callback_buffer",
+        "AL_SOFTX_convolution_effect",
+        "AL_SOFT_deferred_updates",
+        "AL_SOFT_direct_channels",
+        "AL_SOFT_direct_channels_remix",
+        "AL_SOFT_effect_target",
+        "AL_SOFT_events",
+        "AL_SOFT_gain_clamp_ex",
+        "AL_SOFTX_hold_on_disconnect",
+        "AL_SOFT_loop_points",
+        "AL_SOFTX_map_buffer",
+        "AL_SOFT_MSADPCM",
+        "AL_SOFT_source_latency",
+        "AL_SOFT_source_length",
+        "AL_SOFT_source_resampler",
+        "AL_SOFT_source_spatialize",
+        "AL_SOFT_source_start_delay",
+        "AL_SOFT_UHJ",
+        "AL_SOFT_UHJ_ex",
+    };
+}
 
 } // namespace
 
@@ -97,7 +102,6 @@ constexpr ALchar alExtList[] =
 std::atomic<bool> ALCcontext::sGlobalContextLock{false};
 std::atomic<ALCcontext*> ALCcontext::sGlobalContext{nullptr};
 
-thread_local ALCcontext *ALCcontext::sLocalContext{nullptr};
 ALCcontext::ThreadCtx::~ThreadCtx()
 {
     if(ALCcontext *ctx{std::exchange(ALCcontext::sLocalContext, nullptr)})
@@ -112,23 +116,18 @@ thread_local ALCcontext::ThreadCtx ALCcontext::sThreadContext;
 ALeffect ALCcontext::sDefaultEffect;
 
 
-#ifdef __MINGW32__
-ALCcontext *ALCcontext::getThreadContext() noexcept
-{ return sLocalContext; }
-void ALCcontext::setThreadContext(ALCcontext *context) noexcept
-{ sThreadContext.set(context); }
-#endif
-
-ALCcontext::ALCcontext(al::intrusive_ptr<ALCdevice> device)
-    : ContextBase{device.get()}, mALDevice{std::move(device)}
+ALCcontext::ALCcontext(al::intrusive_ptr<ALCdevice> device, ContextFlagBitset flags)
+    : ContextBase{device.get()}, mALDevice{std::move(device)}, mContextFlags{flags}
 {
+    mDebugGroups.emplace_back(DebugSource::Other, 0, std::string{});
+    mDebugEnabled.store(mContextFlags.test(ContextFlags::DebugBit), std::memory_order_relaxed);
 }
 
 ALCcontext::~ALCcontext()
 {
     TRACE("Freeing context %p\n", voidp{this});
 
-    size_t count{std::accumulate(mSourceList.cbegin(), mSourceList.cend(), size_t{0u},
+    size_t count{std::accumulate(mSourceList.cbegin(), mSourceList.cend(), 0_uz,
         [](size_t cur, const SourceSubList &sublist) noexcept -> size_t
         { return cur + static_cast<uint>(al::popcount(~sublist.FreeMask)); })};
     if(count > 0)
@@ -141,7 +140,7 @@ ALCcontext::~ALCcontext()
 #endif // ALSOFT_EAX
 
     mDefaultSlot = nullptr;
-    count = std::accumulate(mEffectSlotList.cbegin(), mEffectSlotList.cend(), size_t{0u},
+    count = std::accumulate(mEffectSlotList.cbegin(), mEffectSlotList.cend(), 0_uz,
         [](size_t cur, const EffectSlotSubList &sublist) noexcept -> size_t
         { return cur + static_cast<uint>(al::popcount(~sublist.FreeMask)); });
     if(count > 0)
@@ -177,25 +176,40 @@ void ALCcontext::init()
         mCurrentVoiceChange.store(cur, std::memory_order_relaxed);
     }
 
-    mExtensionList = alExtList;
+    mExtensions = getContextExtensions();
 
     if(sBufferSubDataCompat)
     {
-        std::string extlist{mExtensionList};
-
-        const auto pos = extlist.find("AL_EXT_SOURCE_RADIUS ");
-        if(pos != std::string::npos)
-            extlist.replace(pos, 20, "AL_SOFT_buffer_sub_data");
-        else
-            extlist += " AL_SOFT_buffer_sub_data";
-
-        mExtensionListOverride = std::move(extlist);
-        mExtensionList = mExtensionListOverride.c_str();
+        auto iter = std::find(mExtensions.begin(), mExtensions.end(), "AL_EXT_SOURCE_RADIUS");
+        if(iter != mExtensions.end()) mExtensions.erase(iter);
+        /* TODO: Would be nice to sort this alphabetically. Needs case-
+         * insensitive searching.
+         */
+        mExtensions.emplace_back("AL_SOFT_buffer_sub_data");
     }
 
 #ifdef ALSOFT_EAX
     eax_initialize_extensions();
 #endif // ALSOFT_EAX
+
+    if(!mExtensions.empty())
+    {
+        const size_t len{std::accumulate(mExtensions.cbegin()+1, mExtensions.cend(),
+            mExtensions.front().length(),
+            [](size_t current, std::string_view ext) noexcept
+            { return current + ext.length() + 1; })};
+
+        std::string extensions;
+        extensions.reserve(len);
+        extensions += mExtensions.front();
+        for(std::string_view ext : al::span{mExtensions}.subspan<1>())
+        {
+            extensions += ' ';
+            extensions += ext;
+        }
+
+        mExtensionsString = std::move(extensions);
+    }
 
     mParams.Position = alu::Vector{0.0f, 0.0f, 0.0f, 1.0f};
     mParams.Matrix = alu::Matrix::Identity();
@@ -300,112 +314,6 @@ void ALCcontext::applyAllUpdates()
      * they all happen at once.
      */
     mHoldUpdates.store(false, std::memory_order_release);
-}
-
-
-void ALCcontext::sendDebugMessage(DebugSource source, DebugType type, ALuint id,
-    DebugSeverity severity, ALsizei length, const char *message)
-{
-    static_assert(DebugSeverityBase+DebugSeverityCount <= 32, "Too many debug bits");
-
-    if(length < 0)
-    {
-        size_t newlen{std::strlen(message)};
-        if(newlen > MaxDebugMessageLength) UNLIKELY
-        {
-            ERR("Debug message too long (%zu > %d)\n", newlen, MaxDebugMessageLength);
-            return;
-        }
-        length = static_cast<ALsizei>(newlen);
-    }
-    else if(length > MaxDebugMessageLength) UNLIKELY
-    {
-        ERR("Debug message too long (%d > %d)\n", length, MaxDebugMessageLength);
-        return;
-    }
-
-    std::unique_lock<std::mutex> debuglock{mDebugCbLock};
-    if(!mDebugEnabled.load()) UNLIKELY
-        return;
-
-    auto get_source_enum = [source]()
-    {
-        switch(source)
-        {
-        case DebugSource::API: return AL_DEBUG_SOURCE_API_SOFT;
-        case DebugSource::System: return AL_DEBUG_SOURCE_AUDIO_SYSTEM_SOFT;
-        case DebugSource::ThirdParty: return AL_DEBUG_SOURCE_THIRD_PARTY_SOFT;
-        case DebugSource::Application: return AL_DEBUG_SOURCE_APPLICATION_SOFT;
-        case DebugSource::Other: return AL_DEBUG_SOURCE_OTHER_SOFT;
-        }
-        throw std::runtime_error{"Unexpected debug source value "+std::to_string(al::to_underlying(source))};
-    };
-    auto get_type_enum = [type]()
-    {
-        switch(type)
-        {
-        case DebugType::Error: return AL_DEBUG_TYPE_ERROR_SOFT;
-        case DebugType::DeprecatedBehavior: return AL_DEBUG_TYPE_DEPRECATED_BEHAVIOR_SOFT;
-        case DebugType::UndefinedBehavior: return AL_DEBUG_TYPE_UNDEFINED_BEHAVIOR_SOFT;
-        case DebugType::Portability: return AL_DEBUG_TYPE_PORTABILITY_SOFT;
-        case DebugType::Performance: return AL_DEBUG_TYPE_PERFORMANCE_SOFT;
-        case DebugType::Marker: return AL_DEBUG_TYPE_MARKER_SOFT;
-        case DebugType::Other: return AL_DEBUG_TYPE_OTHER_SOFT;
-        }
-        throw std::runtime_error{"Unexpected debug type value "+std::to_string(al::to_underlying(type))};
-    };
-    auto get_severity_enum = [severity]()
-    {
-        switch(severity)
-        {
-        case DebugSeverity::High: return AL_DEBUG_SEVERITY_HIGH_SOFT;
-        case DebugSeverity::Medium: return AL_DEBUG_SEVERITY_MEDIUM_SOFT;
-        case DebugSeverity::Low: return AL_DEBUG_SEVERITY_LOW_SOFT;
-        case DebugSeverity::Notification: return AL_DEBUG_SEVERITY_NOTIFICATION_SOFT;
-        }
-        throw std::runtime_error{"Unexpected debug severity value "+std::to_string(al::to_underlying(severity))};
-    };
-
-    auto iditer = mDebugIdFilters.find(id);
-    if(iditer != mDebugIdFilters.end())
-    {
-        const uint filter{(1u<<(DebugSourceBase+al::to_underlying(source)))
-            | (1u<<(DebugTypeBase+al::to_underlying(type)))};
-
-        auto iter = std::lower_bound(iditer->second.cbegin(), iditer->second.cend(), filter);
-        if(iter != iditer->second.cend() && *iter == filter)
-            return;
-    }
-
-    const uint filter{(1u<<(DebugSourceBase+al::to_underlying(source)))
-        | (1u<<(DebugTypeBase+al::to_underlying(type)))
-        | (1u<<(DebugSeverityBase+al::to_underlying(severity)))};
-
-    auto iter = std::lower_bound(mDebugFilters.cbegin(), mDebugFilters.cend(), filter);
-    if(iter != mDebugFilters.cend() && *iter == filter)
-        return;
-
-    if(mDebugCb)
-    {
-        auto callback = mDebugCb;
-        auto param = mDebugParam;
-        debuglock.unlock();
-        callback(get_source_enum(), get_type_enum(), id, get_severity_enum(), length, message,
-            param);
-    }
-    else
-    {
-        if(mDebugLog.size() < MaxDebugLoggedMessages)
-            mDebugLog.emplace_back(source, type, id, severity, message);
-        else UNLIKELY
-            ERR("Debug message log overflow. Lost message:\n"
-                "  Source: 0x%04x\n"
-                "  Type: 0x%04x\n"
-                "  ID: %u\n"
-                "  Severity: 0x%04x\n"
-                "  Message: \"%s\"\n",
-                get_source_enum(), get_type_enum(), id, get_severity_enum(), message);
-    }
 }
 
 
@@ -561,43 +469,15 @@ void ALCcontext::eax_initialize_extensions()
     if(!eax_g_is_enabled)
         return;
 
-    const auto string_max_capacity =
-        std::strlen(mExtensionList) + 1 +
-        std::strlen(eax1_ext_name) + 1 +
-        std::strlen(eax2_ext_name) + 1 +
-        std::strlen(eax3_ext_name) + 1 +
-        std::strlen(eax4_ext_name) + 1 +
-        std::strlen(eax5_ext_name) + 1 +
-        std::strlen(eax_x_ram_ext_name) + 1;
-
-    std::string extlist;
-    extlist.reserve(string_max_capacity);
-
+    mExtensions.emplace(mExtensions.begin(), eax_x_ram_ext_name);
     if(eaxIsCapable())
     {
-        extlist += eax1_ext_name;
-        extlist += ' ';
-
-        extlist += eax2_ext_name;
-        extlist += ' ';
-
-        extlist += eax3_ext_name;
-        extlist += ' ';
-
-        extlist += eax4_ext_name;
-        extlist += ' ';
-
-        extlist += eax5_ext_name;
-        extlist += ' ';
+        mExtensions.emplace(mExtensions.begin(), eax5_ext_name);
+        mExtensions.emplace(mExtensions.begin(), eax4_ext_name);
+        mExtensions.emplace(mExtensions.begin(), eax3_ext_name);
+        mExtensions.emplace(mExtensions.begin(), eax2_ext_name);
+        mExtensions.emplace(mExtensions.begin(), eax1_ext_name);
     }
-
-    extlist += eax_x_ram_ext_name;
-    extlist += ' ';
-
-    extlist += mExtensionList;
-
-    mExtensionListOverride = std::move(extlist);
-    mExtensionList = mExtensionListOverride.c_str();
 }
 
 void ALCcontext::eax_initialize()
@@ -1132,50 +1012,20 @@ void ALCcontext::eaxCommit()
     eax_update_sources();
 }
 
-namespace {
 
-class EaxSetException : public EaxException {
-public:
-    explicit EaxSetException(const char* message)
-        : EaxException{"EAX_SET", message}
-    {}
-};
-
-[[noreturn]] void eax_fail_set(const char* message)
+FORCE_ALIGN ALenum AL_APIENTRY EAXSet(const GUID *a, ALuint b, ALuint c, ALvoid *d, ALuint e) noexcept
 {
-    throw EaxSetException{message};
+    auto context = GetContextRef();
+    if(!context) UNLIKELY return AL_INVALID_OPERATION;
+    return EAXSetDirect(context.get(), a, b, c, d, e);
 }
 
-class EaxGetException : public EaxException {
-public:
-    explicit EaxGetException(const char* message)
-        : EaxException{"EAX_GET", message}
-    {}
-};
-
-[[noreturn]] void eax_fail_get(const char* message)
-{
-    throw EaxGetException{message};
-}
-
-} // namespace
-
-
-FORCE_ALIGN ALenum AL_APIENTRY EAXSet(
-    const GUID* property_set_id,
-    ALuint property_id,
-    ALuint property_source_id,
-    ALvoid* property_value,
+FORCE_ALIGN ALenum AL_APIENTRY EAXSetDirect(ALCcontext *context, const GUID *property_set_id,
+    ALuint property_id, ALuint property_source_id, ALvoid *property_value,
     ALuint property_value_size) noexcept
 try
 {
-    auto context = GetContextRef();
-
-    if(!context)
-        eax_fail_set("No current context.");
-
     std::lock_guard<std::mutex> prop_lock{context->mPropLock};
-
     return context->eax_eax_set(
         property_set_id,
         property_id,
@@ -1183,27 +1033,26 @@ try
         property_value,
         property_value_size);
 }
-catch (...)
+catch(...)
 {
     eax_log_exception(__func__);
     return AL_INVALID_OPERATION;
 }
 
-FORCE_ALIGN ALenum AL_APIENTRY EAXGet(
-    const GUID* property_set_id,
-    ALuint property_id,
-    ALuint property_source_id,
-    ALvoid* property_value,
+
+FORCE_ALIGN ALenum AL_APIENTRY EAXGet(const GUID *a, ALuint b, ALuint c, ALvoid *d, ALuint e) noexcept
+{
+    auto context = GetContextRef();
+    if(!context) UNLIKELY return AL_INVALID_OPERATION;
+    return EAXGetDirect(context.get(), a, b, c, d, e);
+}
+
+FORCE_ALIGN ALenum AL_APIENTRY EAXGetDirect(ALCcontext *context, const GUID *property_set_id,
+    ALuint property_id, ALuint property_source_id, ALvoid *property_value,
     ALuint property_value_size) noexcept
 try
 {
-    auto context = GetContextRef();
-
-    if(!context)
-        eax_fail_get("No current context.");
-
     std::lock_guard<std::mutex> prop_lock{context->mPropLock};
-
     return context->eax_eax_get(
         property_set_id,
         property_id,
@@ -1211,7 +1060,7 @@ try
         property_value,
         property_value_size);
 }
-catch (...)
+catch(...)
 {
     eax_log_exception(__func__);
     return AL_INVALID_OPERATION;

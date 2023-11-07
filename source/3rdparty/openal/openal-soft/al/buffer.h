@@ -2,10 +2,11 @@
 #define AL_BUFFER_H
 
 #include <atomic>
+#include <cstddef>
+#include <string_view>
 
 #include "AL/al.h"
 
-#include "albyte.h"
 #include "alc/inprogext.h"
 #include "almalloc.h"
 #include "atomic.h"
@@ -26,7 +27,7 @@ enum class EaxStorage : uint8_t {
 struct ALbuffer : public BufferStorage {
     ALbitfieldSOFT Access{0u};
 
-    al::vector<al::byte,16> mDataStorage;
+    al::vector<std::byte,16> mDataStorage;
 
     ALuint OriginalSize{0};
 
@@ -46,6 +47,8 @@ struct ALbuffer : public BufferStorage {
 
     /* Self ID */
     ALuint id{0};
+
+    static void SetName(ALCcontext *context, ALuint id, std::string_view name);
 
     DISABLE_ALLOC()
 

@@ -35,17 +35,16 @@
 #include <poll.h>
 #include <math.h>
 #include <string.h>
+#include <vector>
 
 #include <thread>
 #include <functional>
 
-#include "albyte.h"
 #include "alc/alconfig.h"
+#include "althrd_setname.h"
 #include "core/device.h"
 #include "core/helpers.h"
 #include "core/logging.h"
-#include "threads.h"
-#include "vector.h"
 
 #include <sys/audioio.h>
 
@@ -63,7 +62,7 @@ struct SolarisBackend final : public BackendBase {
 
     int mixerProc();
 
-    void open(const char *name) override;
+    void open(std::string_view name) override;
     bool reset() override;
     void start() override;
     void stop() override;
@@ -71,7 +70,7 @@ struct SolarisBackend final : public BackendBase {
     int mFd{-1};
 
     uint mFrameStep{};
-    al::vector<al::byte> mBuffer;
+    std::vector<std::byte> mBuffer;
 
     std::atomic<bool> mKillNow{true};
     std::thread mThread;
@@ -116,7 +115,7 @@ int SolarisBackend::mixerProc()
             continue;
         }
 
-        al::byte *write_ptr{mBuffer.data()};
+        std::byte *write_ptr{mBuffer.data()};
         size_t to_write{mBuffer.size()};
         mDevice->renderSamples(write_ptr, static_cast<uint>(to_write/frame_size), frame_step);
         while(to_write > 0 && !mKillNow.load(std::memory_order_acquire))
@@ -140,13 +139,13 @@ int SolarisBackend::mixerProc()
 }
 
 
-void SolarisBackend::open(const char *name)
+void SolarisBackend::open(std::string_view name)
 {
-    if(!name)
+    if(name.empty())
         name = solaris_device;
-    else if(strcmp(name, solaris_device) != 0)
-        throw al::backend_exception{al::backend_error::NoDevice, "Device name \"%s\" not found",
-            name};
+    else if(name != solaris_device)
+        throw al::backend_exception{al::backend_error::NoDevice, "Device name \"%.*s\" not found",
+            static_cast<int>(name.length()), name.data()};
 
     int fd{::open(solaris_driver.c_str(), O_WRONLY)};
     if(fd == -1)
@@ -231,7 +230,7 @@ bool SolarisBackend::reset()
     setDefaultChannelOrder();
 
     mBuffer.resize(mDevice->UpdateSize * size_t{frame_size});
-    std::fill(mBuffer.begin(), mBuffer.end(), al::byte{});
+    std::fill(mBuffer.begin(), mBuffer.end(), std::byte{});
 
     return true;
 }

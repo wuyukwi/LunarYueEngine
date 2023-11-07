@@ -33,11 +33,11 @@
 #include <iterator>
 #include <memory>
 #include <numeric>
+#include <optional>
 #include <string>
 #include <thread>
 #include <vector>
 
-#include "aloptional.h"
 #include "alspan.h"
 #include "makemhr.h"
 #include "polyphase_resampler.h"
@@ -87,7 +87,7 @@ static bool PrepareLayout(const uint m, const float *xyzs, HrirDataT *hData)
         ++fi;
     }
     fprintf(stdout, "Using %u of %u IRs.\n", ir_total, m);
-    const auto azs = al::as_span(azCounts).first<MAX_FD_COUNT>();
+    const auto azs = al::span{azCounts}.first<MAX_FD_COUNT>();
     return PrepareHrirData({distances, fi}, evCounts, azs, hData);
 }
 
@@ -265,7 +265,7 @@ static bool LoadResponses(MYSOFA_HRTF *sofaHrtf, HrirDataT *hData, const DelayTy
         double *hrirs = hData->mHrirsBase.data();
 
         std::unique_ptr<double[]> restmp;
-        al::optional<PPhaseResampler> resampler;
+        std::optional<PPhaseResampler> resampler;
         if(outRate && outRate != hData->mIrRate)
         {
             resampler.emplace().init(hData->mIrRate, outRate);

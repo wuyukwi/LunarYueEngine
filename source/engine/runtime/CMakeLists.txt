@@ -10,6 +10,7 @@ set_target_properties(runtime PROPERTIES FOLDER ${ENGINE_RUNTIME_FOLDER})
 
 target_link_libraries(runtime PUBLIC core)
 target_link_libraries(runtime PUBLIC mml-window)
+target_link_libraries(runtime PUBLIC SDL3-static)
 
 target_include_directories (runtime PUBLIC ${ENGINE_ROOT_DIR})
 

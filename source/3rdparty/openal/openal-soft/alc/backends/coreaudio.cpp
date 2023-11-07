@@ -22,35 +22,36 @@
 
 #include "coreaudio.h"
 
-#include <inttypes.h>
+#include <cinttypes>
+#include <cmath>
+#include <memory>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string>
 #include <string.h>
 #include <unistd.h>
-
-#include <cmath>
-#include <memory>
-#include <string>
+#include <vector>
+#include <optional>
 
 #include "alnumeric.h"
 #include "core/converter.h"
 #include "core/device.h"
 #include "core/logging.h"
 #include "ringbuffer.h"
+#include "alc/events.h"
 
 #include <AudioUnit/AudioUnit.h>
 #include <AudioToolbox/AudioToolbox.h>
-#include <IOKit/audio/IOAudioTypes.h>
-
-
-namespace {
 
 #if TARGET_OS_IOS || TARGET_OS_TV
 #define CAN_ENUMERATE 0
 #else
+#include <IOKit/audio/IOAudioTypes.h>
 #define CAN_ENUMERATE 1
 #endif
+
+namespace {
 
 constexpr auto OutputElement = 0;
 constexpr auto InputElement = 1;
@@ -272,6 +273,48 @@ void EnumerateDevices(std::vector<DeviceEntry> &list, bool isCapture)
     newdevs.swap(list);
 }
 
+struct DeviceHelper {
+    DeviceHelper()
+    {
+        AudioObjectPropertyAddress addr{kAudioHardwarePropertyDefaultOutputDevice,
+            kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMain};
+        OSStatus status = AudioObjectAddPropertyListener(kAudioObjectSystemObject, &addr, DeviceListenerProc, nil);
+        if (status != noErr)
+            ERR("AudioObjectAddPropertyListener fail: %d", status);
+    }
+    ~DeviceHelper()
+    {
+        AudioObjectPropertyAddress addr{kAudioHardwarePropertyDefaultOutputDevice,
+            kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMain};
+        OSStatus status = AudioObjectRemovePropertyListener(kAudioObjectSystemObject, &addr, DeviceListenerProc, nil);
+        if (status != noErr)
+            ERR("AudioObjectRemovePropertyListener fail: %d", status);
+    }
+
+    static OSStatus DeviceListenerProc(AudioObjectID /*inObjectID*/, UInt32 inNumberAddresses,
+        const AudioObjectPropertyAddress *inAddresses, void* /*inClientData*/)
+    {
+        for(UInt32 i = 0; i < inNumberAddresses; ++i)
+        {
+            switch(inAddresses[i].mSelector)
+            {
+            case kAudioHardwarePropertyDefaultOutputDevice:
+            case kAudioHardwarePropertyDefaultSystemOutputDevice:
+                alc::Event(alc::EventType::DefaultDeviceChanged, alc::DeviceType::Playback,
+                    "Default playback device changed: "+std::to_string(inAddresses[i].mSelector));
+                break;
+            case kAudioHardwarePropertyDefaultInputDevice:
+                alc::Event(alc::EventType::DefaultDeviceChanged, alc::DeviceType::Capture,
+                    "Default capture device changed: "+std::to_string(inAddresses[i].mSelector));
+                break;
+            }
+        }
+        return noErr;
+    }
+};
+
+static std::optional<DeviceHelper> sDeviceHelper;
+
 #else
 
 static constexpr char ca_device[] = "CoreAudio Default";
@@ -286,7 +329,7 @@ struct CoreAudioPlayback final : public BackendBase {
         const AudioTimeStamp *inTimeStamp, UInt32 inBusNumber, UInt32 inNumberFrames,
         AudioBufferList *ioData) noexcept;
 
-    void open(const char *name) override;
+    void open(std::string_view name) override;
     bool reset() override;
     void start() override;
     void stop() override;
@@ -319,11 +362,11 @@ OSStatus CoreAudioPlayback::MixerProc(AudioUnitRenderActionFlags*, const AudioTi
 }
 
 
-void CoreAudioPlayback::open(const char *name)
+void CoreAudioPlayback::open(std::string_view name)
 {
 #if CAN_ENUMERATE
     AudioDeviceID audioDevice{kAudioDeviceUnknown};
-    if(!name)
+    if(name.empty())
         GetHwProperty(kAudioHardwarePropertyDefaultOutputDevice, sizeof(audioDevice),
             &audioDevice);
     else
@@ -336,16 +379,16 @@ void CoreAudioPlayback::open(const char *name)
         auto devmatch = std::find_if(PlaybackList.cbegin(), PlaybackList.cend(), find_name);
         if(devmatch == PlaybackList.cend())
             throw al::backend_exception{al::backend_error::NoDevice,
-                "Device name \"%s\" not found", name};
+                "Device name \"%.*s\" not found", static_cast<int>(name.length()), name.data()};
 
         audioDevice = devmatch->mId;
     }
 #else
-    if(!name)
+    if(name.empty())
         name = ca_device;
-    else if(strcmp(name, ca_device) != 0)
-        throw al::backend_exception{al::backend_error::NoDevice, "Device name \"%s\" not found",
-            name};
+    else if(name != ca_device)
+        throw al::backend_exception{al::backend_error::NoDevice, "Device name \"%.*s\" not found",
+            static_cast<int>(name.length()), name.data()};
 #endif
 
     /* open the default output unit */
@@ -393,7 +436,7 @@ void CoreAudioPlayback::open(const char *name)
     mAudioUnit = audioUnit;
 
 #if CAN_ENUMERATE
-    if(name)
+    if(!name.empty())
         mDevice->DeviceName = name;
     else
     {
@@ -565,10 +608,10 @@ struct CoreAudioCapture final : public BackendBase {
         const AudioTimeStamp *inTimeStamp, UInt32 inBusNumber,
         UInt32 inNumberFrames, AudioBufferList *ioData) noexcept;
 
-    void open(const char *name) override;
+    void open(std::string_view name) override;
     void start() override;
     void stop() override;
-    void captureSamples(al::byte *buffer, uint samples) override;
+    void captureSamples(std::byte *buffer, uint samples) override;
     uint availableSamples() override;
 
     AudioUnit mAudioUnit{0};
@@ -578,7 +621,7 @@ struct CoreAudioCapture final : public BackendBase {
 
     SampleConverterPtr mConverter;
 
-    al::vector<char> mCaptureData;
+    std::vector<char> mCaptureData;
 
     RingBufferPtr mRing{nullptr};
 
@@ -598,7 +641,7 @@ OSStatus CoreAudioCapture::RecordProc(AudioUnitRenderActionFlags *ioActionFlags,
     AudioBufferList*) noexcept
 {
     union {
-        al::byte _[maxz(sizeof(AudioBufferList), offsetof(AudioBufferList, mBuffers[1]))];
+        std::byte _[maxz(sizeof(AudioBufferList), offsetof(AudioBufferList, mBuffers[1]))];
         AudioBufferList list;
     } audiobuf{};
 
@@ -620,11 +663,11 @@ OSStatus CoreAudioCapture::RecordProc(AudioUnitRenderActionFlags *ioActionFlags,
 }
 
 
-void CoreAudioCapture::open(const char *name)
+void CoreAudioCapture::open(std::string_view name)
 {
 #if CAN_ENUMERATE
     AudioDeviceID audioDevice{kAudioDeviceUnknown};
-    if(!name)
+    if(name.empty())
         GetHwProperty(kAudioHardwarePropertyDefaultInputDevice, sizeof(audioDevice),
             &audioDevice);
     else
@@ -637,16 +680,16 @@ void CoreAudioCapture::open(const char *name)
         auto devmatch = std::find_if(CaptureList.cbegin(), CaptureList.cend(), find_name);
         if(devmatch == CaptureList.cend())
             throw al::backend_exception{al::backend_error::NoDevice,
-                "Device name \"%s\" not found", name};
+                "Device name \"%.*s\" not found", static_cast<int>(name.length()), name.data()};
 
         audioDevice = devmatch->mId;
     }
 #else
-    if(!name)
+    if(name.empty())
         name = ca_device;
-    else if(strcmp(name, ca_device) != 0)
-        throw al::backend_exception{al::backend_error::NoDevice, "Device name \"%s\" not found",
-            name};
+    else if(name != ca_device)
+        throw al::backend_exception{al::backend_error::NoDevice, "Device name \"%.*s\" not found",
+            static_cast<int>(name.length()), name.data()};
 #endif
 
     AudioComponentDescription desc{};
@@ -844,7 +887,7 @@ void CoreAudioCapture::open(const char *name)
             mDevice->Frequency, Resampler::FastBSinc24);
 
 #if CAN_ENUMERATE
-    if(name)
+    if(!name.empty())
         mDevice->DeviceName = name;
     else
     {
@@ -878,7 +921,7 @@ void CoreAudioCapture::stop()
         ERR("AudioOutputUnitStop failed: '%s' (%u)\n", FourCCPrinter{err}.c_str(), err);
 }
 
-void CoreAudioCapture::captureSamples(al::byte *buffer, uint samples)
+void CoreAudioCapture::captureSamples(std::byte *buffer, uint samples)
 {
     if(!mConverter)
     {
@@ -916,7 +959,13 @@ BackendFactory &CoreAudioBackendFactory::getFactory()
     return factory;
 }
 
-bool CoreAudioBackendFactory::init() { return true; }
+bool CoreAudioBackendFactory::init() 
+{ 
+#if CAN_ENUMERATE
+    sDeviceHelper.emplace();
+#endif
+    return true; 
+}
 
 bool CoreAudioBackendFactory::querySupport(BackendType type)
 { return type == BackendType::Playback || type == BackendType::Capture; }

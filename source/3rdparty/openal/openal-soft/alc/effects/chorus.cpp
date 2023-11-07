@@ -25,6 +25,7 @@
 #include <climits>
 #include <cstdlib>
 #include <iterator>
+#include <vector>
 
 #include "alc/effects/base.h"
 #include "almalloc.h"
@@ -41,7 +42,6 @@
 #include "core/resampler_limits.h"
 #include "intrusive_ptr.h"
 #include "opthelpers.h"
-#include "vector.h"
 
 
 namespace {
@@ -49,7 +49,7 @@ namespace {
 using uint = unsigned int;
 
 struct ChorusState final : public EffectState {
-    al::vector<float,16> mDelayBuffer;
+    std::vector<float> mDelayBuffer;
     uint mOffset{0};
 
     uint mLfoOffset{0};
@@ -125,16 +125,16 @@ void ChorusState::update(const ContextBase *Context, const EffectSlot *Slot,
 
     /* Gains for left and right sides */
     static constexpr auto inv_sqrt2 = static_cast<float>(1.0 / al::numbers::sqrt2);
-    static constexpr auto lcoeffs_pw = CalcDirectionCoeffs({-1.0f, 0.0f, 0.0f});
-    static constexpr auto rcoeffs_pw = CalcDirectionCoeffs({ 1.0f, 0.0f, 0.0f});
-    static constexpr auto lcoeffs_nrml = CalcDirectionCoeffs({-inv_sqrt2, 0.0f, inv_sqrt2});
-    static constexpr auto rcoeffs_nrml = CalcDirectionCoeffs({ inv_sqrt2, 0.0f, inv_sqrt2});
+    static constexpr auto lcoeffs_pw = CalcDirectionCoeffs(std::array{-1.0f, 0.0f, 0.0f});
+    static constexpr auto rcoeffs_pw = CalcDirectionCoeffs(std::array{ 1.0f, 0.0f, 0.0f});
+    static constexpr auto lcoeffs_nrml = CalcDirectionCoeffs(std::array{-inv_sqrt2, 0.0f, inv_sqrt2});
+    static constexpr auto rcoeffs_nrml = CalcDirectionCoeffs(std::array{ inv_sqrt2, 0.0f, inv_sqrt2});
     auto &lcoeffs = (device->mRenderMode != RenderMode::Pairwise) ? lcoeffs_nrml : lcoeffs_pw;
     auto &rcoeffs = (device->mRenderMode != RenderMode::Pairwise) ? rcoeffs_nrml : rcoeffs_pw;
 
     mOutTarget = target.Main->Buffer;
-    ComputePanGains(target.Main, lcoeffs.data(), Slot->Gain, mGains[0].Target);
-    ComputePanGains(target.Main, rcoeffs.data(), Slot->Gain, mGains[1].Target);
+    ComputePanGains(target.Main, lcoeffs, Slot->Gain, mGains[0].Target);
+    ComputePanGains(target.Main, rcoeffs, Slot->Gain, mGains[1].Target);
 
     float rate{props->Chorus.Rate};
     if(!(rate > 0.0f))

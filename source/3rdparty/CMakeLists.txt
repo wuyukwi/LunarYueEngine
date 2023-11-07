@@ -11,5 +11,6 @@ add_subdirectory_ex(imgui)
 add_subdirectory_ex(glm)
 add_subdirectory_ex(openal)
 add_subdirectory_ex(stb)
+add_subdirectory_ex(sdl)
 
 
