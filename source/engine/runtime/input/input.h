@@ -9,7 +9,7 @@
 
 namespace runtime
 {
-    using action_map_t = std::unordered_map<std::string, std::map<action_type, hpp::event<void(const mml::platform_event&)>>>;
+    using action_map_t = std::unordered_map<std::string, std::map<action_type, hpp::event<void(const SDL_Event&)>>>;
 
     struct action_mapper
     {
@@ -28,9 +28,9 @@ namespace runtime
         ///
         action_map_t actions;
 
-        void handle_event(const mml::platform_event& event)
+        void handle_event(const SDL_Event& event)
         {
-            auto trigger_callbacks = [this](auto& mapper, const mml::platform_event& event) {
+            auto trigger_callbacks = [this](auto& mapper, const SDL_Event& event) {
                 auto mappings = mapper.get_mapping(event);
                 for (auto& action : mappings.actions)
                 {
@@ -74,7 +74,7 @@ namespace runtime
         input();
         ~input();
 
-        void platform_events(const std::pair<std::uint32_t, bool>& info, const std::vector<mml::platform_event>& events);
+        void platform_events(const std::pair<std::uint32_t, bool>& info, const std::vector<SDL_Event>& events);
 
         //-----------------------------------------------------------------------------
         //  Name : get_mappings ()
@@ -104,7 +104,7 @@ namespace runtime
         ///
         /// </summary>
         //-----------------------------------------------------------------------------
-        void handle_event(const mml::platform_event& event);
+        void handle_event(const SDL_Event& event);
 
         //-----------------------------------------------------------------------------
         //  Name : is_key_pressed ()
@@ -114,8 +114,8 @@ namespace runtime
         ///
         /// </summary>
         //-----------------------------------------------------------------------------
-        bool is_key_pressed(mml::keyboard::key key);
-        bool is_key_pressed(mml::keyboard::key key, mml::keyboard::key modifier);
+        bool is_key_pressed(SDL_KeyCode key);
+        bool is_key_pressed(SDL_KeyCode key, SDL_KeyCode modifier);
         //-----------------------------------------------------------------------------
         //  Name : is_key_down ()
         /// <summary>
@@ -124,7 +124,7 @@ namespace runtime
         ///
         /// </summary>
         //-----------------------------------------------------------------------------
-        bool is_key_down(mml::keyboard::key key);
+        bool is_key_down(SDL_KeyCode key);
 
         //-----------------------------------------------------------------------------
         //  Name : is_key_released ()
@@ -134,7 +134,7 @@ namespace runtime
         ///
         /// </summary>
         //-----------------------------------------------------------------------------
-        bool is_key_released(mml::keyboard::key key);
+        bool is_key_released(SDL_KeyCode key);
 
         //-----------------------------------------------------------------------------
         //  Name : mouseMoved ()
@@ -184,7 +184,7 @@ namespace runtime
         ///
         /// </summary>
         //-----------------------------------------------------------------------------
-        bool is_mouse_button_pressed(mml::mouse::button button);
+        bool is_mouse_button_pressed(uint8_t button);
 
         //-----------------------------------------------------------------------------
         //  Name : is_mouse_button_down ()
@@ -194,7 +194,7 @@ namespace runtime
         ///
         /// </summary>
         //-----------------------------------------------------------------------------
-        bool is_mouse_button_down(mml::mouse::button button);
+        bool is_mouse_button_down(uint8_t button);
 
         //-----------------------------------------------------------------------------
         //  Name : is_mouse_button_released ()
@@ -204,7 +204,7 @@ namespace runtime
         ///
         /// </summary>
         //-----------------------------------------------------------------------------
-        bool is_mouse_button_released(mml::mouse::button button);
+        bool is_mouse_button_released(uint8_t button);
 
         //-----------------------------------------------------------------------------
         //  Name : is_mouse_wheel_scrolled ()
@@ -234,7 +234,7 @@ namespace runtime
         ///
         /// </summary>
         //-----------------------------------------------------------------------------
-        bool is_joystick_connected(unsigned int joystick_id);
+        bool is_joystick_connected(int32_t joystick_id);
 
         //-----------------------------------------------------------------------------
         //  Name : is_joystick_active ()
@@ -244,7 +244,7 @@ namespace runtime
         ///
         /// </summary>
         //-----------------------------------------------------------------------------
-        bool is_joystick_active(unsigned int joystick_id);
+        bool is_joystick_active(int32_t joystick_id);
 
         //-----------------------------------------------------------------------------
         //  Name : is_joystick_disconnected ()
@@ -254,7 +254,7 @@ namespace runtime
         ///
         /// </summary>
         //-----------------------------------------------------------------------------
-        bool is_joystick_disconnected(unsigned int joystick_id);
+        bool is_joystick_disconnected(int32_t joystick_id);
 
         //-----------------------------------------------------------------------------
         //  Name : is_joystick_button_pressed ()
@@ -264,7 +264,7 @@ namespace runtime
         ///
         /// </summary>
         //-----------------------------------------------------------------------------
-        bool is_joystick_button_pressed(unsigned int joystick_id, unsigned int button);
+        bool is_joystick_button_pressed(int32_t joystick_id, uint8_t button);
 
         //-----------------------------------------------------------------------------
         //  Name : is_joystick_button_down ()
@@ -274,7 +274,7 @@ namespace runtime
         ///
         /// </summary>
         //-----------------------------------------------------------------------------
-        bool is_joystick_button_down(unsigned int joystick_id, unsigned int button);
+        bool is_joystick_button_down(int32_t joystick_id, uint8_t button);
 
         //-----------------------------------------------------------------------------
         //  Name : is_joystick_button_released ()
@@ -284,7 +284,7 @@ namespace runtime
         ///
         /// </summary>
         //-----------------------------------------------------------------------------
-        bool is_joystick_button_released(unsigned int joystick_id, unsigned int button);
+        bool is_joystick_button_released(int32_t joystick_id, uint8_t button);
 
         //-----------------------------------------------------------------------------
         //  Name : get_joystick_axis_position ()
@@ -294,7 +294,7 @@ namespace runtime
         ///
         /// </summary>
         //-----------------------------------------------------------------------------
-        float get_joystick_axis_position(unsigned int joystick_id, mml::joystick::axis axis);
+        float get_joystick_axis_position(int32_t joystick_id, SDL_GameControllerAxis axis);
 
         //-----------------------------------------------------------------------------
         //  Name : mouse_event ()
@@ -304,7 +304,7 @@ namespace runtime
         ///
         /// </summary>
         //-----------------------------------------------------------------------------
-        bool mouse_event(const mml::platform_event& event);
+        bool mouse_event(const SDL_Event& event);
 
     private:
         //-----------------------------------------------------------------------------
@@ -325,7 +325,7 @@ namespace runtime
         ///
         /// </summary>
         //-----------------------------------------------------------------------------
-        bool key_event(const mml::platform_event& event);
+        bool key_event(const SDL_Event& event);
 
         //-----------------------------------------------------------------------------
         //  Name : mouse_reset ()
@@ -355,7 +355,7 @@ namespace runtime
         ///
         /// </summary>
         //-----------------------------------------------------------------------------
-        bool joystick_event(const mml::platform_event& event);
+        bool joystick_event(const SDL_Event& event);
 
         ///
         action_mapper action_mapper_;
@@ -370,30 +370,30 @@ namespace runtime
         ///
         ipoint32_t last_cursor_position_;
         ///
-        std::map<unsigned int, bool> mouse_buttons_pressed_;
+        std::map<uint8_t, bool> mouse_buttons_pressed_;
         ///
-        std::map<unsigned int, bool> mouse_buttons_down_;
+        std::map<uint8_t, bool> mouse_buttons_down_;
         ///
-        std::map<unsigned int, bool> mouse_buttons_released_;
+        std::map<uint8_t, bool> mouse_buttons_released_;
         ///
-        std::map<mml::keyboard::key, bool> keys_pressed_;
+        std::map<SDL_Keycode, bool> keys_pressed_;
         ///
-        std::map<mml::keyboard::key, bool> keys_down_;
+        std::map<SDL_Keycode, bool> keys_down_;
         ///
-        std::map<mml::keyboard::key, bool> keys_released_;
+        std::map<SDL_Keycode, bool> keys_released_;
         ///
-        std::map<unsigned int, bool> joysticks_connected_;
+        std::map<int32_t, bool> joysticks_connected_;
         ///
-        std::map<unsigned int, bool> joysticks_active_;
+        std::map<int32_t, bool> joysticks_active_;
         ///
-        std::map<unsigned int, bool> joysticks_disconnected_;
+        std::map<int32_t, bool> joysticks_disconnected_;
         ///
-        std::map<std::pair<unsigned int, unsigned int>, bool> joystick_buttons_pressed_;
+        std::map<std::pair<int32_t, uint8_t>, bool> joystick_buttons_pressed_;
         ///
-        std::map<std::pair<unsigned int, unsigned int>, bool> joystick_buttons_down_;
+        std::map<std::pair<int32_t, uint8_t>, bool> joystick_buttons_down_;
         ///
-        std::map<std::pair<unsigned int, unsigned int>, bool> joystick_buttons_released_;
+        std::map<std::pair<int32_t, uint8_t>, bool> joystick_buttons_released_;
         ///
-        std::map<std::pair<unsigned int, unsigned int>, float> joystick_axis_positions_;
+        std::map<std::pair<int32_t, uint8_t>, float> joystick_axis_positions_;
     };
 } // namespace runtime

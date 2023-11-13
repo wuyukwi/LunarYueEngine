@@ -18,7 +18,7 @@ struct docking_system
     void                                            register_dock(std::unique_ptr<imguidock::dock> dock);
 
 private:
-    void platform_events(const std::pair<std::uint32_t, bool>& info, const std::vector<mml::platform_event>& events);
+    void platform_events(const std::pair<std::uint32_t, bool>& info, const std::vector<SDL_Event>& events);
 
     std::map<uint32_t, imguidock::dockspace>      dockspaces_;
     std::vector<std::unique_ptr<imguidock::dock>> docks_;

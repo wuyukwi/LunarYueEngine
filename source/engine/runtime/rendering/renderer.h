@@ -78,13 +78,13 @@ namespace runtime
         render_window* get_focused_window() const;
         void           process_pending_windows();
 
-        void platform_events(const std::pair<std::uint32_t, bool>& info, const std::vector<mml::platform_event>& events);
+        void platform_events(const std::pair<std::uint32_t, bool>& info, const std::vector<SDL_Event>& events);
 
     protected:
         std::uint32_t render_frame_ = 0;
 
         /// engine windows
-        std::unique_ptr<mml::window>                init_window_;
+        // std::unique_ptr<window_sdl>                 init_window_;
         std::vector<std::unique_ptr<render_window>> windows_;
         std::vector<std::unique_ptr<render_window>> windows_pending_addition_;
     };

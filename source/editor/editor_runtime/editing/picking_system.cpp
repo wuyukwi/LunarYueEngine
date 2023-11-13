@@ -32,7 +32,7 @@ namespace editor
 
         const auto render_frame = renderer.get_render_frame();
 
-        if (input.is_mouse_button_pressed(mml::mouse::left))
+        if (input.is_mouse_button_pressed(SDL_BUTTON_LEFT))
         {
             auto& editor_camera = es.camera;
             if (imguizmo::is_over() && es.selection_data.object)

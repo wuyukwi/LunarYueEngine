@@ -41,13 +41,10 @@ namespace editor
         template<typename T>
         void create_window_with_dock(const std::string& dock_name)
         {
-            auto&           rend    = core::get_subsystem<runtime::renderer>();
-            auto&           docking = core::get_subsystem<docking_system>();
-            mml::video_mode desktop = mml::video_mode::get_desktop_mode();
-            desktop.width           = 1280;
-            desktop.height          = 720;
-            auto window             = std::make_unique<render_window>(desktop, dock_name, mml::style::standard);
-            window->request_focus();
+            auto& rend    = core::get_subsystem<runtime::renderer>();
+            auto& docking = core::get_subsystem<docking_system>();
+            auto  window  = std::make_unique<render_window>(dock_name.c_str(), 1280, 720);
+            window->raise_window();
 
             auto dock = std::make_unique<T>(dock_name, true, ImVec2(200.0f, 200.0f));
 
@@ -248,26 +245,26 @@ namespace editor
         auto&       input           = core::get_subsystem<runtime::input>();
         const auto& current_project = pm.get_name();
 
-        if (input.is_key_down(mml::keyboard::LControl))
+        if (input.is_key_down(SDLK_LCTRL))
         {
-            if (input.is_key_down(mml::keyboard::LShift))
+            if (input.is_key_down(SDLK_LSHIFT))
             {
-                if (input.is_key_pressed(mml::keyboard::S))
+                if (input.is_key_pressed(SDLK_s))
                 {
                     save_scene_as();
                 }
             }
-            else if (input.is_key_pressed(mml::keyboard::S))
+            else if (input.is_key_pressed(SDLK_s))
             {
                 save_scene();
             }
 
-            if (input.is_key_pressed(mml::keyboard::O))
+            if (input.is_key_pressed(SDLK_o))
             {
                 open_scene();
             }
 
-            if (input.is_key_pressed(mml::keyboard::N))
+            if (input.is_key_pressed(SDLK_n))
             {
                 create_new_scene();
             }

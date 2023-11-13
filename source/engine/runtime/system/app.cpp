@@ -76,13 +76,13 @@ namespace runtime
         auto&       renderer = core::get_subsystem<runtime::renderer>();
         const auto& windows  = renderer.get_windows();
 
-        std::uint32_t                                             focused_id = 0;
-        std::map<std::uint32_t, std::vector<mml::platform_event>> collected_events;
+        std::uint32_t                                   focused_id = 0;
+        std::map<std::uint32_t, std::vector<SDL_Event>> collected_events;
         for (const auto& window : windows)
         {
-            const auto                       id = window->get_id();
-            std::vector<mml::platform_event> events;
-            mml::platform_event              e;
+            const auto             id = window->get_id();
+            std::vector<SDL_Event> events;
+            SDL_Event              e;
             while (window->poll_event(e))
             {
                 events.emplace_back(e);

@@ -7,20 +7,24 @@ static std::uint32_t s_next_id = 0;
 
 void render_window::on_resize() { render_window::prepare_surface(); }
 
-render_window::render_window()
+render_window::render_window() : window_sdl()
 {
     id_ = s_next_id++;
     render_window::prepare_surface();
 }
 
-render_window::render_window(mml::video_mode mode, const std::string& title, std::uint32_t style /*= mml::style::default*/) :
-    mml::window(mode, title, style)
+render_window::render_window(const char* title, int w, int h, std::uint32_t flags) : window_sdl(title, w, h, flags)
 {
     id_ = s_next_id++;
     render_window::prepare_surface();
 }
 
-render_window::~render_window() { render_window::destroy_surface(); }
+render_window::~render_window()
+{
+    window_sdl::~window_sdl();
+
+    render_window::destroy_surface();
+}
 
 std::shared_ptr<gfx::frame_buffer> render_window::get_surface() const { return surface_; }
 
@@ -51,7 +55,7 @@ void render_window::prepare_surface()
 {
     const auto size = get_size();
 
-    surface_ = std::make_shared<gfx::frame_buffer>(reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(native_handle())),
+    surface_ = std::make_shared<gfx::frame_buffer>(reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(get_native_window_handle())),
                                                    static_cast<std::uint16_t>(size[0]),
                                                    static_cast<std::uint16_t>(size[1]));
 }

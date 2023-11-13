@@ -2,12 +2,7 @@
 
 #include <core/common_lib/hash.hpp>
 
-#include <mml/window/event.hpp>
-#include <mml/window/joystick.hpp>
-#include <mml/window/keyboard.hpp>
-#include <mml/window/mouse.hpp>
-#include <mml/window/sensor.hpp>
-#include <mml/window/touch.hpp>
+#include "SDL_events.h"
 
 #include <map>
 #include <string>
@@ -61,107 +56,108 @@ protected:
     std::map<T, std::vector<std::string>> bindings_;
 };
 
-struct keyboard_mapper : public input_mapper<mml::keyboard::key>
+struct keyboard_mapper : public input_mapper<int32_t>
 {
-    input_mapping get_mapping(const mml::platform_event& e)
+    input_mapping get_mapping(const SDL_Event& e)
     {
         input_mapping binds;
-        if (e.type == mml::platform_event::event_type::key_pressed)
+        if (e.type == SDL_KEYDOWN)
         {
-            binds.actions = bindings_[e.key.code];
+            binds.actions = bindings_[e.key.keysym.sym];
             binds.type    = action_type::pressed;
         }
-        if (e.type == mml::platform_event::event_type::key_released)
+        if (e.type == SDL_KEYUP)
         {
-            binds.actions = bindings_[e.key.code];
+            binds.actions = bindings_[e.key.keysym.sym];
             binds.type    = action_type::released;
         }
         return binds;
     }
 };
 
-struct mouse_button_mapper : public input_mapper<mml::mouse::button>
+struct mouse_button_mapper : public input_mapper<uint8_t>
 {
-    input_mapping get_mapping(const mml::platform_event& e)
+    input_mapping get_mapping(const SDL_Event& e)
     {
         input_mapping binds;
-        if (e.type == mml::platform_event::event_type::mouse_button_pressed)
+        if (e.type == SDL_MOUSEBUTTONDOWN)
         {
-            binds.actions = bindings_[e.mouse_button.button];
+            binds.actions = bindings_[e.button.button];
             binds.type    = action_type::pressed;
         }
-        if (e.type == mml::platform_event::event_type::mouse_button_released)
+        if (e.type == SDL_MOUSEBUTTONUP)
         {
-            binds.actions = bindings_[e.mouse_button.button];
+            binds.actions = bindings_[e.button.button];
             binds.type    = action_type::released;
         }
         return binds;
     }
 };
 
-struct mouse_wheel_mapper : public input_mapper<mml::mouse::wheel>
+struct mouse_wheel_mapper : public input_mapper<std::pair<float, float>>
 {
-    input_mapping get_mapping(const mml::platform_event& e)
+    input_mapping get_mapping(const SDL_Event& e)
     {
         input_mapping binds;
-        if (e.type == mml::platform_event::event_type::mouse_wheel_scrolled)
+        if (e.type == SDL_MOUSEWHEEL)
         {
-            binds.actions = bindings_[e.mouse_wheel_scroll.wheel];
+            binds.actions = bindings_[{e.wheel.preciseX, e.wheel.preciseY}];
             binds.type    = action_type::changed;
         }
         return binds;
     }
 };
 
-struct touch_finger_mapper : public input_mapper<unsigned int>
+struct touch_finger_mapper : public input_mapper<int64_t>
 {
-    input_mapping get_mapping(const mml::platform_event& e)
+    input_mapping get_mapping(const SDL_Event& e)
     {
         input_mapping binds;
-        if (e.type == mml::platform_event::event_type::touch_began)
+        if (e.type == SDL_FINGERDOWN)
         {
-            binds.actions = bindings_[e.touch.finger];
+            binds.actions = bindings_[e.tfinger.fingerId];
             binds.type    = action_type::pressed;
         }
-        if (e.type == mml::platform_event::event_type::touch_moved)
+        if (e.type == SDL_FINGERMOTION)
         {
-            binds.actions = bindings_[e.touch.finger];
+            binds.actions = bindings_[e.tfinger.fingerId];
             binds.type    = action_type::changed;
         }
-        if (e.type == mml::platform_event::event_type::touch_ended)
+        if (e.type == SDL_FINGERUP)
         {
-            binds.actions = bindings_[e.touch.finger];
+            binds.actions = bindings_[e.tfinger.fingerId];
             binds.type    = action_type::released;
         }
         return binds;
     }
 };
 
-struct joystick_button_mapper : public input_mapper<std::pair<unsigned int, unsigned int>>
+struct joystick_button_mapper : public input_mapper<std::pair<uint32_t, uint8_t>>
 {
-    input_mapping get_mapping(const mml::platform_event& e)
+    input_mapping get_mapping(const SDL_Event& e)
     {
         input_mapping binds;
-        if (e.type == mml::platform_event::event_type::joystick_button_pressed)
+        if (e.type == SDL_JOYBUTTONDOWN)
+
         {
-            binds.actions = bindings_[{e.joystick_button.joystick_id, e.joystick_button.button}];
+            binds.actions = bindings_[{e.jbutton.which, e.jbutton.button}];
             binds.type    = action_type::pressed;
         }
-        if (e.type == mml::platform_event::event_type::joystick_button_released)
+        if (e.type == SDL_JOYBUTTONUP)
         {
-            binds.actions = bindings_[{e.joystick_button.joystick_id, e.joystick_button.button}];
+            binds.actions = bindings_[{e.jbutton.which, e.jbutton.button}];
             binds.type    = action_type::released;
         }
         return binds;
     }
 };
 
-struct event_mapper : public input_mapper<mml::platform_event::event_type>
+struct event_mapper : public input_mapper<SDL_EventType>
 {
-    input_mapping get_mapping(const mml::platform_event& e)
+    input_mapping get_mapping(const SDL_Event& e)
     {
         input_mapping binds;
-        binds.actions = bindings_[e.type];
+        binds.actions = bindings_[static_cast<SDL_EventType>(e.type)];
         binds.type    = action_type::changed;
         return binds;
     }

@@ -259,14 +259,15 @@ namespace imguidock
         auto& dockspace = docking.get_dockspace(window_id);
         auto& window    = renderer.get_window(window_id);
         auto& split     = dockspace.root.splits[0];
+        auto& input     = core::get_subsystem<runtime::input>();
 
         if (split && split->active_dock)
         {
             auto& active_dock = split->active_dock;
-            bool  mouseleft   = mml::mouse::is_button_pressed(mml::mouse::left);
+            bool  mouseleft   = input.is_mouse_button_pressed(SDL_BUTTON_LEFT);
             if (active_dock->draging && mouseleft)
             {
-                auto pos = mml::mouse::get_position();
+                auto pos = window->get_mouse_position_in_window();
                 pos[0] -= 40;
                 pos[1] -= 30 + int32_t(ImGui::GetTextLineHeightWithSpacing());
                 if (active_dock->redock_to == nullptr || active_dock->redock_slot == slot::none)
@@ -340,7 +341,7 @@ namespace imguidock
                 {
                     auto& owner = renderer.get_window(owner_id);
 
-                    auto   mouse_pos  = mml::mouse::get_position(*owner);
+                    auto   mouse_pos  = owner->get_mouse_position_in_window();
                     ImVec2 cursor_pos = {float(mouse_pos[0]), float(mouse_pos[1])};
                     if ((mouse_pos[0] > screen_cursor_pos.x && mouse_pos[0] < (screen_cursor_pos.x + size.x)) &&
                         (mouse_pos[1] > screen_cursor_pos.y && mouse_pos[1] < (screen_cursor_pos.y + size.y)))
@@ -487,19 +488,17 @@ namespace imguidock
 
                     auto& renderer = core::get_subsystem<runtime::renderer>();
                     auto& docking  = core::get_subsystem<docking_system>();
-                    auto  window   = std::make_unique<render_window>(mml::video_mode(static_cast<unsigned int>(current_dock_to_->last_size.x),
-                                                                                  static_cast<unsigned int>(current_dock_to_->last_size.y)),
-                                                                  "Window",
-                                                                  mml::style::standard);
+                    auto  window   = std::make_unique<render_window>(
+                        "Window", static_cast<int>(current_dock_to_->last_size.x), static_cast<int>(current_dock_to_->last_size.y));
 
                     auto& dockspace = docking.get_dockspace(window->get_id());
                     dockspace.dock_to(current_dock_to_, slot::tab, 0, true);
-                    auto pos = mml::mouse::get_position();
+                    auto pos = window->get_mouse_position_global();
                     pos[0] -= 40;
                     pos[1] -= 30 + int32_t(ImGui::GetTextLineHeightWithSpacing());
 
                     window->set_position(pos);
-                    window->request_focus();
+                    window->raise_window();
                     renderer.register_window(std::move(window));
                 }
             }

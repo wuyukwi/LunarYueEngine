@@ -21,6 +21,7 @@
 #include <editor_core/gui/embedded/fs_ocornut_imgui.bin.h>
 #include <editor_core/gui/embedded/vs_ocornut_imgui.bin.h>
 #include <editor_core/gui/gui.h>
+
 //////////////////////////////////////////////////////////////////////////
 #include "../meta/interface/gui_system.hpp"
 
@@ -32,9 +33,10 @@ namespace
                                                        BGFX_EMBEDDED_SHADER(fs_ocornut_imgui),
                                                        BGFX_EMBEDDED_SHADER_END()};
     // -------------------------------------------------------------------
-    std::unique_ptr<gpu_program> s_program;
-    asset_handle<gfx::texture>   s_font_texture;
-    std::uint32_t                s_draw_calls = 0;
+    std::unique_ptr<gpu_program>                   s_program;
+    asset_handle<gfx::texture>                     s_font_texture;
+    std::uint32_t                                  s_draw_calls = 0;
+    static std::map<SDL_SystemCursor, SDL_Cursor*> cursors;
 
     void render_func(ImDrawData* _draw_data)
     {
@@ -135,100 +137,104 @@ namespace
         program->end();
     }
 
-    void imgui_handle_event(const mml::platform_event& event)
+    void imgui_handle_event(const SDL_Event& event)
     {
-        auto& io = gui::GetIO();
-        if (event.type == mml::platform_event::lost_focus)
-        {
-            io.MouseDown[0] = false;
-            io.MouseDown[1] = false;
-            io.MouseDown[2] = false;
-        }
+        auto& io = ImGui::GetIO();
 
-        if (event.type == mml::platform_event::key_pressed)
+        switch (event.type)
         {
-            io.KeysDown[event.key.code] = true;
-            io.KeyAlt                   = event.key.alt;
-            io.KeyCtrl                  = event.key.control;
-            io.KeyShift                 = event.key.shift;
-            io.KeySuper                 = event.key.system;
-        }
+            case SDL_QUIT:
+                // Handle quit event if needed
+                break;
 
-        if (event.type == mml::platform_event::key_released)
-        {
-            io.KeysDown[event.key.code] = false;
-            io.KeyAlt                   = event.key.alt;
-            io.KeyCtrl                  = event.key.control;
-            io.KeyShift                 = event.key.shift;
-            io.KeySuper                 = event.key.system;
-        }
+            case SDL_WINDOWEVENT:
+                // Handle window events if needed
+                break;
 
-        if (event.type == mml::platform_event::mouse_wheel_scrolled)
-        {
-            io.MouseWheel += event.mouse_wheel_scroll.delta;
-        }
+            case SDL_KEYDOWN:
+                io.KeysDown[event.key.keysym.scancode] = true;
+                io.KeyAlt                              = (event.key.keysym.mod & KMOD_ALT) != 0;
+                io.KeyCtrl                             = (event.key.keysym.mod & KMOD_CTRL) != 0;
+                io.KeyShift                            = (event.key.keysym.mod & KMOD_SHIFT) != 0;
+                io.KeySuper                            = (event.key.keysym.mod & KMOD_GUI) != 0;
+                break;
 
-        if (event.type == mml::platform_event::mouse_button_pressed)
-        {
-            io.MouseDown[event.mouse_button.button] = true;
-        }
+            case SDL_KEYUP:
+                io.KeysDown[event.key.keysym.scancode] = false;
+                io.KeyAlt                              = (event.key.keysym.mod & KMOD_ALT) != 0;
+                io.KeyCtrl                             = (event.key.keysym.mod & KMOD_CTRL) != 0;
+                io.KeyShift                            = (event.key.keysym.mod & KMOD_SHIFT) != 0;
+                io.KeySuper                            = (event.key.keysym.mod & KMOD_GUI) != 0;
+                break;
 
-        if (event.type == mml::platform_event::mouse_button_released)
-        {
-            io.MouseDown[event.mouse_button.button] = false;
-        }
+            case SDL_MOUSEWHEEL:
+                io.MouseWheel += event.wheel.y;
+                break;
 
-        if (event.type == mml::platform_event::mouse_moved)
-        {
-            io.MousePos.x = float(event.mouse_move.x);
-            io.MousePos.y = float(event.mouse_move.y);
+            case SDL_MOUSEBUTTONDOWN:
+                io.MouseDown[event.button.button - 1] = true;
+                break;
 
-            // Scale according to framebuffer display scale
-            io.MousePos.x *= io.DisplayFramebufferScale.x;
-            io.MousePos.y *= io.DisplayFramebufferScale.y;
-        }
+            case SDL_MOUSEBUTTONUP:
+                io.MouseDown[event.button.button - 1] = false;
+                break;
 
-        if (event.type == mml::platform_event::text_entered)
-        {
-            if (event.text.unicode > 0 && event.text.unicode < 0x10000)
-            {
-                io.AddInputCharacter(static_cast<ImWchar>(event.text.unicode));
-            }
+            case SDL_MOUSEMOTION:
+                io.MousePos.x = static_cast<float>(event.motion.x);
+                io.MousePos.y = static_cast<float>(event.motion.y);
+                io.MousePos.x *= io.DisplayFramebufferScale.x;
+                io.MousePos.y *= io.DisplayFramebufferScale.y;
+                break;
+
+            case SDL_TEXTINPUT:
+                io.AddInputCharacter(static_cast<ImWchar>(event.text.text[0]));
+                break;
+
+            default:
+                break;
         }
     }
 
-    const mml::cursor* map_cursor(ImGuiMouseCursor cursor)
+    SDL_Cursor* map_cursor(ImGuiMouseCursor cursor)
     {
-        static std::map<ImGuiMouseCursor, mml::cursor::type> cursor_map = {
-            {ImGuiMouseCursor_None, mml::cursor::not_allowed},
-            {ImGuiMouseCursor_Arrow, mml::cursor::arrow},
-            {ImGuiMouseCursor_ResizeAll, mml::cursor::size_all},
-            {ImGuiMouseCursor_TextInput, mml::cursor::text},
-            {ImGuiMouseCursor_ResizeNS, mml::cursor::size_vertical},
-            {ImGuiMouseCursor_ResizeEW, mml::cursor::size_horizontal},
-            {ImGuiMouseCursor_ResizeNESW, mml::cursor::size_bottom_left_top_right},
-            {ImGuiMouseCursor_ResizeNWSE, mml::cursor::size_top_left_bottom_right},
-
-            {ImGuiMouseCursor_Hand, mml::cursor::hand},
-            {ImGuiMouseCursor_NotAllowed, mml::cursor::not_allowed},
-            {ImGuiMouseCursor_Help, mml::cursor::help},
-            {ImGuiMouseCursor_Wait, mml::cursor::wait},
-            {ImGuiMouseCursor_ArrowWait, mml::cursor::arrow_wait},
-            {ImGuiMouseCursor_Cross, mml::cursor::cross},
-
+        static std::map<ImGuiMouseCursor, SDL_SystemCursor> cursor_map = {
+            {ImGuiMouseCursor_None, SDL_SYSTEM_CURSOR_NO},
+            {ImGuiMouseCursor_Arrow, SDL_SYSTEM_CURSOR_ARROW},
+            {ImGuiMouseCursor_ResizeAll, SDL_SYSTEM_CURSOR_SIZEALL},
+            {ImGuiMouseCursor_TextInput, SDL_SYSTEM_CURSOR_IBEAM},
+            {ImGuiMouseCursor_ResizeNS, SDL_SYSTEM_CURSOR_SIZENS},
+            {ImGuiMouseCursor_ResizeEW, SDL_SYSTEM_CURSOR_SIZEWE},
+            {ImGuiMouseCursor_ResizeNESW, SDL_SYSTEM_CURSOR_SIZENESW},
+            {ImGuiMouseCursor_ResizeNWSE, SDL_SYSTEM_CURSOR_SIZENWSE},
+            {ImGuiMouseCursor_Hand, SDL_SYSTEM_CURSOR_HAND},
+            {ImGuiMouseCursor_NotAllowed, SDL_SYSTEM_CURSOR_NO},
+            //     {ImGuiMouseCursor_Help, SDL_SYSTEM_CURSOR_HELP},
+            {ImGuiMouseCursor_Wait, SDL_SYSTEM_CURSOR_WAIT},
+            {ImGuiMouseCursor_ArrowWait, SDL_SYSTEM_CURSOR_WAITARROW},
+            //        {ImGuiMouseCursor_Cross, SDL_SYSTEM_CURSOR_CROSShair},
         };
-        auto                                                             id = cursor_map[cursor];
-        static std::map<mml::cursor::type, std::unique_ptr<mml::cursor>> cursors;
+
+        auto id = cursor_map[cursor];
+
         if (cursors.find(id) == cursors.end())
         {
-            auto cursor = std::make_unique<mml::cursor>();
-            if (cursor->load_from_system(id))
+            SDL_Cursor* sdl_cursor = SDL_CreateSystemCursor(id);
+            if (sdl_cursor != nullptr)
             {
-                cursors.emplace(id, std::move(cursor));
+                cursors.emplace(id, sdl_cursor);
             }
         }
 
-        return cursors[id].get();
+        return cursors[id];
+    }
+
+    void cleanup_cursors()
+    {
+        for (auto& cursor_pair : cursors)
+        {
+            SDL_FreeCursor(cursor_pair.second);
+        }
+        cursors.clear();
     }
 
     void imgui_frame_begin() { gui::CleanupTextures(); }
@@ -272,7 +278,7 @@ namespace
         relative_rect.top    = 0;
         relative_rect.right  = static_cast<std::int32_t>(w);
         relative_rect.bottom = static_cast<std::int32_t>(h);
-        auto mouse_pos       = mml::mouse::get_position(window);
+        auto mouse_pos       = window.get_mouse_position_in_window();
 
         if (window.has_focus() && relative_rect.contains({mouse_pos[0], mouse_pos[1]}))
         {
@@ -280,7 +286,7 @@ namespace
             auto        cursor           = map_cursor(gui::GetMouseCursor());
             if ((cursor != nullptr) && last_cursor_type != gui::GetMouseCursor())
             {
-                window.set_mouse_cursor(*cursor);
+                window.set_mouse_cursor(cursor);
             }
 
             last_cursor_type = gui::GetMouseCursor();
@@ -331,31 +337,30 @@ namespace
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
         io.IniFilename = nullptr;
         // init keyboard mapping
-        io.KeyMap[ImGuiKey_Tab]        = mml::keyboard::Tab;
-        io.KeyMap[ImGuiKey_LeftArrow]  = mml::keyboard::Left;
-        io.KeyMap[ImGuiKey_RightArrow] = mml::keyboard::Right;
-        io.KeyMap[ImGuiKey_UpArrow]    = mml::keyboard::Up;
-        io.KeyMap[ImGuiKey_DownArrow]  = mml::keyboard::Down;
-        io.KeyMap[ImGuiKey_PageUp]     = mml::keyboard::PageUp;
-        io.KeyMap[ImGuiKey_PageDown]   = mml::keyboard::PageDown;
-        io.KeyMap[ImGuiKey_Home]       = mml::keyboard::Home;
-        io.KeyMap[ImGuiKey_End]        = mml::keyboard::End;
-        io.KeyMap[ImGuiKey_Insert]     = mml::keyboard::Insert;
-        io.KeyMap[ImGuiKey_Delete]     = mml::keyboard::Delete;
-        io.KeyMap[ImGuiKey_Backspace]  = mml::keyboard::Backspace;
-        io.KeyMap[ImGuiKey_Space]      = mml::keyboard::Space;
-        io.KeyMap[ImGuiKey_Enter]      = mml::keyboard::Enter;
-        io.KeyMap[ImGuiKey_Escape]     = mml::keyboard::Escape;
-        io.KeyMap[ImGuiKey_A]          = mml::keyboard::A;
-        io.KeyMap[ImGuiKey_C]          = mml::keyboard::C;
-        io.KeyMap[ImGuiKey_V]          = mml::keyboard::V;
-        io.KeyMap[ImGuiKey_X]          = mml::keyboard::X;
-        io.KeyMap[ImGuiKey_Y]          = mml::keyboard::Y;
-        io.KeyMap[ImGuiKey_Z]          = mml::keyboard::Z;
-
-        std::uint8_t* data   = nullptr;
-        int           width  = 0;
-        int           height = 0;
+        io.KeyMap[ImGuiKey_Tab]        = SDL_SCANCODE_TAB;
+        io.KeyMap[ImGuiKey_LeftArrow]  = SDL_SCANCODE_LEFT;
+        io.KeyMap[ImGuiKey_RightArrow] = SDL_SCANCODE_RIGHT;
+        io.KeyMap[ImGuiKey_UpArrow]    = SDL_SCANCODE_UP;
+        io.KeyMap[ImGuiKey_DownArrow]  = SDL_SCANCODE_DOWN;
+        io.KeyMap[ImGuiKey_PageUp]     = SDL_SCANCODE_PAGEUP;
+        io.KeyMap[ImGuiKey_PageDown]   = SDL_SCANCODE_PAGEDOWN;
+        io.KeyMap[ImGuiKey_Home]       = SDL_SCANCODE_HOME;
+        io.KeyMap[ImGuiKey_End]        = SDL_SCANCODE_END;
+        io.KeyMap[ImGuiKey_Insert]     = SDL_SCANCODE_INSERT;
+        io.KeyMap[ImGuiKey_Delete]     = SDL_SCANCODE_DELETE;
+        io.KeyMap[ImGuiKey_Backspace]  = SDL_SCANCODE_BACKSPACE;
+        io.KeyMap[ImGuiKey_Space]      = SDL_SCANCODE_SPACE;
+        io.KeyMap[ImGuiKey_Enter]      = SDL_SCANCODE_RETURN;
+        io.KeyMap[ImGuiKey_Escape]     = SDL_SCANCODE_ESCAPE;
+        io.KeyMap[ImGuiKey_A]          = SDL_SCANCODE_A;
+        io.KeyMap[ImGuiKey_C]          = SDL_SCANCODE_C;
+        io.KeyMap[ImGuiKey_V]          = SDL_SCANCODE_V;
+        io.KeyMap[ImGuiKey_X]          = SDL_SCANCODE_X;
+        io.KeyMap[ImGuiKey_Y]          = SDL_SCANCODE_Y;
+        io.KeyMap[ImGuiKey_Z]          = SDL_SCANCODE_Z;
+        std::uint8_t* data             = nullptr;
+        int           width            = 0;
+        int           height           = 0;
 
         ImFontConfig config;
         config.FontDataOwnedByAtlas = false;
@@ -423,6 +428,8 @@ gui_system::~gui_system()
     runtime::on_platform_events.connect(this, &gui_system::platform_events);
     runtime::on_frame_begin.disconnect(this, &gui_system::frame_begin);
 
+    cleanup_cursors();
+
     imgui_dispose();
     imgui_destroy_context(initial_context_);
 }
@@ -456,13 +463,13 @@ void gui_system::draw_end() { imgui_frame_end(); }
 
 void gui_system::pop_context() { imgui_set_context(initial_context_); }
 
-void gui_system::platform_events(const std::pair<std::uint32_t, bool>& info, const std::vector<mml::platform_event>& events)
+void gui_system::platform_events(const std::pair<std::uint32_t, bool>& info, const std::vector<SDL_Event>& events)
 {
     const auto window_id = info.first;
     push_context(window_id);
     for (const auto& e : events)
     {
-        if (e.type == mml::platform_event::closed)
+        if (e.type == SDL_QUIT || (e.type == SDL_WINDOWEVENT && e.window.event == SDL_WINDOWEVENT_CLOSE))
         {
             pop_context();
             auto context = contexts_[window_id];

@@ -5,11 +5,11 @@
 ////////////////////////////////////////////////////////////
 #include <core/graphics/render_pass.h>
 
-#include <mml/window/window.hpp>
+#include <runtime/rendering/sdl_window.h>
 
 #include <memory>
 
-class render_window : public mml::window
+class render_window : public window_sdl
 {
 public:
     //-----------------------------------------------------------------------------
@@ -26,7 +26,7 @@ public:
     /// Constructor
     /// </summary>
     //-----------------------------------------------------------------------------
-    render_window(mml::video_mode mode, const std::string& title, std::uint32_t style = mml::style::standard);
+    render_window(const char* title, int w, int h, std::uint32_t flags = SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
 
     //-----------------------------------------------------------------------------
     //  Name : ~render_window (virtual )
@@ -34,7 +34,7 @@ public:
     /// Destructor.
     /// </summary>
     //-----------------------------------------------------------------------------
-    ~render_window() override;
+    ~render_window();
 
     //-----------------------------------------------------------------------------
     //  Name : get_surface ()
@@ -84,7 +84,7 @@ protected:
     /// perform custom actions when the size of the window changes.
     /// </summary>
     //-----------------------------------------------------------------------------
-    void on_resize() override;
+    void on_resize();
 
     /// Window id.
     std::uint32_t id_ = 0;

@@ -443,7 +443,7 @@ void hierarchy_dock::draw_entity(runtime::entity entity)
     {
         if (is_selected && !gui::IsAnyItemActive())
         {
-            if (input.is_key_pressed(mml::keyboard::F2))
+            if (input.is_key_pressed(SDLK_F2))
             {
                 edit_label_ = true;
                 gui::SetKeyboardFocusHere();
@@ -571,7 +571,7 @@ void hierarchy_dock::render(const ImVec2& /*unused*/)
 
         if (gui::IsWindowFocused())
         {
-            if (input.is_key_pressed(mml::keyboard::Delete))
+            if (input.is_key_pressed(SDLK_DELETE))
             {
                 if (selected && selected.is_type<runtime::entity>())
                 {
@@ -584,7 +584,7 @@ void hierarchy_dock::render(const ImVec2& /*unused*/)
                 }
             }
 
-            if (input.is_key_pressed(mml::keyboard::D, mml::keyboard::LControl))
+            if (input.is_key_pressed(SDLK_d, SDLK_LCTRL))
             {
                 if (selected && selected.is_type<runtime::entity>())
                 {
@@ -603,7 +603,7 @@ void hierarchy_dock::render(const ImVec2& /*unused*/)
                 }
             }
         }
-        if (input.is_key_pressed(mml::keyboard::F, mml::keyboard::LShift))
+        if (input.is_key_pressed(SDLK_f, SDLK_LSHIFT))
         {
             if (selected && selected.is_type<runtime::entity>())
             {

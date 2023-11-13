@@ -295,7 +295,7 @@ void draw_selected_camera(const ImVec2& size)
             }
             gui::End();
 
-            if (input.is_key_pressed(mml::keyboard::F) && sel.has_component<transform_component>())
+            if (input.is_key_pressed(SDLK_f) && sel.has_component<transform_component>())
             {
                 auto transform          = editor_camera.get_component<transform_component>().lock();
                 auto transform_selected = sel.get_component<transform_component>().lock();
@@ -314,26 +314,26 @@ void manipulation_gizmos()
     auto& operation     = es.operation;
     auto& mode          = es.mode;
 
-    if (!input.is_mouse_button_down(mml::mouse::right) && !gui::IsAnyItemActive() && !imguizmo::is_using())
+    if (!input.is_mouse_button_down(SDL_BUTTON_RIGHT) && !gui::IsAnyItemActive() && !imguizmo::is_using())
     {
-        if (input.is_key_pressed(mml::keyboard::W))
+        if (input.is_key_pressed(SDLK_w))
         {
             operation = imguizmo::operation::translate;
         }
-        if (input.is_key_pressed(mml::keyboard::E))
+        if (input.is_key_pressed(SDLK_e))
         {
             operation = imguizmo::operation::rotate;
         }
-        if (input.is_key_pressed(mml::keyboard::R))
+        if (input.is_key_pressed(SDLK_r))
         {
             operation = imguizmo::operation::scale;
             mode      = imguizmo::mode::local;
         }
-        if (input.is_key_pressed(mml::keyboard::T))
+        if (input.is_key_pressed(SDLK_t))
         {
             mode = imguizmo::mode::local;
         }
-        if (input.is_key_pressed(mml::keyboard::Y) && operation != imguizmo::operation::scale)
+        if (input.is_key_pressed(SDLK_y) && operation != imguizmo::operation::scale)
         {
             mode = imguizmo::mode::world;
         }
@@ -352,7 +352,7 @@ void manipulation_gizmos()
             auto            transform      = transform_comp->get_transform();
             math::transform delta;
             float*          snap = nullptr;
-            if (input.is_key_down(mml::keyboard::LControl))
+            if (input.is_key_down(SDLK_LCTRL))
             {
                 if (operation == imguizmo::operation::translate)
                 {
@@ -413,12 +413,12 @@ void handle_camera_movement()
     auto& sim   = core::get_subsystem<core::simulation>();
     auto& rend  = core::get_subsystem<runtime::renderer>();
 
-    if (input.is_mouse_button_down(mml::mouse::right))
+    if (input.is_mouse_button_down(SDL_BUTTON_RIGHT))
     {
         auto wnd = rend.get_focused_window();
         if (wnd)
         {
-            auto    pos         = mml::mouse::get_position(*wnd);
+            auto    pos         = wnd->get_mouse_position_in_window();
             auto    result      = pos;
             auto    win_pos     = gui::GetWindowPos();
             auto    win_size    = gui::GetWindowSize();
@@ -447,14 +447,14 @@ void handle_camera_movement()
             }
             if (result != pos)
             {
-                mml::mouse::set_position(result, *wnd);
-                mml::platform_event ev;
-                ev.type = mml::platform_event::event_type::mouse_moved;
+                wnd->set_mouse_position_in_window(result);
+                SDL_Event ev;
+                ev.type = SDL_MOUSEMOTION;
 
-                ev.mouse_move.x = result[0];
-                ev.mouse_move.y = result[1];
+                ev.motion.x = result[0];
+                ev.motion.y = result[1];
                 input.mouse_event(ev);
-                input.mouse_event(ev);
+                // input.mouse_event(ev);
             }
         }
     }
@@ -468,79 +468,62 @@ void handle_camera_movement()
     float multiplier     = 5.0f;
     auto  delta_move     = input.get_cursor_delta_move();
 
-    if (input.is_mouse_button_down(mml::mouse::middle))
+    if (input.is_mouse_button_down(SDL_BUTTON_MIDDLE))
     {
-        if (input.is_key_down(mml::keyboard::LShift))
+        if (input.is_key_down(SDLK_LSHIFT))
         {
             movement_speed *= multiplier;
         }
 
-        if (delta_move.x != 0)
-        {
-            transform->move_local({-1 * delta_move.x * movement_speed * dt, 0.0f, 0.0f});
-        }
-        if (delta_move.y != 0)
-        {
-            transform->move_local({0.0f, delta_move.y * movement_speed * dt, 0.0f});
-        }
-    }
-
-    if (input.is_mouse_button_down(mml::mouse::right))
-    {
-        if (input.is_key_down(mml::keyboard::LShift))
-        {
-            movement_speed *= multiplier;
-        }
-
-        if (input.is_key_down(mml::keyboard::W))
+        if (input.is_key_down(SDLK_w))
         {
             transform->move_local({0.0f, 0.0f, movement_speed * dt});
         }
 
-        if (input.is_key_down(mml::keyboard::S))
+        if (input.is_key_down(SDLK_s))
         {
             transform->move_local({0.0f, 0.0f, -movement_speed * dt});
         }
 
-        if (input.is_key_down(mml::keyboard::A))
+        if (input.is_key_down(SDLK_a))
         {
             transform->move_local({-movement_speed * dt, 0.0f, 0.0f});
         }
 
-        if (input.is_key_down(mml::keyboard::D))
+        if (input.is_key_down(SDLK_d))
         {
             transform->move_local({movement_speed * dt, 0.0f, 0.0f});
         }
-        if (input.is_key_down(mml::keyboard::Up))
+
+        if (input.is_key_down(SDLK_UP))
         {
             transform->move_local({0.0f, 0.0f, movement_speed * dt});
         }
 
-        if (input.is_key_down(mml::keyboard::Down))
+        if (input.is_key_down(SDLK_DOWN))
         {
             transform->move_local({0.0f, 0.0f, -movement_speed * dt});
         }
 
-        if (input.is_key_down(mml::keyboard::Left))
+        if (input.is_key_down(SDLK_LEFT))
         {
             transform->move_local({-movement_speed * dt, 0.0f, 0.0f});
         }
 
-        if (input.is_key_down(mml::keyboard::Right))
+        if (input.is_key_down(SDLK_RIGHT))
         {
             transform->move_local({movement_speed * dt, 0.0f, 0.0f});
         }
 
-        if (input.is_key_down(mml::keyboard::Space))
+        if (input.is_key_down(SDLK_SPACE))
         {
             transform->move_local({0.0f, movement_speed * dt, 0.0f});
         }
 
-        if (input.is_key_down(mml::keyboard::LControl))
+        if (input.is_key_down(SDLK_LCTRL))
         {
             transform->move_local({0.0f, -movement_speed * dt, 0.0f});
         }
-
         auto x = static_cast<float>(delta_move.x);
         auto y = static_cast<float>(delta_move.y);
 
@@ -722,7 +705,7 @@ void scene_dock::render(const ImVec2& area)
             gui::RenderFrameEx(gui::GetItemRectMin(), gui::GetItemRectMax(), true, 0.0f, 2.0f);
             gui::PopStyleColor();
 
-            if (input.is_key_pressed(mml::keyboard::Delete))
+            if (input.is_key_pressed(SDLK_DELETE))
             {
                 if (selected && selected.is_type<runtime::entity>())
                 {
@@ -735,9 +718,9 @@ void scene_dock::render(const ImVec2& area)
                 }
             }
 
-            if (input.is_key_pressed(mml::keyboard::D))
+            if (input.is_key_pressed(SDLK_d))
             {
-                if (input.is_key_down(mml::keyboard::LControl))
+                if (input.is_key_down(SDLK_LCTRL))
                 {
                     if (selected && selected.is_type<runtime::entity>())
                     {

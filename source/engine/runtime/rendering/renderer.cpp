@@ -22,11 +22,8 @@ namespace runtime
             return;
         }
 
-        mml::video_mode desktop = mml::video_mode::get_desktop_mode();
-        desktop.width           = 1280;
-        desktop.height          = 720;
-        auto window             = std::make_unique<render_window>(desktop, "LunarYue", mml::style::standard);
-        window->request_focus();
+        auto window = std::make_unique<render_window>("LunarYue", 1280, 720);
+        window->raise_window();
         register_window(std::move(window));
         process_pending_windows();
     }
@@ -38,6 +35,7 @@ namespace runtime
         windows_.clear();
         windows_pending_addition_.clear();
         gfx::shutdown();
+        SDL_Quit();
     }
 
     render_window* renderer::get_focused_window() const
@@ -105,11 +103,11 @@ namespace runtime
         windows_pending_addition_.clear();
     }
 
-    void renderer::platform_events(const std::pair<std::uint32_t, bool>& info, const std::vector<mml::platform_event>& events)
+    void renderer::platform_events(const std::pair<std::uint32_t, bool>& info, const std::vector<SDL_Event>& events)
     {
         for (const auto& e : events)
         {
-            if (e.type == mml::platform_event::closed)
+            if (e.type == SDL_QUIT || (e.type == SDL_WINDOWEVENT && e.window.event == SDL_WINDOWEVENT_CLOSE))
             {
                 windows_.erase(std::remove_if(std::begin(windows_),
                                               std::end(windows_),
@@ -122,14 +120,15 @@ namespace runtime
 
     bool renderer::init_backend(cmd_line::parser& parser)
     {
+        if (SDL_InitSubSystem(SDL_INIT_GAMECONTROLLER) > 0)
+        {
+            APPLOG_ERROR("Couldn't initialize SDL: {}", SDL_GetError());
+            return false;
+        }
 
-        mml::video_mode desktop = mml::video_mode::get_desktop_mode();
-        desktop.width           = 100;
-        desktop.height          = 100;
-        init_window_            = std::make_unique<mml::window>(desktop, "App", mml::style::none);
-        init_window_->set_visible(false);
-        const auto sz = init_window_->get_size();
+        std::unique_ptr<window_sdl> init_window = std::make_unique<window_sdl>("init window", 100, 100);
 
+        auto size = init_window->get_size();
         //	gfx::platform_data pd;
         //	pd.ndt = init_window_->native_display_handle();
         //	pd.nwh = reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(init_window_->native_handle()));
@@ -162,12 +161,11 @@ namespace runtime
 
         gfx::init_type init_data;
         init_data.type              = preferred_renderer_type;
-        init_data.resolution.width  = sz[0];
-        init_data.resolution.height = sz[1];
+        init_data.resolution.width  = size[0];
+        init_data.resolution.height = size[1];
         init_data.resolution.reset  = BGFX_RESET_VSYNC;
-        init_data.platformData.ndt  = init_window_->native_display_handle();
-        ;
-        init_data.platformData.nwh = reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(init_window_->native_handle()));
+        // init_data.platformData.ndt = init_data.platformData.ndt = init_window_->native_display_handle();
+        init_data.platformData.nwh = reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(init_window->get_native_window_handle()));
 
         bool novsync = false;
         parser.try_get("novsync", novsync);
@@ -192,6 +190,8 @@ namespace runtime
         {
             APPLOG_WARNING("Directx 12 support is experimental and unstable.");
         }
+
+        init_window.reset();
 
         return true;
     }
