@@ -5,11 +5,13 @@
 
 #include "SDL2/SDL.h"
 
+struct ImGuiPlatformIO;
+
 class window_sdl
 {
 public:
     window_sdl();
-    window_sdl(const char* title, int w, int h, std::uint32_t flags = SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
+    window_sdl(const char* title, int32_t w, int32_t h, int32_t x, int32_t y, std::uint32_t flags);
     ~window_sdl();
 
     void set_visible(bool visible);
@@ -24,7 +26,6 @@ public:
 
     void raise_window();
     bool has_focus();
-    bool poll_event(SDL_Event& event);
 
     void* get_native_window_handle();
     void  destroy_window();
@@ -48,7 +49,13 @@ public:
 
     void set_opacity(float opacity);
 
+    bool get_window_minimized();
+
+    uint32_t get_window_id();
+
     void request_close();
+
+    static bool poll_event(SDL_Event& event);
 
 private:
     SDL_Window* window_;

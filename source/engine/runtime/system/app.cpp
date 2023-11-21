@@ -73,39 +73,14 @@ namespace runtime
 
     void poll_events()
     {
-        auto&       renderer = core::get_subsystem<runtime::renderer>();
-        const auto& windows  = renderer.get_windows();
-
-        std::uint32_t                                   focused_id = 0;
-        std::map<std::uint32_t, std::vector<SDL_Event>> collected_events;
-        for (const auto& window : windows)
+        std::vector<SDL_Event> events;
+        SDL_Event              e;
+        while (render_window::poll_event(e))
         {
-            const auto             id = window->get_id();
-            std::vector<SDL_Event> events;
-            SDL_Event              e;
-            while (window->poll_event(e))
-            {
-                events.emplace_back(e);
-            }
-
-            if (window->has_focus())
-            {
-                focused_id = id;
-            }
-
-            if (!events.empty())
-            {
-                collected_events.emplace(id, std::move(events));
-            }
+            events.emplace_back(e);
         }
 
-        for (const auto& event_pair : collected_events)
-        {
-            const auto                     id     = event_pair.first;
-            const auto&                    events = event_pair.second;
-            std::pair<std::uint32_t, bool> info {id, (id == focused_id)};
-            on_platform_events(info, events);
-        }
+        on_platform_events(events);
     }
 
     void app::run_one_frame()

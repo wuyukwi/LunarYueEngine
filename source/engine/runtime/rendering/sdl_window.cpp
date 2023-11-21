@@ -12,9 +12,9 @@ window_sdl::window_sdl()
     window_ = (SDL_CreateWindow("sdl_window", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 100, 100, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE));
 }
 
-window_sdl::window_sdl(const char* title, int w, int h, std::uint32_t flags)
+window_sdl::window_sdl(const char* title, int32_t w, int32_t h, int32_t x, int32_t y, std::uint32_t flags)
 {
-    window_ = (SDL_CreateWindow(title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, w, h, flags));
+    window_ = (SDL_CreateWindow(title, x, y, w, h, flags));
 }
 
 window_sdl::~window_sdl() { SDL_DestroyWindow(window_); }
@@ -178,6 +178,10 @@ void window_sdl::set_opacity(float opacity)
     // Set window opacity
     SDL_SetWindowOpacity(window_, alpha);
 }
+
+bool window_sdl::get_window_minimized() { return (SDL_GetWindowFlags(window_) & SDL_WINDOW_MINIMIZED) != 0; }
+
+uint32_t window_sdl::get_window_id() { return SDL_GetWindowID(window_); }
 
 void window_sdl::request_close()
 {

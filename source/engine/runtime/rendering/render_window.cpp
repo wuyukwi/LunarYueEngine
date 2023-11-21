@@ -3,19 +3,14 @@
 ////////////////////////////////////////////////////////////
 #include "render_window.h"
 
-static std::uint32_t s_next_id = 0;
-
 void render_window::on_resize() { render_window::prepare_surface(); }
 
-render_window::render_window() : window_sdl()
-{
-    id_ = s_next_id++;
-    render_window::prepare_surface();
-}
+render_window::render_window() : window_sdl() { render_window::prepare_surface(); }
 
-render_window::render_window(const char* title, int w, int h, std::uint32_t flags) : window_sdl(title, w, h, flags)
+render_window::render_window(const char* title, int32_t w, int32_t h, int32_t x, int32_t y, std::uint32_t flags, uint32_t id) :
+    window_sdl(title, w, h, x, y, flags)
 {
-    id_ = s_next_id++;
+
     render_window::prepare_surface();
 }
 
@@ -48,8 +43,6 @@ gfx::view_id render_window::begin_present_pass()
 
     return pass.id;
 }
-
-uint32_t render_window::get_id() const { return id_; }
 
 void render_window::prepare_surface()
 {

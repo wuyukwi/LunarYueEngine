@@ -26,7 +26,13 @@ public:
     /// Constructor
     /// </summary>
     //-----------------------------------------------------------------------------
-    render_window(const char* title, int w, int h, std::uint32_t flags = SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
+    render_window(const char*   title,
+                  int32_t       w,
+                  int32_t       h,
+                  int32_t       x     = SDL_WINDOWPOS_UNDEFINED,
+                  int32_t       y     = SDL_WINDOWPOS_UNDEFINED,
+                  std::uint32_t flags = SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE,
+                  uint32_t      id    = 0);
 
     //-----------------------------------------------------------------------------
     //  Name : ~render_window (virtual )
@@ -51,14 +57,6 @@ public:
     /// </summary>
     //-----------------------------------------------------------------------------
     gfx::view_id begin_present_pass();
-
-    //-----------------------------------------------------------------------------
-    //  Name : get_id ()
-    /// <summary>
-    /// Gets the window id.
-    /// </summary>
-    //-----------------------------------------------------------------------------
-    std::uint32_t get_id() const;
 
 protected:
     //-----------------------------------------------------------------------------
@@ -86,8 +84,6 @@ protected:
     //-----------------------------------------------------------------------------
     void on_resize();
 
-    /// Window id.
-    std::uint32_t id_ = 0;
     /// Render surface for this window.
     std::shared_ptr<gfx::frame_buffer> surface_;
 };

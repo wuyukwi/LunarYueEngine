@@ -27,14 +27,13 @@ const std::map<uint32_t, imguidock::dockspace>& docking_system::get_dockspaces()
 
 void docking_system::register_dock(std::unique_ptr<imguidock::dock> dock) { docks_.emplace_back(std::move(dock)); }
 
-void docking_system::platform_events(const std::pair<std::uint32_t, bool>& info, const const std::vector<SDL_Event>& events)
+void docking_system::platform_events(const const std::vector<SDL_Event>& events)
 {
-    const auto window_id = info.first;
     for (const auto& e : events)
     {
-        if (e.type == SDL_WINDOWEVENT_CLOSE)
+        if (e.type == SDL_WINDOWEVENT && e.window.event == SDL_WINDOWEVENT_CLOSE)
         {
-            dockspaces_.erase(window_id);
+            dockspaces_.erase(e.window.windowID);
             return;
         }
     }

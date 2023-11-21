@@ -8,5 +8,5 @@ namespace runtime
     hpp::event<void(delta_t)> on_frame_ui_render;
     hpp::event<void(delta_t)> on_frame_end;
 
-    hpp::event<void(const std::pair<std::uint32_t, bool>&, const std::vector<SDL_Event>&)> on_platform_events;
+    hpp::event<void(const std::vector<SDL_Event>&)> on_platform_events;
 } // namespace runtime

@@ -491,7 +491,7 @@ namespace imguidock
                     auto  window   = std::make_unique<render_window>(
                         "Window", static_cast<int>(current_dock_to_->last_size.x), static_cast<int>(current_dock_to_->last_size.y));
 
-                    auto& dockspace = docking.get_dockspace(window->get_id());
+                    auto& dockspace = docking.get_dockspace(window->get_window_id());
                     dockspace.dock_to(current_dock_to_, slot::tab, 0, true);
                     auto pos = window->get_mouse_position_global();
                     pos[0] -= 40;

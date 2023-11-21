@@ -15,6 +15,7 @@
 #include <runtime/input/input.h>
 #include <runtime/rendering/gpu_program.h>
 #include <runtime/rendering/render_window.h>
+#include <runtime/rendering/renderer.h>
 
 #include <editor_core/gui/embedded/editor_default.ttf.h>
 #include <editor_core/gui/embedded/fontawesome_webfont.ttf.h>
@@ -50,7 +51,7 @@ namespace
         if (fb_width <= 0 || fb_height <= 0)
             return;
 
-        //_draw_data->ScaleClipRects(io.DisplayFramebufferScale);
+        _draw_data->ScaleClipRects(gui::GetIO().DisplayFramebufferScale);
 
         auto              viewId = gfx::render_pass::get_pass();
         const bgfx::Caps* caps   = bgfx::getCaps();
@@ -121,13 +122,17 @@ namespace
                     const std::uint16_t width  = std::uint16_t(std::min(cmd->ClipRect.z, 65535.0f) - x);
                     const std::uint16_t height = std::uint16_t(std::min(cmd->ClipRect.w, 65535.0f) - y);
 
-                    program->set_texture(0, "s_tex", tex);
-
-                    gfx::set_scissor(x, y, width, height);
                     gfx::set_state(state);
                     gfx::set_vertex_buffer(0, &tvb, 0, num_vertices);
                     gfx::set_index_buffer(&tib, offset, cmd->ElemCount);
+
+                    gfx::set_scissor(x, y, width, height);
+
+                    program->set_texture(0, "s_tex", tex);
+
                     gfx::submit(viewId, program->native_handle());
+
+                    gfx::set_scissor(0, 0, 0, 0);
                     s_draw_calls++;
                 }
 
@@ -137,61 +142,340 @@ namespace
         program->end();
     }
 
+    static ImGuiKey ImGui_ImplSDL2_KeycodeToImGuiKey(int keycode)
+    {
+        switch (keycode)
+        {
+            case SDLK_TAB:
+                return ImGuiKey_Tab;
+            case SDLK_LEFT:
+                return ImGuiKey_LeftArrow;
+            case SDLK_RIGHT:
+                return ImGuiKey_RightArrow;
+            case SDLK_UP:
+                return ImGuiKey_UpArrow;
+            case SDLK_DOWN:
+                return ImGuiKey_DownArrow;
+            case SDLK_PAGEUP:
+                return ImGuiKey_PageUp;
+            case SDLK_PAGEDOWN:
+                return ImGuiKey_PageDown;
+            case SDLK_HOME:
+                return ImGuiKey_Home;
+            case SDLK_END:
+                return ImGuiKey_End;
+            case SDLK_INSERT:
+                return ImGuiKey_Insert;
+            case SDLK_DELETE:
+                return ImGuiKey_Delete;
+            case SDLK_BACKSPACE:
+                return ImGuiKey_Backspace;
+            case SDLK_SPACE:
+                return ImGuiKey_Space;
+            case SDLK_RETURN:
+                return ImGuiKey_Enter;
+            case SDLK_ESCAPE:
+                return ImGuiKey_Escape;
+            case SDLK_QUOTE:
+                return ImGuiKey_Apostrophe;
+            case SDLK_COMMA:
+                return ImGuiKey_Comma;
+            case SDLK_MINUS:
+                return ImGuiKey_Minus;
+            case SDLK_PERIOD:
+                return ImGuiKey_Period;
+            case SDLK_SLASH:
+                return ImGuiKey_Slash;
+            case SDLK_SEMICOLON:
+                return ImGuiKey_Semicolon;
+            case SDLK_EQUALS:
+                return ImGuiKey_Equal;
+            case SDLK_LEFTBRACKET:
+                return ImGuiKey_LeftBracket;
+            case SDLK_BACKSLASH:
+                return ImGuiKey_Backslash;
+            case SDLK_RIGHTBRACKET:
+                return ImGuiKey_RightBracket;
+            case SDLK_BACKQUOTE:
+                return ImGuiKey_GraveAccent;
+            case SDLK_CAPSLOCK:
+                return ImGuiKey_CapsLock;
+            case SDLK_SCROLLLOCK:
+                return ImGuiKey_ScrollLock;
+            case SDLK_NUMLOCKCLEAR:
+                return ImGuiKey_NumLock;
+            case SDLK_PRINTSCREEN:
+                return ImGuiKey_PrintScreen;
+            case SDLK_PAUSE:
+                return ImGuiKey_Pause;
+            case SDLK_KP_0:
+                return ImGuiKey_Keypad0;
+            case SDLK_KP_1:
+                return ImGuiKey_Keypad1;
+            case SDLK_KP_2:
+                return ImGuiKey_Keypad2;
+            case SDLK_KP_3:
+                return ImGuiKey_Keypad3;
+            case SDLK_KP_4:
+                return ImGuiKey_Keypad4;
+            case SDLK_KP_5:
+                return ImGuiKey_Keypad5;
+            case SDLK_KP_6:
+                return ImGuiKey_Keypad6;
+            case SDLK_KP_7:
+                return ImGuiKey_Keypad7;
+            case SDLK_KP_8:
+                return ImGuiKey_Keypad8;
+            case SDLK_KP_9:
+                return ImGuiKey_Keypad9;
+            case SDLK_KP_PERIOD:
+                return ImGuiKey_KeypadDecimal;
+            case SDLK_KP_DIVIDE:
+                return ImGuiKey_KeypadDivide;
+            case SDLK_KP_MULTIPLY:
+                return ImGuiKey_KeypadMultiply;
+            case SDLK_KP_MINUS:
+                return ImGuiKey_KeypadSubtract;
+            case SDLK_KP_PLUS:
+                return ImGuiKey_KeypadAdd;
+            case SDLK_KP_ENTER:
+                return ImGuiKey_KeypadEnter;
+            case SDLK_KP_EQUALS:
+                return ImGuiKey_KeypadEqual;
+            case SDLK_LCTRL:
+                return ImGuiKey_LeftCtrl;
+            case SDLK_LSHIFT:
+                return ImGuiKey_LeftShift;
+            case SDLK_LALT:
+                return ImGuiKey_LeftAlt;
+            case SDLK_LGUI:
+                return ImGuiKey_LeftSuper;
+            case SDLK_RCTRL:
+                return ImGuiKey_RightCtrl;
+            case SDLK_RSHIFT:
+                return ImGuiKey_RightShift;
+            case SDLK_RALT:
+                return ImGuiKey_RightAlt;
+            case SDLK_RGUI:
+                return ImGuiKey_RightSuper;
+            case SDLK_APPLICATION:
+                return ImGuiKey_Menu;
+            case SDLK_0:
+                return ImGuiKey_0;
+            case SDLK_1:
+                return ImGuiKey_1;
+            case SDLK_2:
+                return ImGuiKey_2;
+            case SDLK_3:
+                return ImGuiKey_3;
+            case SDLK_4:
+                return ImGuiKey_4;
+            case SDLK_5:
+                return ImGuiKey_5;
+            case SDLK_6:
+                return ImGuiKey_6;
+            case SDLK_7:
+                return ImGuiKey_7;
+            case SDLK_8:
+                return ImGuiKey_8;
+            case SDLK_9:
+                return ImGuiKey_9;
+            case SDLK_a:
+                return ImGuiKey_A;
+            case SDLK_b:
+                return ImGuiKey_B;
+            case SDLK_c:
+                return ImGuiKey_C;
+            case SDLK_d:
+                return ImGuiKey_D;
+            case SDLK_e:
+                return ImGuiKey_E;
+            case SDLK_f:
+                return ImGuiKey_F;
+            case SDLK_g:
+                return ImGuiKey_G;
+            case SDLK_h:
+                return ImGuiKey_H;
+            case SDLK_i:
+                return ImGuiKey_I;
+            case SDLK_j:
+                return ImGuiKey_J;
+            case SDLK_k:
+                return ImGuiKey_K;
+            case SDLK_l:
+                return ImGuiKey_L;
+            case SDLK_m:
+                return ImGuiKey_M;
+            case SDLK_n:
+                return ImGuiKey_N;
+            case SDLK_o:
+                return ImGuiKey_O;
+            case SDLK_p:
+                return ImGuiKey_P;
+            case SDLK_q:
+                return ImGuiKey_Q;
+            case SDLK_r:
+                return ImGuiKey_R;
+            case SDLK_s:
+                return ImGuiKey_S;
+            case SDLK_t:
+                return ImGuiKey_T;
+            case SDLK_u:
+                return ImGuiKey_U;
+            case SDLK_v:
+                return ImGuiKey_V;
+            case SDLK_w:
+                return ImGuiKey_W;
+            case SDLK_x:
+                return ImGuiKey_X;
+            case SDLK_y:
+                return ImGuiKey_Y;
+            case SDLK_z:
+                return ImGuiKey_Z;
+            case SDLK_F1:
+                return ImGuiKey_F1;
+            case SDLK_F2:
+                return ImGuiKey_F2;
+            case SDLK_F3:
+                return ImGuiKey_F3;
+            case SDLK_F4:
+                return ImGuiKey_F4;
+            case SDLK_F5:
+                return ImGuiKey_F5;
+            case SDLK_F6:
+                return ImGuiKey_F6;
+            case SDLK_F7:
+                return ImGuiKey_F7;
+            case SDLK_F8:
+                return ImGuiKey_F8;
+            case SDLK_F9:
+                return ImGuiKey_F9;
+            case SDLK_F10:
+                return ImGuiKey_F10;
+            case SDLK_F11:
+                return ImGuiKey_F11;
+            case SDLK_F12:
+                return ImGuiKey_F12;
+        }
+        return ImGuiKey_None;
+    }
+
+    static void ImGui_ImplSDL2_UpdateKeyModifiers(SDL_Keymod sdl_key_mods)
+    {
+        ImGuiIO& io = ImGui::GetIO();
+        io.AddKeyEvent(ImGuiMod_Ctrl, (sdl_key_mods & KMOD_CTRL) != 0);
+        io.AddKeyEvent(ImGuiMod_Shift, (sdl_key_mods & KMOD_SHIFT) != 0);
+        io.AddKeyEvent(ImGuiMod_Alt, (sdl_key_mods & KMOD_ALT) != 0);
+        io.AddKeyEvent(ImGuiMod_Super, (sdl_key_mods & KMOD_GUI) != 0);
+    }
+
     void imgui_handle_event(const SDL_Event& event)
     {
-        auto& io = ImGui::GetIO();
+        ImGuiIO& io = ImGui::GetIO();
 
         switch (event.type)
         {
-            case SDL_QUIT:
-                // Handle quit event if needed
+            case SDL_MOUSEMOTION: {
+                ImVec2 mouse_pos((float)event.motion.x, (float)event.motion.y);
+                if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+                {
+                    int window_x, window_y;
+                    SDL_GetWindowPosition(SDL_GetWindowFromID(event.motion.windowID), &window_x, &window_y);
+                    mouse_pos.x += window_x;
+                    mouse_pos.y += window_y;
+                }
+                io.AddMouseSourceEvent(event.motion.which == SDL_TOUCH_MOUSEID ? ImGuiMouseSource_TouchScreen : ImGuiMouseSource_Mouse);
+                io.AddMousePosEvent(mouse_pos.x, mouse_pos.y);
                 break;
+            }
 
-            case SDL_WINDOWEVENT:
-                // Handle window events if needed
+            case SDL_MOUSEWHEEL: {
+                // IMGUI_DEBUG_LOG("wheel %.2f %.2f, precise %.2f %.2f\n", (float)event->wheel.x, (float)event->wheel.y, event->wheel.preciseX,
+                // event->wheel.preciseY);
+                float wheel_x = -event.wheel.preciseX;
+                float wheel_y = event.wheel.preciseY;
+                io.AddMouseSourceEvent(event.wheel.which == SDL_TOUCH_MOUSEID ? ImGuiMouseSource_TouchScreen : ImGuiMouseSource_Mouse);
+                io.AddMouseWheelEvent(wheel_x, wheel_y);
                 break;
-
-            case SDL_KEYDOWN:
-                io.KeysDown[event.key.keysym.scancode] = true;
-                io.KeyAlt                              = (event.key.keysym.mod & KMOD_ALT) != 0;
-                io.KeyCtrl                             = (event.key.keysym.mod & KMOD_CTRL) != 0;
-                io.KeyShift                            = (event.key.keysym.mod & KMOD_SHIFT) != 0;
-                io.KeySuper                            = (event.key.keysym.mod & KMOD_GUI) != 0;
-                break;
-
-            case SDL_KEYUP:
-                io.KeysDown[event.key.keysym.scancode] = false;
-                io.KeyAlt                              = (event.key.keysym.mod & KMOD_ALT) != 0;
-                io.KeyCtrl                             = (event.key.keysym.mod & KMOD_CTRL) != 0;
-                io.KeyShift                            = (event.key.keysym.mod & KMOD_SHIFT) != 0;
-                io.KeySuper                            = (event.key.keysym.mod & KMOD_GUI) != 0;
-                break;
-
-            case SDL_MOUSEWHEEL:
-                io.MouseWheel += event.wheel.y;
-                break;
+            }
 
             case SDL_MOUSEBUTTONDOWN:
-                io.MouseDown[event.button.button - 1] = true;
+            case SDL_MOUSEBUTTONUP: {
+                int mouse_button = -1;
+                if (event.button.button == SDL_BUTTON_LEFT)
+                {
+                    mouse_button = 0;
+                }
+                if (event.button.button == SDL_BUTTON_RIGHT)
+                {
+                    mouse_button = 1;
+                }
+                if (event.button.button == SDL_BUTTON_MIDDLE)
+                {
+                    mouse_button = 2;
+                }
+                if (event.button.button == SDL_BUTTON_X1)
+                {
+                    mouse_button = 3;
+                }
+                if (event.button.button == SDL_BUTTON_X2)
+                {
+                    mouse_button = 4;
+                }
+                if (mouse_button == -1)
+                    break;
+                io.AddMouseSourceEvent(event.button.which == SDL_TOUCH_MOUSEID ? ImGuiMouseSource_TouchScreen : ImGuiMouseSource_Mouse);
+                io.AddMouseButtonEvent(mouse_button, (event.type == SDL_MOUSEBUTTONDOWN));
                 break;
+            }
 
-            case SDL_MOUSEBUTTONUP:
-                io.MouseDown[event.button.button - 1] = false;
+            case SDL_TEXTINPUT: {
+                io.AddInputCharactersUTF8(event.text.text);
                 break;
+            }
 
-            case SDL_MOUSEMOTION:
-                io.MousePos.x = static_cast<float>(event.motion.x);
-                io.MousePos.y = static_cast<float>(event.motion.y);
-                io.MousePos.x *= io.DisplayFramebufferScale.x;
-                io.MousePos.y *= io.DisplayFramebufferScale.y;
+            case SDL_KEYDOWN:
+            case SDL_KEYUP: {
+                ImGui_ImplSDL2_UpdateKeyModifiers((SDL_Keymod)event.key.keysym.mod);
+                ImGuiKey key = ImGui_ImplSDL2_KeycodeToImGuiKey(event.key.keysym.sym);
+                io.AddKeyEvent(key, (event.type == SDL_KEYDOWN));
+                io.SetKeyEventNativeData(
+                    key,
+                    event.key.keysym.sym,
+                    event.key.keysym.scancode,
+                    event.key.keysym
+                        .scancode); // To support legacy indexing (<1.87 user code). Legacy backend uses SDLK_*** as indices to IsKeyXXX() functions.
                 break;
+            }
 
-            case SDL_TEXTINPUT:
-                io.AddInputCharacter(static_cast<ImWchar>(event.text.text[0]));
+            case SDL_WINDOWEVENT: {
+                // - When capturing mouse, SDL will send a bunch of conflicting LEAVE/ENTER event on every mouse move, but the final ENTER tends to be
+                // right.
+                // - However we won't get a correct LEAVE event for a captured window.
+                // - In some cases, when detaching a window from main viewport SDL may send SDL_WINDOWEVENT_ENTER one frame too late,
+                //   causing SDL_WINDOWEVENT_LEAVE on previous frame to interrupt drag operation by clear mouse position. This is why
+                //   we delay process the SDL_WINDOWEVENT_LEAVE events by one frame. See issue #5012 for details.
+                Uint8 window_event = event.window.event;
+                if (window_event == SDL_WINDOWEVENT_ENTER)
+                {
+                }
+                if (window_event == SDL_WINDOWEVENT_LEAVE)
+                    if (window_event == SDL_WINDOWEVENT_FOCUS_GAINED)
+                        io.AddFocusEvent(true);
+                    else if (window_event == SDL_WINDOWEVENT_FOCUS_LOST)
+                        io.AddFocusEvent(false);
+                if (window_event == SDL_WINDOWEVENT_CLOSE || window_event == SDL_WINDOWEVENT_MOVED || window_event == SDL_WINDOWEVENT_RESIZED)
+                    if (ImGuiViewport* viewport = ImGui::FindViewportByPlatformHandle((void*)SDL_GetWindowFromID(event.window.windowID)))
+                    {
+                        if (window_event == SDL_WINDOWEVENT_CLOSE)
+                            viewport->PlatformRequestClose = true;
+                        if (window_event == SDL_WINDOWEVENT_MOVED)
+                            viewport->PlatformRequestMove = true;
+                        if (window_event == SDL_WINDOWEVENT_RESIZED)
+                            viewport->PlatformRequestResize = true;
+                    }
                 break;
-
-            default:
-                break;
+            }
         }
     }
 
@@ -295,27 +579,144 @@ namespace
         // Start the frame
         gui::NewFrame();
 
-        gui::SetNextWindowPos(ImVec2(0, 0));
-        gui::SetNextWindowSize(io.DisplaySize);
-        ImGuiWindowFlags flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse |
-                                 ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoFocusOnAppearing;
+        // gui::SetNextWindowPos(ImVec2(0, 0));
+        // gui::SetNextWindowSize(io.DisplaySize);
+        //  ImGuiWindowFlags flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse |
+        //                          ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoFocusOnAppearing;
 
-        gui::Begin("###workspace", nullptr, flags);
+        // gui::Begin("###workspace", nullptr);
     }
 
     void imgui_frame_end()
     {
-        gui::End();
-        // auto old = ImGui::GetCurrentContext()->DragDropActive;
+        // gui::End();
+        //  auto old = ImGui::GetCurrentContext()->DragDropActive;
         ImGui::GetCurrentContext()->DragDropSourceFrameCount = ImGui::GetCurrentContext()->FrameCount;
         gui::Render();
         // ImGui::GetCurrentContext()->DragDropActive = old;
         render_func(gui::GetDrawData());
+
+        // Update and Render additional Platform Windows
+        if (gui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+        {
+            gui::UpdatePlatformWindows();
+            gui::RenderPlatformWindowsDefault();
+        }
     }
 
     ImGuiContext* imgui_create_context(ImFontAtlas& atlas) { return gui::CreateContext(&atlas); }
 
     void imgui_destroy_context(ImGuiContext* context = nullptr) { gui::DestroyContext(context); }
+
+    void imgui_init_platform_interface()
+    {
+        ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
+
+        platform_io.Platform_CreateWindow = [](ImGuiViewport* vp) {
+            auto&    renderer  = core::get_subsystem<runtime::renderer>();
+            uint32_t sdl_flags = 0;
+            sdl_flags |= SDL_WINDOW_ALLOW_HIGHDPI;
+            sdl_flags |= SDL_WINDOW_HIDDEN;
+            sdl_flags |= (vp->Flags & ImGuiViewportFlags_NoDecoration) ? SDL_WINDOW_BORDERLESS : 0;
+            sdl_flags |= (vp->Flags & ImGuiViewportFlags_NoDecoration) ? 0 : SDL_WINDOW_RESIZABLE;
+#if !defined(_WIN32)
+            // See SDL hack in ImGui_ImplSDL2_ShowWindow().
+            sdl_flags |= (viewport->Flags & ImGuiViewportFlags_NoTaskBarIcon) ? SDL_WINDOW_SKIP_TASKBAR : 0;
+#endif
+            auto window = std::make_unique<render_window>(
+                "not title", (int32_t)vp->Size.x, (int32_t)vp->Size.y, (int32_t)vp->Pos.x, (int32_t)vp->Pos.y, vp->ID);
+            renderer.register_window(std::move(window));
+        };
+
+        platform_io.Platform_DestroyWindow = [](ImGuiViewport* vp) {
+            auto& renderer = core::get_subsystem<runtime::renderer>();
+            renderer.remove_window_by_id(vp->ID);
+        };
+
+        platform_io.Platform_ShowWindow = [](ImGuiViewport* vp) {
+            auto& renderer = core::get_subsystem<runtime::renderer>();
+            renderer.get_window(vp->ID)->set_visible(true);
+        };
+
+        platform_io.Platform_SetWindowPos = [](ImGuiViewport* vp, ImVec2 pos) {
+            auto& renderer = core::get_subsystem<runtime::renderer>();
+            renderer.get_window(vp->ID)->set_position({int32_t(pos.x), int32_t(pos.y)});
+        };
+
+        platform_io.Platform_GetWindowPos = [](ImGuiViewport* vp) -> ImVec2 {
+            auto& renderer = core::get_subsystem<runtime::renderer>();
+            auto& pos      = renderer.get_window(vp->ID)->get_position();
+            return {float(pos[0]), float(pos[1])};
+        };
+
+        platform_io.Platform_SetWindowSize = [](ImGuiViewport* vp, ImVec2 pos) {
+            auto& renderer = core::get_subsystem<runtime::renderer>();
+            renderer.get_window(vp->ID)->set_size({uint32_t(pos.x), uint32_t(pos.y)});
+        };
+
+        platform_io.Platform_GetWindowSize = [](ImGuiViewport* vp) -> ImVec2 {
+            auto& renderer = core::get_subsystem<runtime::renderer>();
+            auto& size     = renderer.get_window(vp->ID)->get_position();
+            return {float(size[0]), float(size[1])};
+        };
+
+        platform_io.Platform_SetWindowFocus = [](ImGuiViewport* vp) {
+            auto& renderer = core::get_subsystem<runtime::renderer>();
+            renderer.get_window(vp->ID)->raise_window();
+        };
+
+        platform_io.Platform_GetWindowFocus = [](ImGuiViewport* vp) -> bool {
+            auto& renderer = core::get_subsystem<runtime::renderer>();
+            return renderer.get_window(vp->ID)->has_focus();
+        };
+
+        platform_io.Platform_GetWindowMinimized = [](ImGuiViewport* vp) -> bool {
+            auto& renderer = core::get_subsystem<runtime::renderer>();
+            return renderer.get_window(vp->ID)->get_window_minimized();
+        };
+
+        platform_io.Platform_SetWindowTitle = [](ImGuiViewport* vp, const char* title) {
+            auto& renderer = core::get_subsystem<runtime::renderer>();
+            renderer.get_window(vp->ID)->set_title(title);
+        };
+
+        platform_io.Platform_SetWindowAlpha = [](ImGuiViewport* vp, float alpha) {
+            auto& renderer = core::get_subsystem<runtime::renderer>();
+            renderer.get_window(vp->ID)->set_opacity(alpha);
+        };
+
+        // Register main window handle (which is owned by the main application, not by us)
+        // This is mostly for simplicity and consistency, so that our code (e.g. mouse handling etc.) can use same logic for main and secondary
+        // viewports.
+        ImGuiViewport* main_viewport = ImGui::GetMainViewport();
+
+        auto id = main_viewport->ID;
+    }
+
+    void imgui_init_clipboard(ImGuiIO& io)
+    {
+        static char* text_data;
+
+        io.SetClipboardTextFn = [](void*, const char* text) { SDL_SetClipboardText(text); };
+        io.GetClipboardTextFn = [](void*) {
+            if (text_data)
+                SDL_free(text_data);
+            text_data = SDL_GetClipboardText();
+            return const_cast<const char*>(text_data);
+        };
+        io.ClipboardUserData    = nullptr;
+        io.SetPlatformImeDataFn = [](ImGuiViewport* viewport, ImGuiPlatformImeData* data) {
+            if (data->WantVisible)
+            {
+                SDL_Rect r;
+                r.x = (int)(data->InputPos.x - viewport->Pos.x);
+                r.y = (int)(data->InputPos.y - viewport->Pos.y + data->InputLineHeight);
+                r.w = 1;
+                r.h = (int)data->InputLineHeight;
+                SDL_SetTextInputRect(&r);
+            }
+        };
+    }
 
     void imgui_init()
     {
@@ -334,33 +735,44 @@ namespace
             fs_ocornut_imgui);
 
         ImGuiIO& io = gui::GetIO();
+
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+        io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+        io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable; // Enable Multi-Viewport / Platform Windows
+
+        // imgui_init_platform_interface();
+        // imgui_init_clipboard(io);
+        // ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
+
+        // io.BackendFlags |= ImGuiBackendFlags_PlatformHasViewports;
+        // io.BackendFlags |= ImGuiBackendFlags_RendererHasViewports;
+
         io.IniFilename = nullptr;
         // init keyboard mapping
-        io.KeyMap[ImGuiKey_Tab]        = SDL_SCANCODE_TAB;
-        io.KeyMap[ImGuiKey_LeftArrow]  = SDL_SCANCODE_LEFT;
-        io.KeyMap[ImGuiKey_RightArrow] = SDL_SCANCODE_RIGHT;
-        io.KeyMap[ImGuiKey_UpArrow]    = SDL_SCANCODE_UP;
-        io.KeyMap[ImGuiKey_DownArrow]  = SDL_SCANCODE_DOWN;
-        io.KeyMap[ImGuiKey_PageUp]     = SDL_SCANCODE_PAGEUP;
-        io.KeyMap[ImGuiKey_PageDown]   = SDL_SCANCODE_PAGEDOWN;
-        io.KeyMap[ImGuiKey_Home]       = SDL_SCANCODE_HOME;
-        io.KeyMap[ImGuiKey_End]        = SDL_SCANCODE_END;
-        io.KeyMap[ImGuiKey_Insert]     = SDL_SCANCODE_INSERT;
-        io.KeyMap[ImGuiKey_Delete]     = SDL_SCANCODE_DELETE;
-        io.KeyMap[ImGuiKey_Backspace]  = SDL_SCANCODE_BACKSPACE;
-        io.KeyMap[ImGuiKey_Space]      = SDL_SCANCODE_SPACE;
-        io.KeyMap[ImGuiKey_Enter]      = SDL_SCANCODE_RETURN;
-        io.KeyMap[ImGuiKey_Escape]     = SDL_SCANCODE_ESCAPE;
-        io.KeyMap[ImGuiKey_A]          = SDL_SCANCODE_A;
-        io.KeyMap[ImGuiKey_C]          = SDL_SCANCODE_C;
-        io.KeyMap[ImGuiKey_V]          = SDL_SCANCODE_V;
-        io.KeyMap[ImGuiKey_X]          = SDL_SCANCODE_X;
-        io.KeyMap[ImGuiKey_Y]          = SDL_SCANCODE_Y;
-        io.KeyMap[ImGuiKey_Z]          = SDL_SCANCODE_Z;
-        std::uint8_t* data             = nullptr;
-        int           width            = 0;
-        int           height           = 0;
+        // io.KeyMap[ImGuiKey_Tab]        = SDL_SCANCODE_TAB;
+        // io.KeyMap[ImGuiKey_LeftArrow]  = SDL_SCANCODE_LEFT;
+        // io.KeyMap[ImGuiKey_RightArrow] = SDL_SCANCODE_RIGHT;
+        // io.KeyMap[ImGuiKey_UpArrow]    = SDL_SCANCODE_UP;
+        // io.KeyMap[ImGuiKey_DownArrow]  = SDL_SCANCODE_DOWN;
+        // io.KeyMap[ImGuiKey_PageUp]     = SDL_SCANCODE_PAGEUP;
+        // io.KeyMap[ImGuiKey_PageDown]   = SDL_SCANCODE_PAGEDOWN;
+        // io.KeyMap[ImGuiKey_Home]       = SDL_SCANCODE_HOME;
+        // io.KeyMap[ImGuiKey_End]        = SDL_SCANCODE_END;
+        // io.KeyMap[ImGuiKey_Insert]     = SDL_SCANCODE_INSERT;
+        // io.KeyMap[ImGuiKey_Delete]     = SDL_SCANCODE_DELETE;
+        // io.KeyMap[ImGuiKey_Backspace]  = SDL_SCANCODE_BACKSPACE;
+        // io.KeyMap[ImGuiKey_Space]      = SDL_SCANCODE_SPACE;
+        // io.KeyMap[ImGuiKey_Enter]      = SDL_SCANCODE_RETURN;
+        // io.KeyMap[ImGuiKey_Escape]     = SDL_SCANCODE_ESCAPE;
+        // io.KeyMap[ImGuiKey_A]          = SDL_SCANCODE_A;
+        // io.KeyMap[ImGuiKey_C]          = SDL_SCANCODE_C;
+        // io.KeyMap[ImGuiKey_V]          = SDL_SCANCODE_V;
+        // io.KeyMap[ImGuiKey_X]          = SDL_SCANCODE_X;
+        // io.KeyMap[ImGuiKey_Y]          = SDL_SCANCODE_Y;
+        // io.KeyMap[ImGuiKey_Z]          = SDL_SCANCODE_Z;
+        std::uint8_t* data   = nullptr;
+        int           width  = 0;
+        int           height = 0;
 
         ImFontConfig config;
         config.FontDataOwnedByAtlas = false;
@@ -463,27 +875,12 @@ void gui_system::draw_end() { imgui_frame_end(); }
 
 void gui_system::pop_context() { imgui_set_context(initial_context_); }
 
-void gui_system::platform_events(const std::pair<std::uint32_t, bool>& info, const std::vector<SDL_Event>& events)
+void gui_system::platform_events(const std::vector<SDL_Event>& events)
 {
-    const auto window_id = info.first;
-    push_context(window_id);
     for (const auto& e : events)
     {
-        if (e.type == SDL_QUIT || (e.type == SDL_WINDOWEVENT && e.window.event == SDL_WINDOWEVENT_CLOSE))
-        {
-            pop_context();
-            auto context = contexts_[window_id];
-            if (context != nullptr)
-            {
-                imgui_destroy_context(context);
-            }
-            contexts_.erase(window_id);
-            return;
-        }
-
         imgui_handle_event(e);
     }
-    pop_context();
 }
 
 gui_style& get_gui_style()

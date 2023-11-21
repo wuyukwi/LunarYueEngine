@@ -19,7 +19,7 @@ namespace runtime
 
     /// platform events
 
-    /// <window_id, is_focused>, {events}
-    extern hpp::event<void(const std::pair<std::uint32_t, bool>&, const std::vector<SDL_Event>&)> on_platform_events;
+    ///{events}
+    extern hpp::event<void(const std::vector<SDL_Event>&)> on_platform_events;
 
 } // namespace runtime

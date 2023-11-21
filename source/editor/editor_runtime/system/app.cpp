@@ -48,7 +48,7 @@ namespace editor
 
             auto dock = std::make_unique<T>(dock_name, true, ImVec2(200.0f, 200.0f));
 
-            auto& dockspace = docking.get_dockspace(window->get_id());
+            auto& dockspace = docking.get_dockspace(window->get_window_id());
             dockspace.dock_to(dock.get(), imguidock::slot::tab, 200, true);
             rend.register_window(std::move(window));
             docking.register_dock(std::move(dock));
@@ -443,7 +443,7 @@ namespace editor
         runtime::app::start(parser);
 
         core::add_subsystem<gui_system>();
-        core::add_subsystem<docking_system>();
+        //        core::add_subsystem<docking_system>();
         core::add_subsystem<editing_system>();
         core::add_subsystem<picking_system>();
         core::add_subsystem<debugdraw_system>();
@@ -469,22 +469,22 @@ namespace editor
         auto console       = std::make_unique<console_dock>("CONSOLE", true, ImVec2(200.0f, 200.0f), console_log_);
         auto style         = std::make_unique<style_dock>("STYLE", true, ImVec2(300.0f, 200.0f));
 
-        auto& docking   = core::get_subsystem<docking_system>();
-        auto& dockspace = docking.get_dockspace(main_window->get_id());
-        dockspace.dock_to(scene.get(), imguidock::slot::tab, 200, true);
-        dockspace.dock_with(game.get(), scene.get(), imguidock::slot::tab, 300, false);
-        dockspace.dock_with(inspector.get(), scene.get(), imguidock::slot::right, 400, true);
-        dockspace.dock_with(hierarchy.get(), scene.get(), imguidock::slot::left, 300, true);
-        dockspace.dock_with(console.get(), scene.get(), imguidock::slot::bottom, 300, true);
-        dockspace.dock_with(project.get(), console.get(), imguidock::slot::tab, 250, true);
+        // auto& docking   = core::get_subsystem<docking_system>();
+        // auto& dockspace = docking.get_dockspace(main_window->get_id());
+        // dockspace.dock_to(scene.get(), imguidock::slot::tab, 200, true);
+        // dockspace.dock_with(game.get(), scene.get(), imguidock::slot::tab, 300, false);
+        // dockspace.dock_with(inspector.get(), scene.get(), imguidock::slot::right, 400, true);
+        // dockspace.dock_with(hierarchy.get(), scene.get(), imguidock::slot::left, 300, true);
+        // dockspace.dock_with(console.get(), scene.get(), imguidock::slot::bottom, 300, true);
+        // dockspace.dock_with(project.get(), console.get(), imguidock::slot::tab, 250, true);
 
-        docking.register_dock(std::move(scene));
-        docking.register_dock(std::move(game));
-        docking.register_dock(std::move(inspector));
-        docking.register_dock(std::move(hierarchy));
-        docking.register_dock(std::move(console));
-        docking.register_dock(std::move(project));
-        docking.register_dock(std::move(style));
+        // docking.register_dock(std::move(scene));
+        // docking.register_dock(std::move(game));
+        // docking.register_dock(std::move(inspector));
+        // docking.register_dock(std::move(hierarchy));
+        // docking.register_dock(std::move(console));
+        // docking.register_dock(std::move(project));
+        // docking.register_dock(std::move(style));
     }
 
     void app::register_console_commands()
@@ -502,8 +502,8 @@ namespace editor
 
     void app::draw_docks(delta_t dt)
     {
-        auto&       gui      = core::get_subsystem<gui_system>();
-        auto&       docking  = core::get_subsystem<docking_system>();
+        auto& gui = core::get_subsystem<gui_system>();
+        //    auto&       docking  = core::get_subsystem<docking_system>();
         auto&       renderer = core::get_subsystem<runtime::renderer>();
         const auto& windows  = renderer.get_windows();
 
@@ -512,9 +512,9 @@ namespace editor
             const auto& window = windows[i];
             window->begin_present_pass();
 
-            const auto id        = window->get_id();
-            auto&      dockspace = docking.get_dockspace(id);
-            gui.push_context(id);
+            const auto id = window->get_window_id();
+            //       auto&      dockspace = docking.get_dockspace(id);
+            //   gui.push_context(id);
             gui.draw_begin(*window, dt);
 
             gui::PushFont("standard");
@@ -525,14 +525,14 @@ namespace editor
             }
             else
             {
-                draw_dockspace(i == 0, *window, dockspace);
+                //               draw_dockspace(i == 0, *window, dockspace);
             }
 
             handle_drag_and_drop();
 
             gui::PopFont();
             gui.draw_end();
-            gui.pop_context();
+            //            gui.pop_context();
         }
     }
 
@@ -552,6 +552,7 @@ namespace editor
             offset = gui::GetFrameHeightWithSpacing();
         }
 
+        gui::ShowDemoWindow(nullptr);
         dockspace.update_and_draw(ImVec2(gui::GetContentRegionAvail().x, gui::GetContentRegionAvail().y - offset));
 
         if (is_main)
@@ -616,74 +617,76 @@ namespace editor
 
     void app::draw_start_page(render_window& window)
     {
-        auto& pm = core::get_subsystem<editor::project_manager>();
+        gui::ShowDemoWindow(nullptr);
 
-        auto on_create_project = [&](const std::string& p) {
-            auto& rend = core::get_subsystem<runtime::renderer>();
-            auto  path = fs::path(p).make_preferred();
-            pm.create_project(path);
-            window.maximize();
-            rend.show_all_secondary_windows();
-            show_start_page_ = false;
-        };
-        auto on_open_project = [&](const std::string& p) {
-            auto& rend = core::get_subsystem<runtime::renderer>();
-            auto  path = fs::path(p).make_preferred();
-            pm.open_project(path);
-            window.maximize();
-            rend.show_all_secondary_windows();
-            show_start_page_ = false;
-        };
+        // auto& pm = core::get_subsystem<editor::project_manager>();
 
-        gui::PushFont("standard_big");
-        ImGuiWindowFlags flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize |
-                                 ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoSavedSettings;
+        // auto on_create_project = [&](const std::string& p) {
+        //     auto& rend = core::get_subsystem<runtime::renderer>();
+        //     auto  path = fs::path(p).make_preferred();
+        //     pm.create_project(path);
+        //     window.maximize();
+        //     rend.show_all_secondary_windows();
+        //     show_start_page_ = false;
+        // };
+        // auto on_open_project = [&](const std::string& p) {
+        //     auto& rend = core::get_subsystem<runtime::renderer>();
+        //     auto  path = fs::path(p).make_preferred();
+        //     pm.open_project(path);
+        //     window.maximize();
+        //     rend.show_all_secondary_windows();
+        //     show_start_page_ = false;
+        // };
 
-        gui::AlignTextToFramePadding();
-        gui::TextUnformatted("RECENT PROJECTS");
-        gui::Separator();
-        gui::BeginGroup();
-        {
-            if (gui::BeginChild("projects_content", ImVec2(gui::GetContentRegionAvail().x * 0.7f, gui::GetContentRegionAvail().y), false, flags))
-            {
+        // gui::PushFont("standard_big");
+        // ImGuiWindowFlags flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize |
+        //                          ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoSavedSettings;
 
-                const auto& rencent_projects = pm.get_options().recent_project_paths;
-                for (const auto& path : rencent_projects)
-                {
-                    if (gui::Selectable(path.c_str()))
-                    {
-                        on_open_project(path);
-                    }
-                }
-            }
-            gui::EndChild();
-        }
-        gui::EndGroup();
+        // gui::AlignTextToFramePadding();
+        // gui::TextUnformatted("RECENT PROJECTS");
+        // gui::Separator();
+        // gui::BeginGroup();
+        //{
+        //     if (gui::BeginChild("projects_content", ImVec2(gui::GetContentRegionAvail().x * 0.7f, gui::GetContentRegionAvail().y), false, flags))
+        //     {
 
-        gui::SameLine();
+        //        const auto& rencent_projects = pm.get_options().recent_project_paths;
+        //        for (const auto& path : rencent_projects)
+        //        {
+        //            if (gui::Selectable(path.c_str()))
+        //            {
+        //                on_open_project(path);
+        //            }
+        //        }
+        //    }
+        //    gui::EndChild();
+        //}
+        // gui::EndGroup();
 
-        gui::BeginGroup();
-        {
-            if (gui::Button("NEW PROJECT", ImVec2(gui::GetContentRegionAvail().x, 0.0f)))
-            {
-                std::string path;
-                if (native::pick_folder_dialog("", path))
-                {
-                    on_create_project(path);
-                }
-            }
+        // gui::SameLine();
 
-            if (gui::Button("OPEN OTHER", ImVec2(gui::GetContentRegionAvail().x, 0.0f)))
-            {
-                std::string path;
-                if (native::pick_folder_dialog("", path))
-                {
-                    on_open_project(path);
-                }
-            }
-        }
-        gui::EndGroup();
-        gui::PopFont();
+        // gui::BeginGroup();
+        //{
+        //     if (gui::Button("NEW PROJECT", ImVec2(gui::GetContentRegionAvail().x, 0.0f)))
+        //     {
+        //         std::string path;
+        //         if (native::pick_folder_dialog("", path))
+        //         {
+        //             on_create_project(path);
+        //         }
+        //     }
+
+        //    if (gui::Button("OPEN OTHER", ImVec2(gui::GetContentRegionAvail().x, 0.0f)))
+        //    {
+        //        std::string path;
+        //        if (native::pick_folder_dialog("", path))
+        //        {
+        //            on_open_project(path);
+        //        }
+        //    }
+        //}
+        // gui::EndGroup();
+        // gui::PopFont();
     }
 
     void app::handle_drag_and_drop()

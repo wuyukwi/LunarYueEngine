@@ -74,7 +74,7 @@ namespace runtime
         input();
         ~input();
 
-        void platform_events(const std::pair<std::uint32_t, bool>& info, const std::vector<SDL_Event>& events);
+        void platform_events(const std::vector<SDL_Event>& events);
 
         //-----------------------------------------------------------------------------
         //  Name : get_mappings ()

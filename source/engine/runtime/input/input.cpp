@@ -269,14 +269,11 @@ namespace runtime
                            get_current_cursor_position().y - get_last_cursor_position().y};
     }
 
-    void input::platform_events(const std::pair<std::uint32_t, bool>& info, const std::vector<SDL_Event>& events)
+    void input::platform_events(const std::vector<SDL_Event>& events)
     {
-        if (info.second)
+        for (const auto& e : events)
         {
-            for (const auto& e : events)
-            {
-                handle_event(e);
-            }
+            handle_event(e);
         }
     }
 } // namespace runtime
