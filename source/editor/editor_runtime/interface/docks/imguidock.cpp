@@ -325,7 +325,7 @@ namespace imguidock
             ImVec2 screen_cursor_pos = ImGui::GetCursorScreenPos();
             screen_cursor_pos.y -= tabbar_height;
 
-            ImGui::BeginChild(idname.c_str(), calculated_size, false, ImGuiWindowFlags_AlwaysUseWindowPadding);
+            ImGui::BeginChild(idname.c_str(), calculated_size, ImGuiChildFlags_Border); // ImGuiWindowFlags_AlwaysUseWindowPadding);
             container->active_dock->draw_function(calculated_size);
             container->active_dock->last_size = calculated_size;
 

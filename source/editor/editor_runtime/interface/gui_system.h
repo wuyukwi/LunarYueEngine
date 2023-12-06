@@ -34,7 +34,7 @@ struct gui_system
     ImGuiContext* get_context(std::uint32_t id);
 
     void push_context(std::uint32_t id);
-    void draw_begin(render_window& window, delta_t dt);
+    void draw_begin(delta_t dt);
 
     void draw_end();
     void pop_context();

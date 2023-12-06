@@ -52,7 +52,7 @@ bool window_sdl::has_focus()
 {
     Uint32 windowFlags = SDL_GetWindowFlags(window_);
 
-    return (windowFlags & SDL_WINDOW_INPUT_FOCUS) != 0;
+    return (windowFlags & SDL_WINDOW_MOUSE_FOCUS) != 0;
 }
 
 bool window_sdl::poll_event(SDL_Event& event) { return SDL_PollEvent(&event); }
@@ -181,7 +181,11 @@ void window_sdl::set_opacity(float opacity)
 
 bool window_sdl::get_window_minimized() { return (SDL_GetWindowFlags(window_) & SDL_WINDOW_MINIMIZED) != 0; }
 
-uint32_t window_sdl::get_window_id() { return SDL_GetWindowID(window_); }
+void window_sdl::set_window_id(uint32_t id) { id_ = id; }
+
+uint32_t window_sdl::get_window_id() { return id_; }
+
+uint32_t window_sdl::get_sdl_window_id() { return SDL_GetWindowID(window_); }
 
 void window_sdl::request_close()
 {

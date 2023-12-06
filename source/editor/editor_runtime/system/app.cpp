@@ -515,7 +515,7 @@ namespace editor
             const auto id = window->get_window_id();
             //       auto&      dockspace = docking.get_dockspace(id);
             //   gui.push_context(id);
-            gui.draw_begin(*window, dt);
+            gui.draw_begin(dt);
 
             gui::PushFont("standard");
 

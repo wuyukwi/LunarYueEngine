@@ -36,8 +36,6 @@ public:
 
     std::array<std::uint32_t, 2> get_size() const;
 
-    void set_size(const std::array<std::uint32_t, 2>& size);
-
     std::array<int, 2> get_mouse_position_global();
     std::array<int, 2> get_mouse_position_in_window();
 
@@ -51,12 +49,17 @@ public:
 
     bool get_window_minimized();
 
+    void     set_window_id(uint32_t id);
     uint32_t get_window_id();
+    uint32_t get_sdl_window_id();
 
     void request_close();
+
+    virtual void set_size(const std::array<std::uint32_t, 2>& size);
 
     static bool poll_event(SDL_Event& event);
 
 private:
-    SDL_Window* window_;
+    SDL_Window* window_ = nullptr;
+    uint32_t    id_     = 0;
 };

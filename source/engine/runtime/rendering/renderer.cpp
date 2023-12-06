@@ -53,7 +53,7 @@ namespace runtime
         return focused_window;
     }
 
-    void renderer::register_window(std::unique_ptr<render_window> window) { windows_pending_addition_.emplace_back(std::move(window)); }
+    void renderer::register_window(std::unique_ptr<render_window> window) { windows_.emplace_back(std::move(window)); }
 
     void renderer::remove_window_by_id(uint32_t id)
     {
@@ -67,6 +67,15 @@ namespace runtime
     const std::unique_ptr<render_window>& renderer::get_window(uint32_t id) const
     {
         auto it = std::find_if(std::begin(windows_), std::end(windows_), [id](const auto& window) { return window->get_window_id() == id; });
+
+        ensures(it != std::end(windows_));
+
+        return *it;
+    }
+
+    const std::unique_ptr<render_window>& renderer::get_window_for_sdl_id(std::uint32_t id) const
+    {
+        auto it = std::find_if(std::begin(windows_), std::end(windows_), [id](const auto& window) { return window->get_sdl_window_id() == id; });
 
         ensures(it != std::end(windows_));
 
@@ -106,21 +115,36 @@ namespace runtime
 
     void renderer::process_pending_windows()
     {
-        std::move(std::begin(windows_pending_addition_), std::end(windows_pending_addition_), std::back_inserter(windows_));
-        windows_pending_addition_.clear();
+        // std::move(std::begin(windows_pending_addition_), std::end(windows_pending_addition_), std::back_inserter(windows_));
+        // windows_pending_addition_.clear();
     }
 
     void renderer::platform_events(const std::vector<SDL_Event>& events)
     {
         for (const auto& e : events)
         {
-            if (e.type == SDL_WINDOWEVENT && e.window.event == SDL_WINDOWEVENT_CLOSE)
+            if (e.type == SDL_WINDOWEVENT)
             {
-                windows_.erase(std::remove_if(std::begin(windows_),
-                                              std::end(windows_),
-                                              [window_id = e.window.windowID](const auto& window) { return window->get_window_id() == window_id; }),
-                               std::end(windows_));
-                return;
+                if (e.window.event == SDL_WINDOWEVENT_CLOSE)
+                {
+                    windows_.erase(
+                        std::remove_if(std::begin(windows_),
+                                       std::end(windows_),
+                                       [window_id = e.window.windowID](const auto& window) { return window->get_sdl_window_id() == window_id; }),
+                        std::end(windows_));
+                    return;
+                }
+            }
+            if (e.window.event == SDL_WINDOWEVENT_RESIZED)
+            {
+                auto it = std::find_if(std::begin(windows_), std::end(windows_), [window_id = e.window.windowID](const auto& window) {
+                    return window->get_sdl_window_id() == window_id;
+                });
+
+                if (it != std::end(windows_))
+                {
+                    it->get()->on_resize();
+                }
             }
         }
     }
@@ -132,6 +156,9 @@ namespace runtime
             APPLOG_ERROR("Couldn't initialize SDL: {}", SDL_GetError());
             return false;
         }
+        SDL_SetHint(SDL_HINT_MOUSE_FOCUS_CLICKTHROUGH, "1");
+        SDL_SetHint(SDL_HINT_IME_SHOW_UI, "1");
+        SDL_SetHint(SDL_HINT_MOUSE_AUTO_CAPTURE, "0");
 
         std::unique_ptr<window_sdl> init_window = std::make_unique<window_sdl>("init window", 100, 100, 100, 0, 0);
 

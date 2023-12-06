@@ -70,6 +70,7 @@ namespace runtime
         //-----------------------------------------------------------------------------
         const std::vector<std::unique_ptr<render_window>>& get_windows() const;
         const std::unique_ptr<render_window>&              get_window(std::uint32_t id) const;
+        const std::unique_ptr<render_window>&              get_window_for_sdl_id(std::uint32_t id) const;
         const std::unique_ptr<render_window>&              get_main_window() const;
         void                                               hide_all_secondary_windows();
         void                                               show_all_secondary_windows();

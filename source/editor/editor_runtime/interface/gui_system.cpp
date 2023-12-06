@@ -38,13 +38,18 @@ namespace
     asset_handle<gfx::texture>                     s_font_texture;
     std::uint32_t                                  s_draw_calls = 0;
     static std::map<SDL_SystemCursor, SDL_Cursor*> cursors;
+    bool                                           want_update_monitors = true;
+    int                                            MouseButtonsDown;
+    bool                                           mouse_can_use_global_state = false;
+    uint32_t                                       MouseWindowID;
 
-    void render_func(ImDrawData* _draw_data)
+    void render_func(ImDrawData* _draw_data, gfx::view_id viewId)
     {
         if (_draw_data == nullptr || s_program == nullptr)
         {
             return;
         }
+
         // Avoid rendering when minimized, scale coordinates for retina displays (screen coordinates != framebuffer coordinates)
         int fb_width  = (int)(_draw_data->DisplaySize.x * _draw_data->FramebufferScale.x);
         int fb_height = (int)(_draw_data->DisplaySize.y * _draw_data->FramebufferScale.y);
@@ -53,8 +58,48 @@ namespace
 
         _draw_data->ScaleClipRects(gui::GetIO().DisplayFramebufferScale);
 
-        auto              viewId = gfx::render_pass::get_pass();
-        const bgfx::Caps* caps   = bgfx::getCaps();
+        // Create and grow vertex/index buffers if needed
+        const auto&                  layout = gfx::pos_texcoord0_color0_vertex::get_layout();
+        gfx::transient_vertex_buffer tvb;
+        gfx::transient_index_buffer  tib;
+
+        if (_draw_data->TotalVtxCount > 0)
+        {
+            auto tvb_size = _draw_data->TotalVtxCount;
+            if (gfx::get_avail_transient_vertex_buffer(tvb_size, layout) != tvb_size)
+                return;
+
+            gfx::alloc_transient_vertex_buffer(&tvb, tvb_size, layout);
+        }
+        else
+            return;
+
+        if (_draw_data->TotalIdxCount > 0)
+        {
+            auto tib_size = _draw_data->TotalIdxCount;
+
+            if (gfx::get_avail_transient_index_buffer(tib_size) != tib_size)
+                return;
+
+            gfx::alloc_transient_index_buffer(&tib, tib_size);
+        }
+        else
+            return;
+
+        // Upload vertex/index data into a single contiguous GPU buffer
+        ImDrawVert* vtx_dst = (ImDrawVert*)tvb.data;
+        ImDrawIdx*  idx_dst = (ImDrawIdx*)tib.data;
+        for (int n = 0; n < _draw_data->CmdListsCount; n++)
+        {
+            const ImDrawList* cmd_list = _draw_data->CmdLists[n];
+            memcpy(vtx_dst, cmd_list->VtxBuffer.Data, cmd_list->VtxBuffer.Size * sizeof(ImDrawVert));
+            memcpy(idx_dst, cmd_list->IdxBuffer.Data, cmd_list->IdxBuffer.Size * sizeof(ImDrawIdx));
+            vtx_dst += cmd_list->VtxBuffer.Size;
+            idx_dst += cmd_list->IdxBuffer.Size;
+        }
+
+        // auto              viewId = gfx::render_pass::get_pass();
+        const bgfx::Caps* caps = bgfx::getCaps();
         {
             float ortho[16];
             float x      = _draw_data->DisplayPos.x;
@@ -69,77 +114,140 @@ namespace
 
         s_draw_calls = 0;
         auto program = s_program.get();
-        program->begin();
+
         // Render command lists
-        for (int32_t ii = 0, num = _draw_data->CmdListsCount; ii < num; ++ii)
+        // (Because we merged all buffers into a single one, we maintain our own offset into them)
+        program->begin();
+        std::uint64_t state = 0 | BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_MSAA |
+                              BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA);
+        int    global_idx_offset = 0;
+        int    global_vtx_offset = 0;
+        ImVec2 clip_off          = _draw_data->DisplayPos;
+        for (int n = 0; n < _draw_data->CmdListsCount; n++)
         {
-            gfx::transient_vertex_buffer tvb;
-            gfx::transient_index_buffer  tib;
-
-            const ImDrawList* draw_list    = _draw_data->CmdLists[ii];
-            std::uint32_t     num_vertices = static_cast<std::uint32_t>(draw_list->VtxBuffer.size());
-            std::uint32_t     num_indices  = static_cast<std::uint32_t>(draw_list->IdxBuffer.size());
-
-            const auto& layout = gfx::pos_texcoord0_color0_vertex::get_layout();
-
-            if (!(gfx::get_avail_transient_vertex_buffer(num_vertices, layout) == num_vertices) ||
-                !(gfx::get_avail_transient_index_buffer(num_indices) == num_indices))
+            const ImDrawList* cmd_list = _draw_data->CmdLists[n];
+            for (int cmd_i = 0; cmd_i < cmd_list->CmdBuffer.Size; cmd_i++)
             {
-                // not enough space in transient buffer just quit drawing the rest...
-                break;
-            }
-
-            gfx::alloc_transient_vertex_buffer(&tvb, num_vertices, layout);
-            gfx::alloc_transient_index_buffer(&tib, num_indices);
-
-            ImDrawVert* verts = reinterpret_cast<ImDrawVert*>(tvb.data);
-            std::memcpy(verts, draw_list->VtxBuffer.begin(), num_vertices * sizeof(ImDrawVert));
-
-            ImDrawIdx* indices = reinterpret_cast<ImDrawIdx*>(tib.data);
-            std::memcpy(indices, draw_list->IdxBuffer.begin(), num_indices * sizeof(ImDrawIdx));
-
-            std::uint64_t state = 0 | BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_MSAA |
-                                  BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA);
-
-            std::uint32_t offset = 0;
-            for (const ImDrawCmd *cmd = draw_list->CmdBuffer.begin(), *cmdEnd = draw_list->CmdBuffer.end(); cmd != cmdEnd; ++cmd)
-            {
-                if (cmd->UserCallback != nullptr)
+                const ImDrawCmd* pcmd = &cmd_list->CmdBuffer[cmd_i];
+                if (pcmd->UserCallback != nullptr)
                 {
-                    cmd->UserCallback(draw_list, cmd);
+                    // User callback, registered via ImDrawList::AddCallback()
+                    // (ImDrawCallback_ResetRenderState is a special callback value used by the user to request the renderer to reset render state.)
+                    if (pcmd->UserCallback == ImDrawCallback_ResetRenderState)
+                        render_func(_draw_data, viewId);
+                    else
+                        pcmd->UserCallback(cmd_list, pcmd);
                 }
-                else if (0 != cmd->ElemCount)
+                else
                 {
-                    auto tex = s_font_texture.get();
-
-                    if (nullptr != cmd->TextureId)
-                    {
-                        tex = reinterpret_cast<gfx::texture*>(cmd->TextureId);
-                    }
-
-                    const std::uint16_t x      = std::uint16_t(std::max(cmd->ClipRect.x, 0.0f));
-                    const std::uint16_t y      = std::uint16_t(std::max(cmd->ClipRect.y, 0.0f));
-                    const std::uint16_t width  = std::uint16_t(std::min(cmd->ClipRect.z, 65535.0f) - x);
-                    const std::uint16_t height = std::uint16_t(std::min(cmd->ClipRect.w, 65535.0f) - y);
+                    // Project scissor/clipping rectangles into framebuffer space
+                    ImVec2 clip_min(pcmd->ClipRect.x - clip_off.x, pcmd->ClipRect.y - clip_off.y);
+                    ImVec2 clip_max(pcmd->ClipRect.z - clip_off.x, pcmd->ClipRect.w - clip_off.y);
+                    if (clip_max.x <= clip_min.x || clip_max.y <= clip_min.y)
+                        continue;
 
                     gfx::set_state(state);
-                    gfx::set_vertex_buffer(0, &tvb, 0, num_vertices);
-                    gfx::set_index_buffer(&tib, offset, cmd->ElemCount);
 
-                    gfx::set_scissor(x, y, width, height);
+                    // Apply scissor/clipping rectangle
+                    gfx::set_scissor((uint16_t)clip_min.x, (uint16_t)clip_min.y, (uint16_t)clip_max.x, (uint16_t)clip_max.y);
+
+                    // Bind texture, Draw
+                    auto tex = s_font_texture.get();
+                    if (pcmd->GetTexID() != nullptr)
+                        tex = reinterpret_cast<gfx::texture*>(pcmd->GetTexID());
 
                     program->set_texture(0, "s_tex", tex);
 
+                    gfx::set_vertex_buffer(0, &tvb, pcmd->VtxOffset + global_vtx_offset, cmd_list->IdxBuffer.Size);
+                    gfx::set_index_buffer(&tib, pcmd->IdxOffset + global_idx_offset, pcmd->ElemCount);
                     gfx::submit(viewId, program->native_handle());
-
-                    gfx::set_scissor(0, 0, 0, 0);
-                    s_draw_calls++;
                 }
-
-                offset += cmd->ElemCount;
             }
+            global_idx_offset += cmd_list->IdxBuffer.Size;
+            global_vtx_offset += cmd_list->VtxBuffer.Size;
         }
         program->end();
+
+        // return;
+
+        // program->begin();
+        //// Render command lists
+        // for (int32_t ii = 0, num = _draw_data->CmdListsCount; ii < num; ++ii)
+        //{
+        //     gfx::transient_vertex_buffer tvb;
+        //     gfx::transient_index_buffer  tib;
+
+        //    const ImDrawList* draw_list    = _draw_data->CmdLists[ii];
+        //    std::uint32_t     num_vertices = static_cast<std::uint32_t>(draw_list->VtxBuffer.size());
+        //    std::uint32_t     num_indices  = static_cast<std::uint32_t>(draw_list->IdxBuffer.size());
+
+        //    const auto& layout = gfx::pos_texcoord0_color0_vertex::get_layout();
+
+        //    if (!(gfx::get_avail_transient_vertex_buffer(num_vertices, layout) == num_vertices) ||
+        //        !(gfx::get_avail_transient_index_buffer(num_indices) == num_indices))
+        //    {
+        //        // not enough space in transient buffer just quit drawing the rest...
+        //        break;
+        //    }
+
+        //    gfx::alloc_transient_vertex_buffer(&tvb, num_vertices, layout);
+        //    gfx::alloc_transient_index_buffer(&tib, num_indices);
+
+        //    ImDrawVert* verts = reinterpret_cast<ImDrawVert*>(tvb.data);
+        //    std::memcpy(verts, draw_list->VtxBuffer.begin(), num_vertices * sizeof(ImDrawVert));
+
+        //    ImDrawIdx* indices = reinterpret_cast<ImDrawIdx*>(tib.data);
+        //    std::memcpy(indices, draw_list->IdxBuffer.begin(), num_indices * sizeof(ImDrawIdx));
+
+        //    std::uint64_t state = 0 | BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_MSAA |
+        //                          BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA);
+
+        //    std::uint32_t offset = 0;
+        //    for (const ImDrawCmd *cmd = draw_list->CmdBuffer.begin(), *cmdEnd = draw_list->CmdBuffer.end(); cmd != cmdEnd; ++cmd)
+        //    {
+        //        if (cmd->UserCallback != nullptr)
+        //        {
+        //            cmd->UserCallback(draw_list, cmd);
+        //        }
+        //        else if (0 != cmd->ElemCount)
+        //        {
+        //            auto tex = s_font_texture.get();
+
+        //            if (nullptr != cmd->TextureId)
+        //            {
+        //                tex = reinterpret_cast<gfx::texture*>(cmd->TextureId);
+        //            }
+
+        //            const ImVec2 clipMin         = ImVec2(cmd->ClipRect.x, cmd->ClipRect.y);
+        //            const ImVec2 clipMax         = ImVec2(cmd->ClipRect.z, cmd->ClipRect.w);
+        //            const ImVec2 clipMinViewport = ImVec2(clipMin.x - _draw_data->DisplayPos.x, clipMin.y - _draw_data->DisplayPos.y);
+        //            const ImVec2 clipMaxViewport = ImVec2(clipMax.x - _draw_data->DisplayPos.x, clipMax.y - _draw_data->DisplayPos.y);
+
+        //            //                    APPLOG_INFO("ClipMin : ({},{}) ClipMax: ({},{})", clipMin.x, clipMin.y, clipMax.x, clipMax.y);
+
+        //            const std::uint16_t x      = std::uint16_t(std::max(clipMinViewport.x, 0.0f));
+        //            const std::uint16_t y      = std::uint16_t(std::max(clipMinViewport.y, 0.0f));
+        //            const std::uint16_t width  = std::uint16_t(std::min(clipMaxViewport.x, 65535.0f) - x);
+        //            const std::uint16_t height = std::uint16_t(std::min(clipMaxViewport.y, 65535.0f) - y);
+
+        //            gfx::set_state(state);
+        //            gfx::set_vertex_buffer(0, &tvb, 0, num_vertices);
+        //            gfx::set_index_buffer(&tib, offset, cmd->ElemCount);
+
+        //            gfx::set_scissor(x, y, width, height);
+
+        //            program->set_texture(0, "s_tex", tex);
+
+        //            gfx::submit(viewId, program->native_handle());
+
+        //            gfx::set_scissor(0, 0, 0, 0);
+        //            s_draw_calls++;
+        //        }
+
+        //        offset += cmd->ElemCount;
+        //    }
+        //}
+        // program->end();
     }
 
     static ImGuiKey ImGui_ImplSDL2_KeycodeToImGuiKey(int keycode)
@@ -369,6 +477,37 @@ namespace
         io.AddKeyEvent(ImGuiMod_Super, (sdl_key_mods & KMOD_GUI) != 0);
     }
 
+    static void ImGui_ImplSDL2_UpdateMonitors()
+    {
+        ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
+        platform_io.Monitors.resize(0);
+        want_update_monitors = false;
+        int display_count    = SDL_GetNumVideoDisplays();
+        for (int n = 0; n < display_count; n++)
+        {
+            // Warning: the validity of monitor DPI information on Windows depends on the application DPI awareness settings, which generally needs to
+            // be set in the manifest or at runtime.
+            ImGuiPlatformMonitor monitor;
+            SDL_Rect             r;
+            SDL_GetDisplayBounds(n, &r);
+            monitor.MainPos = monitor.WorkPos = ImVec2((float)r.x, (float)r.y);
+            monitor.MainSize = monitor.WorkSize = ImVec2((float)r.w, (float)r.h);
+
+            SDL_GetDisplayUsableBounds(n, &r);
+            monitor.WorkPos  = ImVec2((float)r.x, (float)r.y);
+            monitor.WorkSize = ImVec2((float)r.w, (float)r.h);
+
+            // FIXME-VIEWPORT: On MacOS SDL reports actual monitor DPI scale, ignoring OS configuration. We may want to set
+            //  DpiScale to cocoa_window.backingScaleFactor here.
+            float dpi = 0.0f;
+            if (!SDL_GetDisplayDPI(n, &dpi, nullptr, nullptr))
+                monitor.DpiScale = dpi / 96.0f;
+
+            monitor.PlatformHandle = (void*)(intptr_t)n;
+            platform_io.Monitors.push_back(monitor);
+        }
+    }
+
     void imgui_handle_event(const SDL_Event& event)
     {
         ImGuiIO& io = ImGui::GetIO();
@@ -383,6 +522,9 @@ namespace
                     SDL_GetWindowPosition(SDL_GetWindowFromID(event.motion.windowID), &window_x, &window_y);
                     mouse_pos.x += window_x;
                     mouse_pos.y += window_y;
+                    //                    APPLOG_INFO(
+                    //                        "windowID {},mouse pos ({},{}),window xy ({},{})", event.motion.windowID, mouse_pos.x, mouse_pos.y,
+                    //                        window_x, window_y);
                 }
                 io.AddMouseSourceEvent(event.motion.which == SDL_TOUCH_MOUSEID ? ImGuiMouseSource_TouchScreen : ImGuiMouseSource_Mouse);
                 io.AddMousePosEvent(mouse_pos.x, mouse_pos.y);
@@ -390,8 +532,9 @@ namespace
             }
 
             case SDL_MOUSEWHEEL: {
-                // IMGUI_DEBUG_LOG("wheel %.2f %.2f, precise %.2f %.2f\n", (float)event->wheel.x, (float)event->wheel.y, event->wheel.preciseX,
-                // event->wheel.preciseY);
+                //                IMGUI_DEBUG_LOG(
+                //                    "wheel %.2f %.2f, precise %.2f %.2f\n", (float)event.wheel.x, (float)event.wheel.y, event.wheel.preciseX,
+                //                    event.wheel.preciseY);
                 float wheel_x = -event.wheel.preciseX;
                 float wheel_y = event.wheel.preciseY;
                 io.AddMouseSourceEvent(event.wheel.which == SDL_TOUCH_MOUSEID ? ImGuiMouseSource_TouchScreen : ImGuiMouseSource_Mouse);
@@ -426,6 +569,9 @@ namespace
                     break;
                 io.AddMouseSourceEvent(event.button.which == SDL_TOUCH_MOUSEID ? ImGuiMouseSource_TouchScreen : ImGuiMouseSource_Mouse);
                 io.AddMouseButtonEvent(mouse_button, (event.type == SDL_MOUSEBUTTONDOWN));
+                APPLOG_INFO("windowID {}, mouse {}, {}", event.button.windowID, mouse_button, (event.type == SDL_MOUSEBUTTONDOWN));
+                MouseButtonsDown =
+                    (event.type == SDL_MOUSEBUTTONDOWN) ? (MouseButtonsDown | (1 << mouse_button)) : (MouseButtonsDown & ~(1 << mouse_button));
                 break;
             }
 
@@ -448,6 +594,11 @@ namespace
                 break;
             }
 
+            case SDL_DISPLAYEVENT: {
+                want_update_monitors = true;
+                break;
+            }
+
             case SDL_WINDOWEVENT: {
                 // - When capturing mouse, SDL will send a bunch of conflicting LEAVE/ENTER event on every mouse move, but the final ENTER tends to be
                 // right.
@@ -458,25 +609,54 @@ namespace
                 Uint8 window_event = event.window.event;
                 if (window_event == SDL_WINDOWEVENT_ENTER)
                 {
+                    MouseWindowID = event.window.windowID;
+                    APPLOG_INFO("SDL_WINDOWEVENT_ENTER {}", event.window.windowID);
                 }
                 if (window_event == SDL_WINDOWEVENT_LEAVE)
-                    if (window_event == SDL_WINDOWEVENT_FOCUS_GAINED)
-                        io.AddFocusEvent(true);
-                    else if (window_event == SDL_WINDOWEVENT_FOCUS_LOST)
-                        io.AddFocusEvent(false);
-                if (window_event == SDL_WINDOWEVENT_CLOSE || window_event == SDL_WINDOWEVENT_MOVED || window_event == SDL_WINDOWEVENT_RESIZED)
-                    if (ImGuiViewport* viewport = ImGui::FindViewportByPlatformHandle((void*)SDL_GetWindowFromID(event.window.windowID)))
-                    {
-                        if (window_event == SDL_WINDOWEVENT_CLOSE)
-                            viewport->PlatformRequestClose = true;
-                        if (window_event == SDL_WINDOWEVENT_MOVED)
-                            viewport->PlatformRequestMove = true;
-                        if (window_event == SDL_WINDOWEVENT_RESIZED)
-                            viewport->PlatformRequestResize = true;
-                    }
+                {
+                    APPLOG_INFO("SDL_WINDOWEVENT_LEAVE {}", event.window.windowID);
+                }
+
+                if (window_event == SDL_WINDOWEVENT_FOCUS_GAINED)
+                {
+                    io.AddFocusEvent(true);
+                    APPLOG_INFO("SDL_WINDOWEVENT_FOCUS_GAINED {}", event.window.windowID);
+                }
+                else if (window_event == SDL_WINDOWEVENT_FOCUS_LOST)
+                {
+                    io.AddFocusEvent(false);
+                    APPLOG_INFO("SDL_WINDOWEVENT_FOCUS_LOST {}", event.window.windowID);
+                }
                 break;
             }
         }
+    }
+
+    static void ImGui_ImplSDL2_UpdateMouseData()
+    {
+        ImGuiIO& io       = ImGui::GetIO();
+        auto&    renderer = core::get_subsystem<runtime::renderer>();
+
+        // SDL_CaptureMouse() let the OS know e.g. that our imgui drag outside the SDL window boundaries shouldn't e.g. trigger other operations
+        // outside
+        SDL_CaptureMouse((MouseButtonsDown != 0) ? SDL_TRUE : SDL_FALSE);
+
+        // auto& focused_window = renderer.get_window_for_sdl_id(MouseWindowID);
+
+        // (Optional) When using multiple viewports: call io.AddMouseViewportEvent() with the viewport the OS mouse cursor is hovering.
+        // If ImGuiBackendFlags_HasMouseHoveredViewport is not set by the backend, Dear imGui will ignore this field and infer the information using
+        // its flawed heuristic.
+        // - [!] SDL backend does NOT correctly ignore viewports with the _NoInputs flag.
+        //       Some backend are not able to handle that correctly. If a backend report an hovered viewport that has the _NoInputs flag (e.g. when
+        //       dragging a window for docking, the viewport has the _NoInputs flag in order to allow us to find the viewport under), then Dear
+        // ImGui /       is forced to ignore the value reported by the backend, and use its flawed heuristic to guess the viewport behind. / - [X]
+        // SDL backend correctly reports this regardless of another viewport behind focused and dragged from (we need this to find a useful drag /
+        // and drop target).
+
+        // if (io.BackendFlags & ImGuiBackendFlags_HasMouseHoveredViewport)
+        //{
+        //     io.AddMouseViewportEvent(focused_window->get_window_id());
+        // }
     }
 
     SDL_Cursor* map_cursor(ImGuiMouseCursor cursor)
@@ -529,8 +709,8 @@ namespace
         if (last_context != nullptr && last_context != context)
         {
             std::memcpy(&context->Style, &last_context->Style, sizeof(ImGuiStyle));
-            std::memcpy(&context->IO.KeyMap, &last_context->IO.KeyMap, sizeof(last_context->IO.KeyMap));
-            std::memcpy(&context->IO.NavInputs, &last_context->IO.NavInputs, sizeof(last_context->IO.NavInputs));
+            // std::memcpy(&context->IO.KeyMap, &last_context->IO.KeyMap, sizeof(last_context->IO.KeyMap));
+            // std::memcpy(&context->IO.NavInputs, &last_context->IO.NavInputs, sizeof(last_context->IO.NavInputs));
 
             context->IO.IniFilename          = last_context->IO.IniFilename;
             context->IO.ConfigFlags          = last_context->IO.ConfigFlags;
@@ -541,18 +721,21 @@ namespace
         gui::SetCurrentContext(context);
     }
 
-    void imgui_frame_update(render_window& window, delta_t dt)
+    void imgui_frame_update(delta_t dt)
     {
+        auto& renderer = core::get_subsystem<runtime::renderer>();
+        auto& window   = renderer.get_main_window();
+
         auto& io          = gui::GetIO();
-        auto  view_size   = window.get_surface()->get_size();
+        auto  view_size   = window->get_surface()->get_size();
         auto  display_w   = view_size.width;
         auto  display_h   = view_size.height;
-        auto  window_size = window.get_size();
+        auto  window_size = window->get_size();
         auto  w           = window_size[0];
         auto  h           = window_size[1];
 
         io.DisplayFramebufferScale = ImVec2(w > 0 ? ((float)display_w / w) : 0, h > 0 ? ((float)display_h / h) : 0);
-        // Setup display size (every frame to accommodate for window resizing)
+        //  Setup display size (every frame to accommodate for window resizing)
         io.DisplaySize = ImVec2(float(w), float(h));
         // Setup time step
         io.DeltaTime = dt.count();
@@ -562,19 +745,23 @@ namespace
         relative_rect.top    = 0;
         relative_rect.right  = static_cast<std::int32_t>(w);
         relative_rect.bottom = static_cast<std::int32_t>(h);
-        auto mouse_pos       = window.get_mouse_position_in_window();
+        auto mouse_pos       = window->get_mouse_position_in_window();
 
-        if (window.has_focus() && relative_rect.contains({mouse_pos[0], mouse_pos[1]}))
+        if (window->has_focus() && relative_rect.contains({mouse_pos[0], mouse_pos[1]}))
         {
             static auto last_cursor_type = gui::GetMouseCursor();
             auto        cursor           = map_cursor(gui::GetMouseCursor());
             if ((cursor != nullptr) && last_cursor_type != gui::GetMouseCursor())
             {
-                window.set_mouse_cursor(cursor);
+                window->set_mouse_cursor(cursor);
             }
 
             last_cursor_type = gui::GetMouseCursor();
         }
+
+        if (want_update_monitors)
+            ImGui_ImplSDL2_UpdateMonitors();
+        ImGui_ImplSDL2_UpdateMouseData();
 
         // Start the frame
         gui::NewFrame();
@@ -591,16 +778,23 @@ namespace
     {
         // gui::End();
         //  auto old = ImGui::GetCurrentContext()->DragDropActive;
-        ImGui::GetCurrentContext()->DragDropSourceFrameCount = ImGui::GetCurrentContext()->FrameCount;
+        // ImGui::GetCurrentContext()->DragDropSourceFrameCount = ImGui::GetCurrentContext()->FrameCount;
         gui::Render();
+
         // ImGui::GetCurrentContext()->DragDropActive = old;
-        render_func(gui::GetDrawData());
+
+        ImGuiPlatformIO& platform_io = gui::GetPlatformIO();
+        // if (platform_io.Viewports.Size == 1)
+        render_func(gui::GetDrawData(), 0);
 
         // Update and Render additional Platform Windows
         if (gui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
         {
             gui::UpdatePlatformWindows();
-            gui::RenderPlatformWindowsDefault();
+
+            for (int i = 1; i < platform_io.Viewports.Size; i++)
+                if ((platform_io.Viewports[i]->Flags & ImGuiViewportFlags_IsMinimized) == 0)
+                    render_func(platform_io.Viewports[i]->DrawData, i);
         }
     }
 
@@ -623,8 +817,11 @@ namespace
             // See SDL hack in ImGui_ImplSDL2_ShowWindow().
             sdl_flags |= (viewport->Flags & ImGuiViewportFlags_NoTaskBarIcon) ? SDL_WINDOW_SKIP_TASKBAR : 0;
 #endif
+            sdl_flags |= (vp->Flags & ImGuiViewportFlags_TopMost) ? SDL_WINDOW_ALWAYS_ON_TOP : 0;
+
             auto window = std::make_unique<render_window>(
-                "not title", (int32_t)vp->Size.x, (int32_t)vp->Size.y, (int32_t)vp->Pos.x, (int32_t)vp->Pos.y, vp->ID);
+                "not title", (int32_t)vp->Size.x, (int32_t)vp->Size.y, (int32_t)vp->Pos.x, (int32_t)vp->Pos.y, vp->ID, sdl_flags);
+            vp->PlatformHandleRaw = window->get_native_window_handle();
             renderer.register_window(std::move(window));
         };
 
@@ -634,6 +831,27 @@ namespace
         };
 
         platform_io.Platform_ShowWindow = [](ImGuiViewport* vp) {
+#if defined(_WIN32)
+            HWND hwnd = (HWND)vp->PlatformHandleRaw;
+
+            // SDL hack: Hide icon from task bar
+            // Note: SDL 2.0.6+ has a SDL_WINDOW_SKIP_TASKBAR flag which is supported under Windows but the way it create the window breaks our
+            // seamless transition.
+            if (vp->Flags & ImGuiViewportFlags_NoTaskBarIcon)
+            {
+                LONG ex_style = ::GetWindowLong(hwnd, GWL_EXSTYLE);
+                ex_style &= ~WS_EX_APPWINDOW;
+                ex_style |= WS_EX_TOOLWINDOW;
+                ::SetWindowLong(hwnd, GWL_EXSTYLE, ex_style);
+            }
+
+            // SDL hack: SDL always activate/focus windows :/
+            if (vp->Flags & ImGuiViewportFlags_NoFocusOnAppearing)
+            {
+                ::ShowWindow(hwnd, SW_SHOWNA);
+                return;
+            }
+#endif
             auto& renderer = core::get_subsystem<runtime::renderer>();
             renderer.get_window(vp->ID)->set_visible(true);
         };
@@ -689,8 +907,17 @@ namespace
         // This is mostly for simplicity and consistency, so that our code (e.g. mouse handling etc.) can use same logic for main and secondary
         // viewports.
         ImGuiViewport* main_viewport = ImGui::GetMainViewport();
+        auto&          renderer      = core::get_subsystem<runtime::renderer>();
 
-        auto id = main_viewport->ID;
+        auto& main_window = renderer.get_main_window();
+
+        // main_viewport->ID             = main_window->get_window_id();
+        main_window->set_window_id(main_viewport->ID);
+        main_viewport->PlatformHandle = main_window.get();
+        //  auto pos            = main_window->get_position();
+        //  main_viewport->Pos  = {float(pos[0]), float(pos[1])};
+        //  auto size           = main_window->get_size();
+        //  main_viewport->Size = {float(size[0]), float(size[1])};
     }
 
     void imgui_init_clipboard(ImGuiIO& io)
@@ -740,36 +967,20 @@ namespace
         io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
         io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable; // Enable Multi-Viewport / Platform Windows
 
-        // imgui_init_platform_interface();
-        // imgui_init_clipboard(io);
-        // ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
+        imgui_init_platform_interface();
+        imgui_init_clipboard(io);
+        ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
 
-        // io.BackendFlags |= ImGuiBackendFlags_PlatformHasViewports;
-        // io.BackendFlags |= ImGuiBackendFlags_RendererHasViewports;
+        const char* sdl_backend              = SDL_GetCurrentVideoDriver();
+        const char* global_mouse_whitelist[] = {"windows", "cocoa", "x11", "DIVE", "VMAN"};
+        for (int n = 0; n < IM_ARRAYSIZE(global_mouse_whitelist); n++)
+            if (strncmp(sdl_backend, global_mouse_whitelist[n], strlen(global_mouse_whitelist[n])) == 0)
+                mouse_can_use_global_state = true;
 
-        io.IniFilename = nullptr;
-        // init keyboard mapping
-        // io.KeyMap[ImGuiKey_Tab]        = SDL_SCANCODE_TAB;
-        // io.KeyMap[ImGuiKey_LeftArrow]  = SDL_SCANCODE_LEFT;
-        // io.KeyMap[ImGuiKey_RightArrow] = SDL_SCANCODE_RIGHT;
-        // io.KeyMap[ImGuiKey_UpArrow]    = SDL_SCANCODE_UP;
-        // io.KeyMap[ImGuiKey_DownArrow]  = SDL_SCANCODE_DOWN;
-        // io.KeyMap[ImGuiKey_PageUp]     = SDL_SCANCODE_PAGEUP;
-        // io.KeyMap[ImGuiKey_PageDown]   = SDL_SCANCODE_PAGEDOWN;
-        // io.KeyMap[ImGuiKey_Home]       = SDL_SCANCODE_HOME;
-        // io.KeyMap[ImGuiKey_End]        = SDL_SCANCODE_END;
-        // io.KeyMap[ImGuiKey_Insert]     = SDL_SCANCODE_INSERT;
-        // io.KeyMap[ImGuiKey_Delete]     = SDL_SCANCODE_DELETE;
-        // io.KeyMap[ImGuiKey_Backspace]  = SDL_SCANCODE_BACKSPACE;
-        // io.KeyMap[ImGuiKey_Space]      = SDL_SCANCODE_SPACE;
-        // io.KeyMap[ImGuiKey_Enter]      = SDL_SCANCODE_RETURN;
-        // io.KeyMap[ImGuiKey_Escape]     = SDL_SCANCODE_ESCAPE;
-        // io.KeyMap[ImGuiKey_A]          = SDL_SCANCODE_A;
-        // io.KeyMap[ImGuiKey_C]          = SDL_SCANCODE_C;
-        // io.KeyMap[ImGuiKey_V]          = SDL_SCANCODE_V;
-        // io.KeyMap[ImGuiKey_X]          = SDL_SCANCODE_X;
-        // io.KeyMap[ImGuiKey_Y]          = SDL_SCANCODE_Y;
-        // io.KeyMap[ImGuiKey_Z]          = SDL_SCANCODE_Z;
+        io.BackendFlags |= ImGuiBackendFlags_PlatformHasViewports;
+        io.BackendFlags |= ImGuiBackendFlags_RendererHasViewports;
+
+        io.IniFilename       = nullptr;
         std::uint8_t* data   = nullptr;
         int           width  = 0;
         int           height = 0;
@@ -869,7 +1080,7 @@ void gui_system::push_context(uint32_t id)
     imgui_set_context(context);
 }
 
-void gui_system::draw_begin(render_window& window, delta_t dt) { imgui_frame_update(window, dt); }
+void gui_system::draw_begin(delta_t dt) { imgui_frame_update(dt); }
 
 void gui_system::draw_end() { imgui_frame_end(); }
 
@@ -903,6 +1114,7 @@ void gui_style::set_style_colors(const hsv_setup& _setup)
     ImGuiStyle& style                           = gui::GetStyle();
     style.FrameRounding                         = rounding;
     style.WindowRounding                        = rounding;
+    style.CurveTessellationTol                  = 0.1f;
     style.Colors[ImGuiCol_Text]                 = ImVec4(col_text.x, col_text.y, col_text.z, 1.00f);
     style.Colors[ImGuiCol_TextDisabled]         = ImVec4(col_text.x, col_text.y, col_text.z, 0.58f);
     style.Colors[ImGuiCol_WindowBg]             = ImVec4(col_back.x, col_back.y, col_back.z, 1.00f);

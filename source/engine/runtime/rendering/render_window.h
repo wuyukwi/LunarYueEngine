@@ -31,8 +31,8 @@ public:
                   int32_t       h,
                   int32_t       x     = SDL_WINDOWPOS_UNDEFINED,
                   int32_t       y     = SDL_WINDOWPOS_UNDEFINED,
-                  std::uint32_t flags = SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE,
-                  uint32_t      id    = 0);
+                  uint32_t      id    = 0,
+                  std::uint32_t flags = SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
 
     //-----------------------------------------------------------------------------
     //  Name : ~render_window (virtual )
@@ -58,6 +58,17 @@ public:
     //-----------------------------------------------------------------------------
     gfx::view_id begin_present_pass();
 
+    //-----------------------------------------------------------------------------
+    //  Name : on_resize (virtual )
+    /// <summary>
+    /// This function is called so that derived classes can
+    /// perform custom actions when the size of the window changes.
+    /// </summary>
+    //-----------------------------------------------------------------------------
+    void on_resize();
+
+    void set_size(const std::array<std::uint32_t, 2>& size) override;
+
 protected:
     //-----------------------------------------------------------------------------
     //  Name : prepare_surface (virtual )
@@ -74,15 +85,6 @@ protected:
     /// </summary>
     //-----------------------------------------------------------------------------
     virtual void destroy_surface();
-
-    //-----------------------------------------------------------------------------
-    //  Name : on_resize (virtual )
-    /// <summary>
-    /// This function is called so that derived classes can
-    /// perform custom actions when the size of the window changes.
-    /// </summary>
-    //-----------------------------------------------------------------------------
-    void on_resize();
 
     /// Render surface for this window.
     std::shared_ptr<gfx::frame_buffer> surface_;

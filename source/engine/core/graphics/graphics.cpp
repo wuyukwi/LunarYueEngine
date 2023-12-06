@@ -32,12 +32,31 @@ namespace gfx
             int32_t len = vsnprintf(out, sizeof(temp), _format, _argList);
             if ((int32_t)sizeof(temp) < len)
             {
-                out = (char*)alloca(len + 1);
-                len = vsnprintf(out, len, _format, _argList);
+                out = (char*)_malloca(len + 1);
+                if (out)
+                {
+                    len      = vsnprintf(out, len, _format, _argList);
+                    out[len] = '\0';
+                }
+                else
+                {
+                    return;
+                }
             }
-            out[len] = '\0';
+            else
+            {
+                out[len] = '\0';
+            }
 
-            log("info", /*std::string(_filePath) +*/ "[" + std::to_string(_line) + "]" + std::string(out));
+            std::string filePath(_filePath);
+            size_t      lastSlashPos = filePath.find_last_of("\\");
+            std::string fileName;
+            if (lastSlashPos != std::string::npos)
+                fileName = filePath.substr(lastSlashPos + 1);
+            else
+                fileName = filePath;
+
+            log("info", fileName + "[" + std::to_string(_line) + "]" + std::string(out));
         }
 
         void profilerBegin(const char* /*_name*/, std::uint32_t /*_abgr*/, const char* /*_filePath*/, std::uint16_t /*_line*/) final {}

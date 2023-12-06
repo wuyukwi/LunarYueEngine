@@ -5,12 +5,18 @@
 
 void render_window::on_resize() { render_window::prepare_surface(); }
 
+void render_window::set_size(const std::array<std::uint32_t, 2>& size)
+{
+    window_sdl::set_size(size);
+    on_resize();
+}
+
 render_window::render_window() : window_sdl() { render_window::prepare_surface(); }
 
-render_window::render_window(const char* title, int32_t w, int32_t h, int32_t x, int32_t y, std::uint32_t flags, uint32_t id) :
+render_window::render_window(const char* title, int32_t w, int32_t h, int32_t x, int32_t y, uint32_t id, std::uint32_t flags) :
     window_sdl(title, w, h, x, y, flags)
 {
-
+    set_window_id(id);
     render_window::prepare_surface();
 }
 
