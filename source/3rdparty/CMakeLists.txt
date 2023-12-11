@@ -11,5 +11,6 @@ add_subdirectory_ex(glm)
 add_subdirectory_ex(openal_soft)
 add_subdirectory_ex(stb)
 add_subdirectory_ex(sdl)
+add_subdirectory_ex(sdl3)
 
 
