@@ -17,3 +17,12 @@
 [submodule "source/3rdparty/openal_soft/openal_soft"]
 	path = source/3rdparty/openal_soft/openal_soft
 	url = https://github.com/kcat/openal-soft.git
+[submodule "source/3rdparty/rttr/rttr"]
+	path = source/3rdparty/rttr/rttr
+	url = https://github.com/rttrorg/rttr.git
+[submodule "source/3rdparty/spdlog/spdlog"]
+	path = source/3rdparty/spdlog/spdlog
+	url = https://github.com/gabime/spdlog.git
+[submodule "source/3rdparty/sdl3/sdl3"]
+	path = source/3rdparty/sdl3/sdl3
+	url = https://github.com/libsdl-org/SDL.git
