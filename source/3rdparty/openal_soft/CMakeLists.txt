@@ -11,9 +11,9 @@ if(MINGW)
 	set( ALSOFT_STATIC_LIBGCC ON CACHE BOOL "Force -static-libgcc for static GCC runtimes" FORCE)
 endif()
 
-add_subdirectory( openal-soft )
+add_subdirectory(openal_soft)
 
-target_include_directories (OpenAL PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/openal-soft/include)
+target_include_directories (OpenAL PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/openal_soft/include)
 
 set_target_properties(OpenAL PROPERTIES FOLDER ${THIRD_PARTY_FOLDER}/OpenAL)
 set_target_properties(alcommon PROPERTIES FOLDER ${THIRD_PARTY_FOLDER}/OpenAL)
