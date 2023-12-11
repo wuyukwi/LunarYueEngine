@@ -1,25 +1,30 @@
 #include "sdl_window.h"
+
 #include "core/graphics/graphics.h"
 #include "core/logging/logging.h"
+
+#include "SDL2/SDL.h"
 
 BX_PRAGMA_DIAGNOSTIC_PUSH()
 BX_PRAGMA_DIAGNOSTIC_IGNORED_CLANG("-Wextern-c-compat")
 #include "SDL2/SDL_syswm.h"
 BX_PRAGMA_DIAGNOSTIC_POP()
 
-window_sdl::window_sdl()
+sdl_window::sdl_window(const char* title, int32_t w, int32_t h, int32_t x, int32_t y, std::uint32_t flags)
 {
-    window_ = (SDL_CreateWindow("sdl_window", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 100, 100, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE));
-}
+    if (x == -1)
+        x = SDL_WINDOWPOS_CENTERED;
+    if (y == -1)
+        y = SDL_WINDOWPOS_CENTERED;
+    if (flags == 0)
+        flags = SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI;
 
-window_sdl::window_sdl(const char* title, int32_t w, int32_t h, int32_t x, int32_t y, std::uint32_t flags)
-{
     window_ = (SDL_CreateWindow(title, x, y, w, h, flags));
 }
 
-window_sdl::~window_sdl() { SDL_DestroyWindow(window_); }
+sdl_window::~sdl_window() { SDL_DestroyWindow(window_); }
 
-void window_sdl::set_visible(bool visible)
+void sdl_window::set_visible(bool visible)
 {
     if (visible)
         SDL_ShowWindow(window_);
@@ -27,7 +32,7 @@ void window_sdl::set_visible(bool visible)
         SDL_HideWindow(window_);
 }
 
-bool window_sdl::is_visible() const
+bool sdl_window::is_visible() const
 {
     Uint32 windowFlags = SDL_GetWindowFlags(window_);
 
@@ -36,28 +41,33 @@ bool window_sdl::is_visible() const
     return isVisible;
 }
 
-void window_sdl::raise_window() { SDL_RaiseWindow(window_); }
+void sdl_window::raise_window() { SDL_RaiseWindow(window_); }
 
-void window_sdl::maximize() { SDL_MaximizeWindow(window_); }
+void sdl_window::maximize() { SDL_MaximizeWindow(window_); }
 
-void window_sdl::minimize() { SDL_MinimizeWindow(window_); }
+void sdl_window::minimize() { SDL_MinimizeWindow(window_); }
 
-void window_sdl::restore() { SDL_RestoreWindow(window_); }
+void sdl_window::restore() { SDL_RestoreWindow(window_); }
 
-void window_sdl::set_title(const char* title) { SDL_SetWindowTitle(window_, title); }
+void sdl_window::set_title(const char* title) { SDL_SetWindowTitle(window_, title); }
 
-void window_sdl::set_mouse_cursor(SDL_Cursor* cursor) { SDL_SetCursor(cursor); };
+void sdl_window::set_mouse_cursor(SDL_Cursor* cursor) { SDL_SetCursor(cursor); }
+void sdl_window::show_cursor(bool visible)
+{
+    if (visible)
+        SDL_ShowCursor(SDL_TRUE);
+    else
+        SDL_ShowCursor(SDL_FALSE);
+};
 
-bool window_sdl::has_focus()
+bool sdl_window::has_focus()
 {
     Uint32 windowFlags = SDL_GetWindowFlags(window_);
 
-    return (windowFlags & SDL_WINDOW_MOUSE_FOCUS) != 0;
+    return (windowFlags & SDL_WINDOW_INPUT_FOCUS) != 0;
 }
 
-bool window_sdl::poll_event(SDL_Event& event) { return SDL_PollEvent(&event); }
-
-void* window_sdl::get_native_window_handle()
+void* sdl_window::get_native_window_handle()
 {
     SDL_SysWMinfo wmi;
     SDL_VERSION(&wmi.version);
@@ -96,7 +106,7 @@ void* window_sdl::get_native_window_handle()
 #endif // BX_PLATFORM_
 }
 
-void window_sdl::destroy_window()
+void sdl_window::destroy_window()
 {
     if (!window_)
         return;
@@ -113,16 +123,16 @@ void window_sdl::destroy_window()
     SDL_DestroyWindow(window_);
 }
 
-std::array<std::int32_t, 2> window_sdl::get_position() const
+std::array<std::int32_t, 2> sdl_window::get_position() const
 {
     std::array<std::int32_t, 2> position = {0, 0};
     SDL_GetWindowPosition(window_, &position[0], &position[1]);
     return position;
 }
 
-void window_sdl::set_position(const std::array<std::int32_t, 2>& position) { SDL_SetWindowPosition(window_, position[0], position[1]); }
+void sdl_window::set_position(const std::array<std::int32_t, 2>& position) { SDL_SetWindowPosition(window_, position[0], position[1]); }
 
-std::array<std::uint32_t, 2> window_sdl::get_size() const
+std::array<std::uint32_t, 2> sdl_window::get_size() const
 {
     int w, h;
     SDL_GetWindowSize(window_, &w, &h);
@@ -130,16 +140,24 @@ std::array<std::uint32_t, 2> window_sdl::get_size() const
     return {static_cast<std::uint32_t>(w), static_cast<std::uint32_t>(h)};
 }
 
-void window_sdl::set_size(const std::array<std::uint32_t, 2>& size) { SDL_SetWindowSize(window_, size[0], size[1]); }
+std::array<std::uint32_t, 2> sdl_window::get_drawable_size() const
+{
+    int w, h;
+    SDL_GL_GetDrawableSize(window_, &w, &h);
 
-std::array<int, 2> window_sdl::get_mouse_position_global()
+    return {static_cast<std::uint32_t>(w), static_cast<std::uint32_t>(h)};
+}
+
+void sdl_window::set_size(const std::array<std::uint32_t, 2>& size) { SDL_SetWindowSize(window_, size[0], size[1]); }
+
+std::array<int, 2> sdl_window::get_mouse_position_global()
 {
     std::array<int, 2> position;
     SDL_GetMouseState(&position[0], &position[1]);
     return position;
 }
 
-std::array<int, 2> window_sdl::get_mouse_position_in_window()
+std::array<int, 2> sdl_window::get_mouse_position_in_window()
 {
     std::array<int, 2> position;
     SDL_GetMouseState(&position[0], &position[1]);
@@ -153,9 +171,9 @@ std::array<int, 2> window_sdl::get_mouse_position_in_window()
     return position;
 }
 
-void window_sdl::set_mouse_position_global(const std::array<int, 2>& position) { SDL_WarpMouseGlobal(position[0], position[1]); }
+void sdl_window::set_mouse_position_global(const std::array<int, 2>& position) { SDL_WarpMouseGlobal(position[0], position[1]); }
 
-void window_sdl::set_mouse_position_in_window(const std::array<int, 2>& position)
+void sdl_window::set_mouse_position_in_window(const std::array<int, 2>& position)
 {
     int windowX, windowY;
     SDL_GetWindowPosition(window_, &windowX, &windowY);
@@ -163,11 +181,11 @@ void window_sdl::set_mouse_position_in_window(const std::array<int, 2>& position
     SDL_WarpMouseInWindow(window_, position[0] + windowX, position[1] + windowY);
 }
 
-void window_sdl::set_mouse_cursor_visible(bool visible) { SDL_ShowCursor(visible ? SDL_ENABLE : SDL_DISABLE); }
+void sdl_window::set_mouse_cursor_visible(bool visible) { SDL_ShowCursor(visible ? SDL_ENABLE : SDL_DISABLE); }
 
-void window_sdl::set_mouse_cursor_grabbed(bool grabbed) { SDL_SetRelativeMouseMode(grabbed ? SDL_TRUE : SDL_FALSE); }
+void sdl_window::set_mouse_cursor_grabbed(bool grabbed) { SDL_SetRelativeMouseMode(grabbed ? SDL_TRUE : SDL_FALSE); }
 
-void window_sdl::set_opacity(float opacity)
+void sdl_window::set_opacity(float opacity)
 {
     // Ensure opacity is within the valid range [0.0, 1.0]
     opacity = std::max(0.0f, std::min(1.0f, opacity));
@@ -179,15 +197,11 @@ void window_sdl::set_opacity(float opacity)
     SDL_SetWindowOpacity(window_, alpha);
 }
 
-bool window_sdl::get_window_minimized() { return (SDL_GetWindowFlags(window_) & SDL_WINDOW_MINIMIZED) != 0; }
+bool sdl_window::window_is_minimized() { return (SDL_GetWindowFlags(window_) & SDL_WINDOW_MINIMIZED) != 0; }
 
-void window_sdl::set_window_id(uint32_t id) { id_ = id; }
+uint32_t sdl_window::get_sdl_window_id() { return SDL_GetWindowID(window_); }
 
-uint32_t window_sdl::get_window_id() { return id_; }
-
-uint32_t window_sdl::get_sdl_window_id() { return SDL_GetWindowID(window_); }
-
-void window_sdl::request_close()
+void sdl_window::request_close()
 {
     // Create an SDL event for closing the window
     SDL_Event event;

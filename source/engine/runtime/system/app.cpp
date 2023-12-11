@@ -75,7 +75,7 @@ namespace runtime
     {
         std::vector<SDL_Event> events;
         SDL_Event              e;
-        while (render_window::poll_event(e))
+        while (SDL_PollEvent(&e))
         {
             events.emplace_back(e);
         }
@@ -98,15 +98,17 @@ namespace runtime
 
         poll_events();
 
-        renderer.process_pending_windows();
-
-        const auto& windows     = renderer.get_windows();
-        bool        should_quit = std::all_of(std::begin(windows), std::end(windows), [](const auto& window) { return !window->is_visible(); });
-        if (should_quit)
+        if (renderer.should_quit())
         {
             quit(0);
             return;
         }
+
+        // APPLOG_INFO("fps :{} frame : {} deltatime : {} time_since_launch :{}",
+        //             sim.get_fps(),
+        //             sim.get_frame(),
+        //             sim.get_delta_time().count(),
+        //             sim.get_time_since_launch().count());
 
         on_frame_begin(dt);
 

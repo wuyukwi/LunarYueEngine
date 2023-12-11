@@ -415,7 +415,7 @@ void handle_camera_movement()
 
     if (input.is_mouse_button_down(SDL_BUTTON_RIGHT))
     {
-        auto wnd = rend.get_focused_window();
+        auto& wnd = rend.get_focused_window();
         if (wnd)
         {
             auto    pos         = wnd->get_mouse_position_in_window();
@@ -657,7 +657,7 @@ void scene_dock::render(const ImVec2& area)
     auto& input    = core::get_subsystem<runtime::input>();
     auto& sim      = core::get_subsystem<core::simulation>();
 
-    auto  window        = renderer.get_focused_window();
+    auto& window        = renderer.get_focused_window();
     auto& editor_camera = es.camera;
     auto& selected      = es.selection_data.object;
 
@@ -770,6 +770,5 @@ void scene_dock::render(const ImVec2& area)
 
 scene_dock::scene_dock(const std::string& dtitle, bool close_button, const ImVec2& min_size)
 {
-
     initialize(dtitle, close_button, min_size, std::bind(&scene_dock::render, this, std::placeholders::_1));
 }

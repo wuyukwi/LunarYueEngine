@@ -3,6 +3,7 @@
 
 #include <core/cmd_line/parser.hpp>
 #include <core/common_lib/basetypes.hpp>
+#include <runtime/system/events.h>
 
 #include <memory>
 #include <vector>
@@ -60,6 +61,8 @@ namespace runtime
         /// <param name="id"></param>
         void remove_window_by_id(uint32_t id);
 
+        bool should_quit() { return should_quit_; }
+
         //-----------------------------------------------------------------------------
         //  Name : get_windows ()
         /// <summary>
@@ -69,8 +72,7 @@ namespace runtime
         /// </summary>
         //-----------------------------------------------------------------------------
         const std::vector<std::unique_ptr<render_window>>& get_windows() const;
-        const std::unique_ptr<render_window>&              get_window(std::uint32_t id) const;
-        const std::unique_ptr<render_window>&              get_window_for_sdl_id(std::uint32_t id) const;
+        const std::unique_ptr<render_window>&              get_window_for_id(std::uint32_t id) const;
         const std::unique_ptr<render_window>&              get_main_window() const;
         void                                               hide_all_secondary_windows();
         void                                               show_all_secondary_windows();
@@ -82,8 +84,7 @@ namespace runtime
         ///
         /// </summary>
         //-----------------------------------------------------------------------------
-        render_window* get_focused_window() const;
-        void           process_pending_windows();
+        const std::unique_ptr<render_window>& get_focused_window() const;
 
         void platform_events(const std::vector<SDL_Event>& events);
 
@@ -92,6 +93,7 @@ namespace runtime
 
         /// engine windows
         std::vector<std::unique_ptr<render_window>> windows_;
-        std::vector<std::unique_ptr<render_window>> windows_pending_addition_;
+
+        bool should_quit_ = false;
     };
 } // namespace runtime

@@ -7,22 +7,19 @@ void render_window::on_resize() { render_window::prepare_surface(); }
 
 void render_window::set_size(const std::array<std::uint32_t, 2>& size)
 {
-    window_sdl::set_size(size);
+    sdl_window::set_size(size);
     on_resize();
 }
 
-render_window::render_window() : window_sdl() { render_window::prepare_surface(); }
-
-render_window::render_window(const char* title, int32_t w, int32_t h, int32_t x, int32_t y, uint32_t id, std::uint32_t flags) :
-    window_sdl(title, w, h, x, y, flags)
+render_window::render_window(const char* title, int32_t w, int32_t h, int32_t x, int32_t y, std::uint32_t flags) :
+    sdl_window(title, w, h, x, y, flags)
 {
-    set_window_id(id);
     render_window::prepare_surface();
 }
 
 render_window::~render_window()
 {
-    window_sdl::~window_sdl();
+    sdl_window::~sdl_window();
 
     render_window::destroy_surface();
 }
@@ -52,7 +49,7 @@ gfx::view_id render_window::begin_present_pass()
 
 void render_window::prepare_surface()
 {
-    const auto size = get_size();
+    const auto size = get_drawable_size();
 
     surface_ = std::make_shared<gfx::frame_buffer>(reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(get_native_window_handle())),
                                                    static_cast<std::uint16_t>(size[0]),

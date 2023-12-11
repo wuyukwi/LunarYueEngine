@@ -7,6 +7,8 @@
 #include <core/graphics/render_pass.h>
 #include <core/logging/logging.h>
 
+#include <SDL.h>
+
 #include <algorithm>
 #include <cstdarg>
 
@@ -25,7 +27,6 @@ namespace runtime
         auto window = std::make_unique<render_window>("LunarYue", 1280, 720);
         window->raise_window();
         register_window(std::move(window));
-        process_pending_windows();
     }
 
     renderer::~renderer()
@@ -33,47 +34,37 @@ namespace runtime
         on_platform_events.disconnect(this, &renderer::platform_events);
         on_frame_end.disconnect(this, &renderer::frame_end);
         windows_.clear();
-        windows_pending_addition_.clear();
         gfx::shutdown();
         SDL_Quit();
     }
 
-    render_window* renderer::get_focused_window() const
+    const std::unique_ptr<render_window>& renderer::get_focused_window() const
     {
-        render_window* focused_window = nullptr;
+        static const std::unique_ptr<render_window> empty;
 
         const auto& windows = get_windows();
         auto        it      = std::find_if(std::begin(windows), std::end(windows), [](const auto& window) { return window->has_focus(); });
 
         if (it != std::end(windows))
         {
-            focused_window = it->get();
+            return *it;
         }
 
-        return focused_window;
+        return empty;
     }
 
     void renderer::register_window(std::unique_ptr<render_window> window) { windows_.emplace_back(std::move(window)); }
 
     void renderer::remove_window_by_id(uint32_t id)
     {
-        auto it = std::remove_if(std::begin(windows_), std::end(windows_), [id](const auto& window) { return window->get_window_id() == id; });
+        auto it = std::remove_if(std::begin(windows_), std::end(windows_), [id](const auto& window) { return window->get_sdl_window_id() == id; });
 
         windows_.erase(it, std::end(windows_));
     }
 
     const std::vector<std::unique_ptr<render_window>>& renderer::get_windows() const { return windows_; }
 
-    const std::unique_ptr<render_window>& renderer::get_window(uint32_t id) const
-    {
-        auto it = std::find_if(std::begin(windows_), std::end(windows_), [id](const auto& window) { return window->get_window_id() == id; });
-
-        ensures(it != std::end(windows_));
-
-        return *it;
-    }
-
-    const std::unique_ptr<render_window>& renderer::get_window_for_sdl_id(std::uint32_t id) const
+    const std::unique_ptr<render_window>& renderer::get_window_for_id(std::uint32_t id) const
     {
         auto it = std::find_if(std::begin(windows_), std::end(windows_), [id](const auto& window) { return window->get_sdl_window_id() == id; });
 
@@ -113,25 +104,29 @@ namespace runtime
         }
     }
 
-    void renderer::process_pending_windows()
-    {
-        // std::move(std::begin(windows_pending_addition_), std::end(windows_pending_addition_), std::back_inserter(windows_));
-        // windows_pending_addition_.clear();
-    }
-
     void renderer::platform_events(const std::vector<SDL_Event>& events)
     {
         for (const auto& e : events)
         {
+            if (e.type == SDL_QUIT)
+                should_quit_ = true;
+
             if (e.type == SDL_WINDOWEVENT)
             {
                 if (e.window.event == SDL_WINDOWEVENT_CLOSE)
                 {
-                    windows_.erase(
-                        std::remove_if(std::begin(windows_),
-                                       std::end(windows_),
-                                       [window_id = e.window.windowID](const auto& window) { return window->get_sdl_window_id() == window_id; }),
-                        std::end(windows_));
+                    if (e.window.windowID == get_main_window()->get_sdl_window_id())
+                    {
+                        should_quit_ = true;
+                    }
+                    else
+                    {
+                        windows_.erase(
+                            std::remove_if(std::begin(windows_),
+                                           std::end(windows_),
+                                           [window_id = e.window.windowID](const auto& window) { return window->get_sdl_window_id() == window_id; }),
+                            std::end(windows_));
+                    }
                     return;
                 }
             }
@@ -160,7 +155,7 @@ namespace runtime
         SDL_SetHint(SDL_HINT_IME_SHOW_UI, "1");
         SDL_SetHint(SDL_HINT_MOUSE_AUTO_CAPTURE, "0");
 
-        std::unique_ptr<window_sdl> init_window = std::make_unique<window_sdl>("init window", 100, 100, 100, 0, 0);
+        std::unique_ptr<sdl_window> init_window = std::make_unique<sdl_window>("init window", 100, 100, 100, 0, 0);
 
         auto size = init_window->get_size();
         init_window->set_visible(false);

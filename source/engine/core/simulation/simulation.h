@@ -106,7 +106,7 @@ namespace core
         /// minimum/maximum frames per second
         std::uint32_t min_fps_ = 0;
         ///
-        std::uint32_t max_fps_ = 200;
+        std::uint32_t max_fps_ = 400;
         ///
         std::uint32_t max_inactive_fps_ = 20;
         /// previous time steps for smoothing in seconds

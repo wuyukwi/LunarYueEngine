@@ -23,6 +23,8 @@
 #include <editor_core/gui/embedded/vs_ocornut_imgui.bin.h>
 #include <editor_core/gui/gui.h>
 
+#include <SDL.h>
+
 //////////////////////////////////////////////////////////////////////////
 #include "../meta/interface/gui_system.hpp"
 
@@ -41,7 +43,6 @@ namespace
     bool                                           want_update_monitors = true;
     int                                            MouseButtonsDown;
     bool                                           mouse_can_use_global_state = false;
-    uint32_t                                       MouseWindowID;
 
     void render_func(ImDrawData* _draw_data, gfx::view_id viewId)
     {
@@ -250,7 +251,7 @@ namespace
         // program->end();
     }
 
-    static ImGuiKey ImGui_ImplSDL2_KeycodeToImGuiKey(int keycode)
+    ImGuiKey keycode_to_imgui_key(int keycode)
     {
         switch (keycode)
         {
@@ -468,7 +469,7 @@ namespace
         return ImGuiKey_None;
     }
 
-    static void ImGui_ImplSDL2_UpdateKeyModifiers(SDL_Keymod sdl_key_mods)
+    void update_keymodifiers(SDL_Keymod sdl_key_mods)
     {
         ImGuiIO& io = ImGui::GetIO();
         io.AddKeyEvent(ImGuiMod_Ctrl, (sdl_key_mods & KMOD_CTRL) != 0);
@@ -477,7 +478,7 @@ namespace
         io.AddKeyEvent(ImGuiMod_Super, (sdl_key_mods & KMOD_GUI) != 0);
     }
 
-    static void ImGui_ImplSDL2_UpdateMonitors()
+    void update_monitors()
     {
         ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
         platform_io.Monitors.resize(0);
@@ -568,10 +569,17 @@ namespace
                 if (mouse_button == -1)
                     break;
                 io.AddMouseSourceEvent(event.button.which == SDL_TOUCH_MOUSEID ? ImGuiMouseSource_TouchScreen : ImGuiMouseSource_Mouse);
-                io.AddMouseButtonEvent(mouse_button, (event.type == SDL_MOUSEBUTTONDOWN));
-                APPLOG_INFO("windowID {}, mouse {}, {}", event.button.windowID, mouse_button, (event.type == SDL_MOUSEBUTTONDOWN));
-                MouseButtonsDown =
-                    (event.type == SDL_MOUSEBUTTONDOWN) ? (MouseButtonsDown | (1 << mouse_button)) : (MouseButtonsDown & ~(1 << mouse_button));
+                if (event.type == SDL_MOUSEBUTTONDOWN)
+                {
+                    io.AddMouseButtonEvent(mouse_button, true);
+                    SDL_CaptureMouse(SDL_TRUE);
+                }
+                else
+                {
+                    io.AddMouseButtonEvent(mouse_button, false);
+                    SDL_CaptureMouse(SDL_FALSE);
+                }
+                // APPLOG_INFO("windowID {}, mouse {}, {}", event.button.windowID, mouse_button, (event.type == SDL_MOUSEBUTTONDOWN));
                 break;
             }
 
@@ -582,8 +590,8 @@ namespace
 
             case SDL_KEYDOWN:
             case SDL_KEYUP: {
-                ImGui_ImplSDL2_UpdateKeyModifiers((SDL_Keymod)event.key.keysym.mod);
-                ImGuiKey key = ImGui_ImplSDL2_KeycodeToImGuiKey(event.key.keysym.sym);
+                update_keymodifiers((SDL_Keymod)event.key.keysym.mod);
+                ImGuiKey key = keycode_to_imgui_key(event.key.keysym.sym);
                 io.AddKeyEvent(key, (event.type == SDL_KEYDOWN));
                 io.SetKeyEventNativeData(
                     key,
@@ -609,54 +617,27 @@ namespace
                 Uint8 window_event = event.window.event;
                 if (window_event == SDL_WINDOWEVENT_ENTER)
                 {
-                    MouseWindowID = event.window.windowID;
-                    APPLOG_INFO("SDL_WINDOWEVENT_ENTER {}", event.window.windowID);
+                    // MouseWindowID = event.window.windowID;
+                    // APPLOG_INFO("SDL_WINDOWEVENT_ENTER {}", event.window.windowID);
                 }
                 if (window_event == SDL_WINDOWEVENT_LEAVE)
                 {
-                    APPLOG_INFO("SDL_WINDOWEVENT_LEAVE {}", event.window.windowID);
+                    // APPLOG_INFO("SDL_WINDOWEVENT_LEAVE {}", event.window.windowID);
                 }
 
                 if (window_event == SDL_WINDOWEVENT_FOCUS_GAINED)
                 {
                     io.AddFocusEvent(true);
-                    APPLOG_INFO("SDL_WINDOWEVENT_FOCUS_GAINED {}", event.window.windowID);
+                    // APPLOG_INFO("SDL_WINDOWEVENT_FOCUS_GAINED {}", event.window.windowID);
                 }
                 else if (window_event == SDL_WINDOWEVENT_FOCUS_LOST)
                 {
                     io.AddFocusEvent(false);
-                    APPLOG_INFO("SDL_WINDOWEVENT_FOCUS_LOST {}", event.window.windowID);
+                    // APPLOG_INFO("SDL_WINDOWEVENT_FOCUS_LOST {}", event.window.windowID);
                 }
                 break;
             }
         }
-    }
-
-    static void ImGui_ImplSDL2_UpdateMouseData()
-    {
-        ImGuiIO& io       = ImGui::GetIO();
-        auto&    renderer = core::get_subsystem<runtime::renderer>();
-
-        // SDL_CaptureMouse() let the OS know e.g. that our imgui drag outside the SDL window boundaries shouldn't e.g. trigger other operations
-        // outside
-        SDL_CaptureMouse((MouseButtonsDown != 0) ? SDL_TRUE : SDL_FALSE);
-
-        // auto& focused_window = renderer.get_window_for_sdl_id(MouseWindowID);
-
-        // (Optional) When using multiple viewports: call io.AddMouseViewportEvent() with the viewport the OS mouse cursor is hovering.
-        // If ImGuiBackendFlags_HasMouseHoveredViewport is not set by the backend, Dear imGui will ignore this field and infer the information using
-        // its flawed heuristic.
-        // - [!] SDL backend does NOT correctly ignore viewports with the _NoInputs flag.
-        //       Some backend are not able to handle that correctly. If a backend report an hovered viewport that has the _NoInputs flag (e.g. when
-        //       dragging a window for docking, the viewport has the _NoInputs flag in order to allow us to find the viewport under), then Dear
-        // ImGui /       is forced to ignore the value reported by the backend, and use its flawed heuristic to guess the viewport behind. / - [X]
-        // SDL backend correctly reports this regardless of another viewport behind focused and dragged from (we need this to find a useful drag /
-        // and drop target).
-
-        // if (io.BackendFlags & ImGuiBackendFlags_HasMouseHoveredViewport)
-        //{
-        //     io.AddMouseViewportEvent(focused_window->get_window_id());
-        // }
     }
 
     SDL_Cursor* map_cursor(ImGuiMouseCursor cursor)
@@ -672,10 +653,8 @@ namespace
             {ImGuiMouseCursor_ResizeNWSE, SDL_SYSTEM_CURSOR_SIZENWSE},
             {ImGuiMouseCursor_Hand, SDL_SYSTEM_CURSOR_HAND},
             {ImGuiMouseCursor_NotAllowed, SDL_SYSTEM_CURSOR_NO},
-            //     {ImGuiMouseCursor_Help, SDL_SYSTEM_CURSOR_HELP},
             {ImGuiMouseCursor_Wait, SDL_SYSTEM_CURSOR_WAIT},
             {ImGuiMouseCursor_ArrowWait, SDL_SYSTEM_CURSOR_WAITARROW},
-            //        {ImGuiMouseCursor_Cross, SDL_SYSTEM_CURSOR_CROSShair},
         };
 
         auto id = cursor_map[cursor];
@@ -723,16 +702,18 @@ namespace
 
     void imgui_frame_update(delta_t dt)
     {
-        auto& renderer = core::get_subsystem<runtime::renderer>();
-        auto& window   = renderer.get_main_window();
-
+        auto& renderer    = core::get_subsystem<runtime::renderer>();
+        auto& window      = renderer.get_main_window();
         auto& io          = gui::GetIO();
         auto  view_size   = window->get_surface()->get_size();
-        auto  display_w   = view_size.width;
-        auto  display_h   = view_size.height;
         auto  window_size = window->get_size();
-        auto  w           = window_size[0];
-        auto  h           = window_size[1];
+
+        auto display_w = view_size.width;
+        auto display_h = view_size.height;
+        if (window->window_is_minimized())
+            window_size = {0, 0};
+        auto w = window_size[0];
+        auto h = window_size[1];
 
         io.DisplayFramebufferScale = ImVec2(w > 0 ? ((float)display_w / w) : 0, h > 0 ? ((float)display_h / h) : 0);
         //  Setup display size (every frame to accommodate for window resizing)
@@ -740,28 +721,27 @@ namespace
         // Setup time step
         io.DeltaTime = dt.count();
 
-        irect32_t relative_rect;
-        relative_rect.left   = 0;
-        relative_rect.top    = 0;
-        relative_rect.right  = static_cast<std::int32_t>(w);
-        relative_rect.bottom = static_cast<std::int32_t>(h);
-        auto mouse_pos       = window->get_mouse_position_in_window();
-
-        if (window->has_focus() && relative_rect.contains({mouse_pos[0], mouse_pos[1]}))
+        static ImGuiMouseCursor last_cursor_type = ImGui::GetMouseCursor();
+        if (io.MouseDrawCursor || last_cursor_type == ImGuiMouseCursor_None)
         {
-            static auto last_cursor_type = gui::GetMouseCursor();
-            auto        cursor           = map_cursor(gui::GetMouseCursor());
+            // Hide OS mouse cursor if imgui is drawing it or if it wants no cursor
+            SDL_ShowCursor(SDL_FALSE);
+        }
+        else
+        {
+            // Show OS mouse cursor
+            auto cursor = map_cursor(gui::GetMouseCursor());
             if ((cursor != nullptr) && last_cursor_type != gui::GetMouseCursor())
             {
                 window->set_mouse_cursor(cursor);
             }
+            window->show_cursor(true);
 
             last_cursor_type = gui::GetMouseCursor();
         }
 
         if (want_update_monitors)
-            ImGui_ImplSDL2_UpdateMonitors();
-        ImGui_ImplSDL2_UpdateMouseData();
+            update_monitors();
 
         // Start the frame
         gui::NewFrame();
@@ -820,14 +800,18 @@ namespace
             sdl_flags |= (vp->Flags & ImGuiViewportFlags_TopMost) ? SDL_WINDOW_ALWAYS_ON_TOP : 0;
 
             auto window = std::make_unique<render_window>(
-                "not title", (int32_t)vp->Size.x, (int32_t)vp->Size.y, (int32_t)vp->Pos.x, (int32_t)vp->Pos.y, vp->ID, sdl_flags);
+                "not title", (int32_t)vp->Size.x, (int32_t)vp->Size.y, (int32_t)vp->Pos.x, (int32_t)vp->Pos.y, sdl_flags);
             vp->PlatformHandleRaw = window->get_native_window_handle();
+            vp->PlatformHandle    = window.get();
             renderer.register_window(std::move(window));
         };
 
         platform_io.Platform_DestroyWindow = [](ImGuiViewport* vp) {
+            auto  window   = (render_window*)vp->PlatformHandle;
             auto& renderer = core::get_subsystem<runtime::renderer>();
-            renderer.remove_window_by_id(vp->ID);
+            renderer.remove_window_by_id(window->get_sdl_window_id());
+            vp->PlatformHandle   = nullptr;
+            vp->PlatformUserData = vp->PlatformHandle = nullptr;
         };
 
         platform_io.Platform_ShowWindow = [](ImGuiViewport* vp) {
@@ -852,72 +836,64 @@ namespace
                 return;
             }
 #endif
-            auto& renderer = core::get_subsystem<runtime::renderer>();
-            renderer.get_window(vp->ID)->set_visible(true);
+            auto window = (render_window*)vp->PlatformHandle;
+            window->set_visible(true);
         };
 
         platform_io.Platform_SetWindowPos = [](ImGuiViewport* vp, ImVec2 pos) {
-            auto& renderer = core::get_subsystem<runtime::renderer>();
-            renderer.get_window(vp->ID)->set_position({int32_t(pos.x), int32_t(pos.y)});
+            auto window = (render_window*)vp->PlatformHandle;
+            window->set_position({int32_t(pos.x), int32_t(pos.y)});
         };
 
         platform_io.Platform_GetWindowPos = [](ImGuiViewport* vp) -> ImVec2 {
-            auto& renderer = core::get_subsystem<runtime::renderer>();
-            auto& pos      = renderer.get_window(vp->ID)->get_position();
+            auto  window = (render_window*)vp->PlatformHandle;
+            auto& pos    = window->get_position();
             return {float(pos[0]), float(pos[1])};
         };
 
         platform_io.Platform_SetWindowSize = [](ImGuiViewport* vp, ImVec2 pos) {
-            auto& renderer = core::get_subsystem<runtime::renderer>();
-            renderer.get_window(vp->ID)->set_size({uint32_t(pos.x), uint32_t(pos.y)});
+            auto window = (render_window*)vp->PlatformHandle;
+            window->set_size({uint32_t(pos.x), uint32_t(pos.y)});
         };
 
         platform_io.Platform_GetWindowSize = [](ImGuiViewport* vp) -> ImVec2 {
-            auto& renderer = core::get_subsystem<runtime::renderer>();
-            auto& size     = renderer.get_window(vp->ID)->get_position();
+            auto  window = (render_window*)vp->PlatformHandle;
+            auto& size   = window->get_position();
             return {float(size[0]), float(size[1])};
         };
 
         platform_io.Platform_SetWindowFocus = [](ImGuiViewport* vp) {
-            auto& renderer = core::get_subsystem<runtime::renderer>();
-            renderer.get_window(vp->ID)->raise_window();
+            auto window = (render_window*)vp->PlatformHandle;
+            window->raise_window();
         };
 
         platform_io.Platform_GetWindowFocus = [](ImGuiViewport* vp) -> bool {
-            auto& renderer = core::get_subsystem<runtime::renderer>();
-            return renderer.get_window(vp->ID)->has_focus();
+            auto window = (render_window*)vp->PlatformHandle;
+            return window->has_focus();
         };
 
         platform_io.Platform_GetWindowMinimized = [](ImGuiViewport* vp) -> bool {
-            auto& renderer = core::get_subsystem<runtime::renderer>();
-            return renderer.get_window(vp->ID)->get_window_minimized();
+            auto window = (render_window*)vp->PlatformHandle;
+            return window->window_is_minimized();
         };
 
         platform_io.Platform_SetWindowTitle = [](ImGuiViewport* vp, const char* title) {
-            auto& renderer = core::get_subsystem<runtime::renderer>();
-            renderer.get_window(vp->ID)->set_title(title);
+            auto window = (render_window*)vp->PlatformHandle;
+            window->set_title(title);
         };
 
         platform_io.Platform_SetWindowAlpha = [](ImGuiViewport* vp, float alpha) {
-            auto& renderer = core::get_subsystem<runtime::renderer>();
-            renderer.get_window(vp->ID)->set_opacity(alpha);
+            auto window = (render_window*)vp->PlatformHandle;
+            window->set_opacity(alpha);
         };
 
         // Register main window handle (which is owned by the main application, not by us)
         // This is mostly for simplicity and consistency, so that our code (e.g. mouse handling etc.) can use same logic for main and secondary
         // viewports.
-        ImGuiViewport* main_viewport = ImGui::GetMainViewport();
-        auto&          renderer      = core::get_subsystem<runtime::renderer>();
-
-        auto& main_window = renderer.get_main_window();
-
-        // main_viewport->ID             = main_window->get_window_id();
-        main_window->set_window_id(main_viewport->ID);
+        ImGuiViewport* main_viewport  = ImGui::GetMainViewport();
+        auto&          renderer       = core::get_subsystem<runtime::renderer>();
+        auto&          main_window    = renderer.get_main_window();
         main_viewport->PlatformHandle = main_window.get();
-        //  auto pos            = main_window->get_position();
-        //  main_viewport->Pos  = {float(pos[0]), float(pos[1])};
-        //  auto size           = main_window->get_size();
-        //  main_viewport->Size = {float(size[0]), float(size[1])};
     }
 
     void imgui_init_clipboard(ImGuiIO& io)
@@ -979,6 +955,7 @@ namespace
 
         io.BackendFlags |= ImGuiBackendFlags_PlatformHasViewports;
         io.BackendFlags |= ImGuiBackendFlags_RendererHasViewports;
+        io.BackendFlags |= ImGuiBackendFlags_RendererHasVtxOffset;
 
         io.IniFilename       = nullptr;
         std::uint8_t* data   = nullptr;
@@ -1159,6 +1136,12 @@ void gui_style::set_style_colors(const hsv_setup& _setup)
     style.Colors[ImGuiCol_PlotHistogramHovered] = ImVec4(col_main.x, col_main.y, col_main.z, 1.00f);
     style.Colors[ImGuiCol_TextSelectedBg]       = ImVec4(col_main.x, col_main.y, col_main.z, 0.43f);
     style.Colors[ImGuiCol_NavHighlight]         = style.Colors[ImGuiCol_HeaderHovered];
+
+    if (gui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+    {
+        style.WindowRounding              = 0.0f;
+        style.Colors[ImGuiCol_WindowBg].w = 1.0f;
+    }
 }
 
 void gui_style::load_style()

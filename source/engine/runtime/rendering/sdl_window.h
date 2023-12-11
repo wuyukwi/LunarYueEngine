@@ -3,16 +3,15 @@
 #include <array>
 #include <memory>
 
-#include "SDL2/SDL.h"
-
 struct ImGuiPlatformIO;
+class SDL_Window;
+struct SDL_Cursor;
 
-class window_sdl
+class sdl_window
 {
 public:
-    window_sdl();
-    window_sdl(const char* title, int32_t w, int32_t h, int32_t x, int32_t y, std::uint32_t flags);
-    ~window_sdl();
+    sdl_window(const char* title, int32_t w, int32_t h, int32_t x, int32_t y, std::uint32_t flags);
+    ~sdl_window();
 
     void set_visible(bool visible);
     bool is_visible() const;
@@ -23,6 +22,7 @@ public:
 
     void set_title(const char* title);
     void set_mouse_cursor(SDL_Cursor* cursor);
+    void show_cursor(bool visible);
 
     void raise_window();
     bool has_focus();
@@ -35,6 +35,7 @@ public:
     void set_position(const std::array<std::int32_t, 2>& position);
 
     std::array<std::uint32_t, 2> get_size() const;
+    std::array<std::uint32_t, 2> get_drawable_size() const;
 
     std::array<int, 2> get_mouse_position_global();
     std::array<int, 2> get_mouse_position_in_window();
@@ -47,19 +48,14 @@ public:
 
     void set_opacity(float opacity);
 
-    bool get_window_minimized();
+    bool window_is_minimized();
 
-    void     set_window_id(uint32_t id);
-    uint32_t get_window_id();
     uint32_t get_sdl_window_id();
 
     void request_close();
 
     virtual void set_size(const std::array<std::uint32_t, 2>& size);
 
-    static bool poll_event(SDL_Event& event);
-
 private:
     SDL_Window* window_ = nullptr;
-    uint32_t    id_     = 0;
 };

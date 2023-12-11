@@ -9,7 +9,7 @@
 
 #include <memory>
 
-class render_window : public window_sdl
+class render_window : public sdl_window
 {
 public:
     //-----------------------------------------------------------------------------
@@ -26,13 +26,7 @@ public:
     /// Constructor
     /// </summary>
     //-----------------------------------------------------------------------------
-    render_window(const char*   title,
-                  int32_t       w,
-                  int32_t       h,
-                  int32_t       x     = SDL_WINDOWPOS_UNDEFINED,
-                  int32_t       y     = SDL_WINDOWPOS_UNDEFINED,
-                  uint32_t      id    = 0,
-                  std::uint32_t flags = SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
+    render_window(const char* title, int32_t w, int32_t h, int32_t x = -1, int32_t y = -1, std::uint32_t flags = 0);
 
     //-----------------------------------------------------------------------------
     //  Name : ~render_window (virtual )
@@ -58,6 +52,8 @@ public:
     //-----------------------------------------------------------------------------
     gfx::view_id begin_present_pass();
 
+    void set_size(const std::array<std::uint32_t, 2>& size) override;
+
     //-----------------------------------------------------------------------------
     //  Name : on_resize (virtual )
     /// <summary>
@@ -66,8 +62,6 @@ public:
     /// </summary>
     //-----------------------------------------------------------------------------
     void on_resize();
-
-    void set_size(const std::array<std::uint32_t, 2>& size) override;
 
 protected:
     //-----------------------------------------------------------------------------
