@@ -4,3 +4,13 @@
 [submodule "source/3rdparty/bgfx/bgfx"]
 	path = source/3rdparty/bgfx/bgfx
 	url = https://github.com/bkaradzic/bgfx.cmake.git
+[submodule "source/3rdparty/cereal/cereal"]
+	path = source/3rdparty/cereal/cereal
+	url = https://github.com/USCiLab/cereal.git
+[submodule "source/3rdparty/glm/glm"]
+	path = source/3rdparty/glm/glm
+	url = https://github.com/g-truc/glm.git
+[submodule "source/3rdparty/imgui/imgui"]
+	path = source/3rdparty/imgui/imgui
+	url = https://github.com/ocornut/imgui.git
+	branch = docking
