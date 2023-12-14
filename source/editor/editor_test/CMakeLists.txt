@@ -3,13 +3,9 @@ set(EDITOR_TEST_NAME test_editor)
 
 set(libsrc
     main.cpp
-    imgui_impl_dx11.cpp
-    imgui_impl_sdl2.cpp
 )
 
 set(libheaders
-    imgui_impl_sdl2.h
-    imgui_impl_dx11.h
 )
 
 set(EDITOR_RESOURCE
@@ -23,9 +19,10 @@ source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}" FILES ${libsrc} ${EDITOR_RESOURC
 
 set_target_properties(${EDITOR_TEST_NAME} PROPERTIES FOLDER ${EDITOR_TEST_FOLDER})
 
-target_link_libraries(${EDITOR_TEST_NAME} PUBLIC editor_core)
-target_link_libraries(${EDITOR_TEST_NAME} PUBLIC runtime)
+#target_link_libraries(${EDITOR_TEST_NAME} PUBLIC editor_core)
+#target_link_libraries(${EDITOR_TEST_NAME} PUBLIC runtime)
 target_link_libraries(${EDITOR_TEST_NAME} PUBLIC d3d11)
+target_link_libraries(${EDITOR_TEST_NAME} PUBLIC SDL3::SDL3-static)
 
 target_include_directories (${EDITOR_TEST_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/..)
 

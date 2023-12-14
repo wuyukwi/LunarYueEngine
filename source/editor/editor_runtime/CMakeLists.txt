@@ -7,7 +7,7 @@ source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}" FILES ${libsrc} ${EDITOR_RESOURC
 
 add_executable (${EDITOR_NAME} ${libsrc} ${EDITOR_RESOURCE})
 
-add_dependencies(${EDITOR_NAME} ALL_BUILD)
+#add_dependencies(${EDITOR_NAME} ALL_BUILD)
 
 target_link_libraries(${EDITOR_NAME} PUBLIC editor_core)
 target_link_libraries(${EDITOR_NAME} PUBLIC runtime)

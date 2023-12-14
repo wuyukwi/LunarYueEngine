@@ -208,11 +208,6 @@ namespace runtime
             APPLOG_ERROR("Could not initialize rendering backend!");
             return false;
         }
-        if (gfx::get_renderer_type() == gfx::renderer_type::Direct3D9)
-        {
-            APPLOG_ERROR("Does not support dx9. Minimum supported is dx11.");
-            return false;
-        }
 
         APPLOG_INFO("Using {0} rendering backend.", gfx::get_renderer_name(gfx::get_renderer_type()));
 

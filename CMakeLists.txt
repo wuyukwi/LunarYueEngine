@@ -2,9 +2,11 @@ cmake_minimum_required(VERSION 3.19 FATAL_ERROR)
 
 project(LunarYue VERSION 0.1.0)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(BUILD_SHARED_LIBS OFF)
+add_definitions(-DUNICODE -D_UNICODE)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /D_UNICODE /DUNICODE")
 
 include(CMakeDependentOption)
 
@@ -19,6 +21,10 @@ endif()
 if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
   # Update if necessary
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=implicit-const-int-float-conversion")
+endif()
+
+if(MSVC)
+    add_compile_options(/Zc:__cplusplus)
 endif()
 
 set(ASSET_DIR "data")

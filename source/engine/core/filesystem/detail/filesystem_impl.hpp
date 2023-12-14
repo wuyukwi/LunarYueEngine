@@ -3713,7 +3713,7 @@ namespace ghc
         GHC_INLINE size_t hash_value(const path& p) noexcept { return std::hash<std::string>()(p.generic_string()); }
 
 #ifdef GHC_HAS_THREEWAY_COMP
-        GHC_INLINE std::strong_ordering operator<=>(const path& lhs, const path& rhs) noexcept { return lhs.compare(rhs) <= > 0; }
+        GHC_INLINE std::strong_ordering operator<=>(const path& lhs, const path& rhs) noexcept { return lhs.compare(rhs) <=> 0; }
 #endif
 
         GHC_INLINE bool operator==(const path& lhs, const path& rhs) noexcept { return lhs.compare(rhs) == 0; }
@@ -5792,7 +5792,7 @@ namespace ghc
         }
 
 #ifdef GHC_HAS_THREEWAY_COMP
-        GHC_INLINE std::strong_ordering directory_entry::operator<=>(const directory_entry& rhs) const noexcept { return _path <= > rhs._path; }
+        GHC_INLINE std::strong_ordering directory_entry::operator<=>(const directory_entry& rhs) const noexcept { return _path <=> rhs._path; }
 #endif
 
         GHC_INLINE bool directory_entry::operator<(const directory_entry& rhs) const noexcept { return _path < rhs._path; }

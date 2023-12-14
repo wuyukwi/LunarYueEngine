@@ -82,9 +82,10 @@ void scene_dock::show_statistics(const ImVec2& area, unsigned int fps, bool& sho
     gui::SetNextWindowPos(stat_pos);
     gui::SetNextWindowSizeConstraints(ImVec2(0, 0), area - gui::GetStyle().WindowPadding);
 
-    if (gui::Begin((ICON_FA_BAR_CHART "\tSTATISTICS##" + title).c_str(),
-                   nullptr,
-                   ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize))
+    if (gui::Begin( //(ICON_FA_BAR_CHART "\tSTATISTICS##" + title).c_str(),
+            "\tSTATISTICS##",
+            nullptr,
+            ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize))
     {
 
         auto stats = gfx::get_stats();
@@ -93,7 +94,8 @@ void scene_dock::show_statistics(const ImVec2& area, unsigned int fps, bool& sho
         const double to_cpu_ms = 1000.0 / double(stats->cpuTimerFreq);
         const double to_gpu_ms = 1000.0 / double(stats->gpuTimerFreq);
 
-        if (gui::CollapsingHeader(ICON_FA_INFO_CIRCLE "\tRender Info"))
+        if (gui::CollapsingHeader( // ICON_FA_INFO_CIRCLE +
+                "\tRender Info"))
         {
             gui::PushFont("default");
 
@@ -129,7 +131,8 @@ void scene_dock::show_statistics(const ImVec2& area, unsigned int fps, bool& sho
             gui::PopFont();
         }
 
-        if (gui::CollapsingHeader(ICON_FA_PUZZLE_PIECE "\tResources"))
+        if (gui::CollapsingHeader( // ICON_FA_PUZZLE_PIECE
+                "\tResources"))
         {
             const auto caps = gfx::get_caps();
 
@@ -153,7 +156,8 @@ void scene_dock::show_statistics(const ImVec2& area, unsigned int fps, bool& sho
             gui::PopFont();
         }
 
-        if (gui::CollapsingHeader(ICON_FA_CLOCK_O "\tProfiler"))
+        if (gui::CollapsingHeader( // ICON_FA_CLOCK_O
+                "\tProfiler"))
         {
             if (gui::Checkbox("Enable profiler", &enable_profiler))
             {

@@ -23,16 +23,23 @@
 
 #include <sstream>
 
+#include "spdlog/sinks/stdout_color_sinks.h"
 namespace runtime
 {
 
     void app::setup(cmd_line::parser& parser)
     {
-        auto logging_container = logging::get_mutable_logging_container();
-        logging_container->add_sink(std::make_shared<logging::sinks::platform_sink_mt>());
-        logging_container->add_sink(std::make_shared<logging::sinks::simple_file_sink_mt>("Log.txt", true));
+        // auto logging_container = logging::get_mutable_logging_container();
+        // logging_container->add_sink(std::make_shared<logging::sinks::platform_sink_mt>());
+        // logging_container->add_sink(std::make_shared<logging::sinks::basic_file_sink_mt>("Log.txt", true));
 
-        logging::create(APPLOG, logging_container);
+        // logging::create<logging::logger>(APPLOG, logging_container);
+        auto            platform_sink = std::make_shared<logging::sinks::platform_sink_mt>();
+        auto            file_sink     = std::make_shared<logging::sinks::basic_file_sink_mt>("Log.txt", true);
+        logging::logger logger(APPLOG, {platform_sink, file_sink});
+
+        auto log = std::make_shared<logging::logger>(logger);
+        logging::initialize_logger(log);
 
         serialization::set_warning_logger([](const std::string& msg) { APPLOG_WARNING(msg); });
 

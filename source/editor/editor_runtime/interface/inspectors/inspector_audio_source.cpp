@@ -1,4 +1,5 @@
 #include "inspector_audio_source.h"
+#include "editor_core/gui/embedded/IconsFontAwesome6.h"
 #include "inspectors.h"
 
 bool inspector_audio_source_component::inspect(rttr::variant& var, bool read_only, const meta_getter& get_metadata)
@@ -8,17 +9,17 @@ bool inspector_audio_source_component::inspect(rttr::variant& var, bool read_onl
     if (data)
     {
         gui::PushFont("icons");
-        if (gui::Button(ICON_FA_PLAY))
+        if (gui::Button(reinterpret_cast<const char*>(ICON_FA_PLAY)))
         {
             data->play();
         }
         gui::SameLine();
-        if (gui::Button(ICON_FA_PAUSE))
+        if (gui::Button(reinterpret_cast<const char*>(ICON_FA_PAUSE)))
         {
             data->pause();
         }
         gui::SameLine();
-        if (gui::Button(ICON_FA_STOP))
+        if (gui::Button(reinterpret_cast<const char*>(ICON_FA_STOP)))
         {
             data->stop();
         }

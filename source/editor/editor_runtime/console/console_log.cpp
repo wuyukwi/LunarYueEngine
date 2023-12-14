@@ -1,16 +1,16 @@
 #include "console_log.h"
 #include <map>
 
-void console_log::_sink_it(const logging::details::log_msg& msg)
+void console_log::sink_it_(const logging::details::log_msg& msg)
 {
     {
         std::lock_guard<std::recursive_mutex> lock(entries_mutex_);
-        entries_.push_back({msg.formatted.c_str(), msg.level});
+        entries_.push_back({msg.payload, msg.level});
     }
     has_new_entries_ = true;
 }
 
-void console_log::_flush() {}
+void console_log::flush_() {}
 
 console_log::entries_t console_log::get_items()
 {

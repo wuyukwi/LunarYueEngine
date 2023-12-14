@@ -438,17 +438,16 @@ namespace editor
     {
         console_log_ = std::make_shared<console_log>();
 
-        auto logging_container = logging::get_mutable_logging_container();
-        logging_container->add_sink(console_log_);
+        logging::get(APPLOG)->sinks().push_back(console_log_);
 
         runtime::app::start(parser);
 
         core::add_subsystem<gui_system>();
         //        core::add_subsystem<docking_system>();
-        core::add_subsystem<editing_system>();
-        core::add_subsystem<picking_system>();
-        core::add_subsystem<debugdraw_system>();
-        core::add_subsystem<project_manager>();
+        // core::add_subsystem<editing_system>();
+        // core::add_subsystem<picking_system>();
+        // core::add_subsystem<debugdraw_system>();
+        // core::add_subsystem<project_manager>();
 
         create_docks();
         register_console_commands();
@@ -518,7 +517,7 @@ namespace editor
             //   gui.push_context(id);
             gui.draw_begin(dt);
 
-            gui::PushFont("standard");
+            gui::PushFont("heavy");
 
             if (show_start_page_)
             {
@@ -529,7 +528,7 @@ namespace editor
                 //               draw_dockspace(i == 0, *window, dockspace);
             }
 
-            handle_drag_and_drop();
+            // handle_drag_and_drop();
 
             gui::PopFont();
             gui.draw_end();
@@ -584,7 +583,7 @@ namespace editor
             gui::SetCursorPosY(ImGui::GetCursorPosY());
             gui::PushStyleColor(ImGuiCol_Text, col);
             gui::AlignTextToFramePadding();
-            if (gui::Selectable(last_item.first.c_str(), false, 0, ImVec2(0, gui::GetTextLineHeight())))
+            if (gui::Selectable(last_item.first.data(), false, 0, ImVec2(0, gui::GetTextLineHeight())))
             {
                 dockspace.activate_dock(console_dock_name_);
             }
@@ -595,7 +594,9 @@ namespace editor
         {
             gui::PushFont("icons");
             gui::AlignTextToFramePadding();
-            gui::Text(ICON_FA_TASKS " Queued tasks : (%u)", unsigned(tasks_info.pending_tasks));
+            gui::Text( // ICON_FA_TASKS
+                " Queued tasks : (%u)",
+                unsigned(tasks_info.pending_tasks));
             auto& g = *gui::GetCurrentContext();
             if (!g.DragDropActive && gui::IsItemHovered())
             {

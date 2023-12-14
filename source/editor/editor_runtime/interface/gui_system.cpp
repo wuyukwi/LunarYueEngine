@@ -17,8 +17,7 @@
 #include <runtime/rendering/render_window.h>
 #include <runtime/rendering/renderer.h>
 
-#include <editor_core/gui/embedded/editor_default.ttf.h>
-#include <editor_core/gui/embedded/fontawesome_webfont.ttf.h>
+#include <editor_core/gui/embedded/IconsFontAwesome6.h>
 #include <editor_core/gui/embedded/fs_ocornut_imgui.bin.h>
 #include <editor_core/gui/embedded/vs_ocornut_imgui.bin.h>
 #include <editor_core/gui/gui.h>
@@ -846,8 +845,8 @@ namespace
         };
 
         platform_io.Platform_GetWindowPos = [](ImGuiViewport* vp) -> ImVec2 {
-            auto  window = (render_window*)vp->PlatformHandle;
-            auto& pos    = window->get_position();
+            auto window = (render_window*)vp->PlatformHandle;
+            auto pos    = window->get_position();
             return {float(pos[0]), float(pos[1])};
         };
 
@@ -857,8 +856,8 @@ namespace
         };
 
         platform_io.Platform_GetWindowSize = [](ImGuiViewport* vp) -> ImVec2 {
-            auto  window = (render_window*)vp->PlatformHandle;
-            auto& size   = window->get_position();
+            auto window = (render_window*)vp->PlatformHandle;
+            auto size   = window->get_position();
             return {float(size[0]), float(size[1])};
         };
 
@@ -962,33 +961,50 @@ namespace
         int           width  = 0;
         int           height = 0;
 
+        const auto font_path = fs::resolve_protocol("editor:/data/font");
+
         ImFontConfig config;
         config.FontDataOwnedByAtlas = false;
         config.MergeMode            = false;
 
         gui::AddFont("default", io.Fonts->AddFontDefault(&config));
-        gui::AddFont("standard",
-                     io.Fonts->AddFontFromMemoryTTF(reinterpret_cast<void*>(std::intptr_t(s_font_default)), sizeof(s_font_default), 20, &config));
+
+        const ImWchar*    chineseSimplified  = io.Fonts->GetGlyphRangesChineseSimplifiedCommon();
+        const ImWchar*    chineseTraditional = io.Fonts->GetGlyphRangesChineseFull();
+        const ImWchar*    japanese           = io.Fonts->GetGlyphRangesJapanese();
+        ImVector<ImWchar> combinedRanges;
+        combinedRanges.reserve(1024);
+        for (int i = 0; chineseSimplified[i] != 0; ++i)
+            combinedRanges.push_back(chineseSimplified[i]);
+        for (int i = 0; chineseTraditional[i] != 0; ++i)
+            combinedRanges.push_back(chineseTraditional[i]);
+        for (int i = 0; japanese[i] != 0; ++i)
+            combinedRanges.push_back(japanese[i]);
+        combinedRanges.push_back(0);
+
+        gui::AddFont(
+            "heavy",
+            io.Fonts->AddFontFromFileTTF((font_path / "ResourceHanRoundedCN-Heavy.ttf").generic_string().c_str(), 20, &config, combinedRanges.Data));
 
         static const ImWchar icons_ranges[] = {ICON_MIN_FA, ICON_MAX_FA, 0};
         config.MergeMode                    = true;
         config.PixelSnapH                   = true;
-        gui::AddFont(
-            "icons",
-            io.Fonts->AddFontFromMemoryTTF(
-                reinterpret_cast<void*>(std::intptr_t(fontawesome_webfont_ttf)), sizeof(fontawesome_webfont_ttf), 20, &config, icons_ranges));
+        gui::AddFont(FONT_ICON_FILE_NAME_FAR,
+                     io.Fonts->AddFontFromFileTTF((font_path / FONT_ICON_FILE_NAME_FAR).generic_string().c_str(), 20, &config, icons_ranges));
+        gui::AddFont(FONT_ICON_FILE_NAME_FAS,
+                     io.Fonts->AddFontFromFileTTF((font_path / FONT_ICON_FILE_NAME_FAS).generic_string().c_str(), 20, &config, icons_ranges));
 
-        config.MergeMode  = false;
-        config.PixelSnapH = false;
-        gui::AddFont("standard_big",
-                     io.Fonts->AddFontFromMemoryTTF(reinterpret_cast<void*>(std::intptr_t(s_font_default)), sizeof(s_font_default), 50, &config));
+        // config.MergeMode  = false;
+        // config.PixelSnapH = false;
+        // gui::AddFont("standard_big",
+        //              io.Fonts->AddFontFromMemoryTTF(reinterpret_cast<void*>(std::intptr_t(s_font_default)), sizeof(s_font_default), 50, &config));
 
-        config.MergeMode  = true;
-        config.PixelSnapH = true;
-        gui::AddFont(
-            "icons_big",
-            io.Fonts->AddFontFromMemoryTTF(
-                reinterpret_cast<void*>(std::intptr_t(fontawesome_webfont_ttf)), sizeof(fontawesome_webfont_ttf), 50, &config, icons_ranges));
+        // config.MergeMode  = true;
+        // config.PixelSnapH = true;
+        // gui::AddFont(
+        //     "icons_big",
+        //     io.Fonts->AddFontFromMemoryTTF(
+        //         reinterpret_cast<void*>(std::intptr_t(fontawesome_webfont_ttf)), sizeof(fontawesome_webfont_ttf), 50, &config, icons_ranges));
 
         io.Fonts->GetTexDataAsRGBA32(&data, &width, &height);
 

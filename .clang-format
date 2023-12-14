@@ -1,7 +1,5 @@
+# Format Style Options - Created with Clang Power Tools
 ---
-StatementMacros: ['Meta', 'CLASS', 'REFLECTION_TYPE', 'REFLECTION_BODY']
-Language:        Cpp
-# BasedOnStyle:  Google
 AccessModifierOffset: -4
 AlignAfterOpenBracket: Align
 AlignConsecutiveAssignments: true
@@ -22,38 +20,39 @@ AlwaysBreakTemplateDeclarations: Yes
 BinPackArguments: false
 BinPackParameters: false
 BraceWrapping:
-  AfterClass:      true
+  AfterCaseLabel: false
+  AfterClass: true
   AfterControlStatement: true
-  AfterEnum:       true
-  AfterFunction:   true
-  AfterNamespace:  true
+  AfterEnum: true
+  AfterFunction: true
+  AfterNamespace: true
   AfterObjCDeclaration: true
-  AfterStruct:     true
-  AfterUnion:      true
+  AfterStruct: true
+  AfterUnion: true
   AfterExternBlock: true
-  BeforeCatch:     true
-  BeforeElse:      true
-  IndentBraces:    false
+  BeforeCatch: true
+  BeforeElse: true
+  IndentBraces: false
   SplitEmptyFunction: false
   SplitEmptyRecord: false
   SplitEmptyNamespace: false
+  BeforeLambdaBody: false
+  BeforeWhile: false
 BreakBeforeBinaryOperators: None
 BreakBeforeBraces: Custom
 BreakBeforeInheritanceComma: false
 BreakBeforeTernaryOperators: false
-BreakConstructorInitializersBeforeComma: true
 BreakConstructorInitializers: AfterColon
 BreakAfterJavaFieldAnnotations: false
 BreakStringLiterals: true
-ColumnLimit:     150
-CommentPragmas:  '^ IWYU pragma:'
-CompactNamespaces:  false
+ColumnLimit: 150
+CommentPragmas: '^ IWYU pragma:'
+CompactNamespaces: false
 ConstructorInitializerAllOnOneLineOrOnePerLine: false
-ConstructorInitializerIndentWidth: 4
+ConstructorInitializerIndentWidth : 4
 ContinuationIndentWidth: 4
 Cpp11BracedListStyle: true
 DerivePointerAlignment: false
-DisableFormat:   false
 ExperimentalAutoDetectBinPacking: false
 FixNamespaceComments: true
 ForEachMacros:
@@ -62,28 +61,29 @@ ForEachMacros:
   - BOOST_FOREACH
 IncludeBlocks: Preserve
 IncludeCategories:
-  - Regex:           '^"(core/pilot_prerequisites)/'
-    Priority:        -1
-  - Regex:           '^"(core)/)'
-    Priority:        5
-  - Regex:           '^"(runtime)/)'
-    Priority:        4
-  - Regex:           '^"(client|server)/)'
-    Priority:        3
-  - Regex:           '^"(sketum)/)'
-    Priority:        2
-  - Regex:           '.*'
-    Priority:        1
+  - Regex: '^"(core/pilot_prerequisites)/'
+    Priority: -1
+  - Regex: '^"(core)/)'
+    Priority: 5
+  - Regex: '^"(runtime)/)'
+    Priority: 4
+  - Regex: '^"(client|server)/)'
+    Priority: 3
+  - Regex: '^"(sketum)/)'
+    Priority: 2
+  - Regex: '.*'
+    Priority: 1
 IndentCaseLabels: true
-IndentWidth:     4
 IndentExternBlock: AfterExternBlock
 IndentPPDirectives: None
+IndentWidth: 4
 IndentWrappedFunctionNames: false
 JavaScriptQuotes: Leave
 JavaScriptWrapImports: true
 KeepEmptyLinesAtTheStartOfBlocks: true
+Language: Cpp
 MacroBlockBegin: ''
-MacroBlockEnd:   ''
+MacroBlockEnd: ''
 MaxEmptyLinesToKeep: 1
 NamespaceIndentation: All
 ObjCBlockIndentWidth: 2
@@ -97,15 +97,13 @@ PenaltyBreakString: 1000
 PenaltyExcessCharacter: 1000000
 PenaltyReturnTypeOnItsOwnLine: 60
 PointerAlignment: Left
-ReflowComments:  true
+ReflowComments: true
 SortIncludes: true
 SortUsingDeclarations: true
 SpaceAfterCStyleCast: false
 SpaceAfterLogicalNot: false
 SpaceAfterTemplateKeyword: false
-# SpaceAroundPointerQualifiers: Default
 SpaceBeforeAssignmentOperators: true
-# SpaceBeforeCaseColon: true
 SpaceBeforeCpp11BracedList: true
 SpaceBeforeCtorInitializerColon: true
 SpaceBeforeInheritanceColon: true
@@ -114,14 +112,13 @@ SpaceBeforeRangeBasedForLoopColon: true
 SpaceBeforeSquareBrackets: false
 SpaceInEmptyParentheses: false
 SpacesBeforeTrailingComments: 1
-SpacesInAngles:  false
+SpacesInAngles: false
+SpacesInContainerLiterals: true
 SpacesInCStyleCastParentheses: false
 SpacesInConditionalStatement: false
-SpacesInContainerLiterals: true
 SpacesInParentheses: false
 SpacesInSquareBrackets: false
-Standard: c++17
+Standard: c++20
 TabWidth: 4
 UseTab: Never
 ...
-

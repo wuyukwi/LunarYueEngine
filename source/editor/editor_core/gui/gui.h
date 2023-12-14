@@ -1,6 +1,5 @@
 #pragma once
 
-#include "embedded/icons_font_awesome.h"
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui/imgui.h"
 #include "imgui/imgui_internal.h"

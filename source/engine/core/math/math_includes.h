@@ -235,10 +235,10 @@ namespace math
         static std::uint32_t float4_to_u32(const vec4& in)
         {
             std::uint32_t out;
-            out = ((std::uint32_t)(saturate<float, highp>(in.x) * 255.0f));
-            out |= ((std::uint32_t)(saturate<float, highp>(in.y) * 255.0f)) << 8;
-            out |= ((std::uint32_t)(saturate<float, highp>(in.z) * 255.0f)) << 16;
-            out |= ((std::uint32_t)(saturate<float, highp>(in.w) * 255.0f)) << 24;
+            out = ((std::uint32_t)(saturate<float>(in.x) * 255.0f));
+            out |= ((std::uint32_t)(saturate<float>(in.y) * 255.0f)) << 8;
+            out |= ((std::uint32_t)(saturate<float>(in.z) * 255.0f)) << 16;
+            out |= ((std::uint32_t)(saturate<float>(in.w) * 255.0f)) << 24;
             return out;
         }
 

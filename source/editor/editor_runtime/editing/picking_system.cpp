@@ -143,11 +143,11 @@ namespace editor
                 std::uint8_t bb = *x++;
                 std::uint8_t aa = *x++;
                 (void)aa;
-                if (gfx::renderer_type::Direct3D9 == gfx::get_renderer_type())
-                {
-                    // Comes back as BGRA
-                    std::swap(rr, bb);
-                }
+                // if (gfx::renderer_type::Direct3D9 == gfx::get_renderer_type())
+                //{
+                //     // Comes back as BGRA
+                //     std::swap(rr, bb);
+                // }
 
                 // Skip background
                 if (0 == (rr | gg | bb))

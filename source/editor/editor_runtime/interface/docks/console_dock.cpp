@@ -47,7 +47,7 @@ void console_dock::render(const ImVec2&)
 
     for (const auto& pair_msg : items)
     {
-        const char* item_cstr = pair_msg.first.c_str();
+        const char* item_cstr = pair_msg.first.data();
         if (!filter.PassFilter(item_cstr))
             continue;
         const auto& colorization = console_log_->get_level_colorization(pair_msg.second);
