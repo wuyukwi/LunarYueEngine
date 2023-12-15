@@ -443,11 +443,11 @@ namespace editor
         runtime::app::start(parser);
 
         core::add_subsystem<gui_system>();
-        //        core::add_subsystem<docking_system>();
-        // core::add_subsystem<editing_system>();
-        // core::add_subsystem<picking_system>();
-        // core::add_subsystem<debugdraw_system>();
-        // core::add_subsystem<project_manager>();
+        core::add_subsystem<docking_system>();
+        core::add_subsystem<editing_system>();
+        core::add_subsystem<picking_system>();
+        core::add_subsystem<debugdraw_system>();
+        core::add_subsystem<project_manager>();
 
         create_docks();
         register_console_commands();
@@ -500,40 +500,31 @@ namespace editor
         runtime::app::stop();
     }
 
-    void app::draw_docks(delta_t dt)
+    void app::draw_docks(float dt)
     {
         auto& gui = core::get_subsystem<gui_system>();
         //    auto&       docking  = core::get_subsystem<docking_system>();
-        auto&       renderer = core::get_subsystem<runtime::renderer>();
-        const auto& windows  = renderer.get_windows();
+        auto& renderer = core::get_subsystem<runtime::renderer>();
+        auto& window   = renderer.get_main_window();
 
-        for (std::size_t i = 0; i < windows.size(); ++i)
+        gui.draw_begin(dt);
+
+        gui::PushFont("heavy");
+
+        if (show_start_page_)
         {
-            const auto& window = windows[i];
-            window->begin_present_pass();
-
-            const auto id = window->get_sdl_window_id();
-            //       auto&      dockspace = docking.get_dockspace(id);
-            //   gui.push_context(id);
-            gui.draw_begin(dt);
-
-            gui::PushFont("heavy");
-
-            if (show_start_page_)
-            {
-                draw_start_page(*window);
-            }
-            else
-            {
-                //               draw_dockspace(i == 0, *window, dockspace);
-            }
-
-            // handle_drag_and_drop();
-
-            gui::PopFont();
-            gui.draw_end();
-            //            gui.pop_context();
+            draw_start_page(*window);
         }
+        else
+        {
+            draw_dockspace(*window);
+        }
+
+        handle_drag_and_drop();
+
+        gui::PopFont();
+        gui.draw_end();
+        //            gui.pop_context();
     }
 
     void app::draw_header(render_window& window)
@@ -542,26 +533,17 @@ namespace editor
         draw_toolbar();
     }
 
-    void app::draw_dockspace(bool is_main, render_window& window, imguidock::dockspace& dockspace)
+    void app::draw_dockspace(render_window& window)
     {
         float offset = 0.0f;
 
-        if (is_main)
-        {
-            draw_header(window);
-            offset = gui::GetFrameHeightWithSpacing();
-        }
+        draw_header(window);
+        offset = gui::GetFrameHeightWithSpacing();
 
-        gui::ShowDemoWindow(nullptr);
-        dockspace.update_and_draw(ImVec2(gui::GetContentRegionAvail().x, gui::GetContentRegionAvail().y - offset));
-
-        if (is_main)
-        {
-            draw_footer(window, dockspace);
-        }
+        draw_footer(window);
     }
 
-    void app::draw_footer(render_window&, imguidock::dockspace& dockspace)
+    void app::draw_footer(render_window&)
     {
         if (!console_log_)
             return;
@@ -585,7 +567,7 @@ namespace editor
             gui::AlignTextToFramePadding();
             if (gui::Selectable(last_item.first.data(), false, 0, ImVec2(0, gui::GetTextLineHeight())))
             {
-                dockspace.activate_dock(console_dock_name_);
+                // dockspace.activate_dock(console_dock_name_);
             }
             gui::PopStyleColor();
         }
@@ -619,130 +601,91 @@ namespace editor
 
     void app::draw_start_page(render_window& window)
     {
-        static bool   show_demo_window    = true;
-        static bool   show_another_window = false;
-        static ImVec4 clear_color         = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-        ImGuiIO&      io                  = ImGui::GetIO();
-        auto&         sim                 = core::get_subsystem<core::simulation>();
+        static bool show_demo_window = true;
+        ImGuiIO&    io               = ImGui::GetIO();
 
         // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear
         // ImGui!).
         if (show_demo_window)
             ImGui::ShowDemoWindow(&show_demo_window);
 
-        // 2. Show a simple window that we create ourselves. We use a Begin/End pair to create a named window.
+        gui::SetNextWindowPos(gui::GetMainViewport()->Pos);
+        gui::SetNextWindowSize(io.DisplaySize);
+        ImGuiWindowFlags flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse |
+                                 ImGuiWindowFlags_NoDocking;
+
+        gui::Begin("###workspace", nullptr, flags | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoFocusOnAppearing);
+
+        auto& pm = core::get_subsystem<editor::project_manager>();
+
+        auto on_create_project = [&](const std::string& p) {
+            auto& rend = core::get_subsystem<runtime::renderer>();
+            auto  path = fs::path(p).make_preferred();
+            pm.create_project(path);
+            window.maximize();
+            rend.show_all_secondary_windows();
+            show_start_page_ = false;
+        };
+        auto on_open_project = [&](const std::string& p) {
+            auto& rend = core::get_subsystem<runtime::renderer>();
+            auto  path = fs::path(p).make_preferred();
+            pm.open_project(path);
+            window.maximize();
+            rend.show_all_secondary_windows();
+            show_start_page_ = false;
+        };
+
+        gui::PushFont("heavy_big");
+
+        gui::AlignTextToFramePadding();
+        gui::TextUnformatted("RECENT PROJECTS");
+        gui::Separator();
+        gui::BeginGroup();
         {
-            static float f       = 0.0f;
-            static int   counter = 0;
+            if (gui::BeginChild("projects_content",
+                                ImVec2(gui::GetContentRegionAvail().x * 0.7f, gui::GetContentRegionAvail().y),
+                                false,
+                                flags | ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoSavedSettings))
+            {
 
-            ImGui::Begin("Hello, world!"); // Create a window called "Hello, world!" and append into it.
-
-            ImGui::Text("This is some useful text.");          // Display some text (you can use a format strings too)
-            ImGui::Checkbox("Demo Window", &show_demo_window); // Edit bools storing our window open/close state
-            ImGui::Checkbox("Another Window", &show_another_window);
-
-            ImGui::SliderFloat("float", &f, 0.0f, 1.0f); // Edit 1 float using a slider from 0.0f to 1.0f
-            static int max_fps = 500;
-            gui::SliderInt("max fps", &max_fps, 20, 1000);
-            sim.set_max_fps(max_fps);
-            static int min_fps = 144;
-            gui::SliderInt("min fps", &min_fps, 0, 1000);
-            sim.set_min_fps(min_fps);
-            static int active_fps;
-            gui::SliderInt("active_fps", &active_fps, 0, 100);
-            sim.set_max_inactive_fps(active_fps);
-            ImGui::Text("fps :%d | frame : %d |delta time : %.7f ms", sim.get_fps(), sim.get_frame(), sim.get_delta_time().count());
-
-            ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
-
-            if (ImGui::Button("Button")) // Buttons return true when clicked (most widgets return true when edited/activated)
-                counter++;
-            ImGui::SameLine();
-            ImGui::Text("counter = %d", counter);
-
-            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
-            ImGui::End();
+                const auto& rencent_projects = pm.get_options().recent_project_paths;
+                for (const auto& path : rencent_projects)
+                {
+                    if (gui::Selectable(path.c_str()))
+                    {
+                        on_open_project(path);
+                    }
+                }
+            }
+            gui::EndChild();
         }
+        gui::EndGroup();
 
-        // 3. Show another simple window.
-        if (show_another_window)
+        gui::SameLine();
+
+        gui::BeginGroup();
         {
-            ImGui::Begin("Another Window", &show_another_window); // Pass a pointer to our bool variable (the window will have a closing button that
-                                                                  // will clear the bool when clicked)
-            ImGui::Text("Hello from another window!");
-            if (ImGui::Button("Close Me"))
-                show_another_window = false;
-            ImGui::End();
+            if (gui::Button("NEW PROJECT", ImVec2(gui::GetContentRegionAvail().x, 0.0f)))
+            {
+                std::string path;
+                if (native::pick_folder_dialog("", path))
+                {
+                    on_create_project(path);
+                }
+            }
+
+            if (gui::Button("OPEN OTHER", ImVec2(gui::GetContentRegionAvail().x, 0.0f)))
+            {
+                std::string path;
+                if (native::pick_folder_dialog("", path))
+                {
+                    on_open_project(path);
+                }
+            }
         }
-
-        // auto& pm = core::get_subsystem<editor::project_manager>();
-
-        // auto on_create_project = [&](const std::string& p) {
-        //     auto& rend = core::get_subsystem<runtime::renderer>();
-        //     auto  path = fs::path(p).make_preferred();
-        //     pm.create_project(path);
-        //     window.maximize();
-        //     rend.show_all_secondary_windows();
-        //     show_start_page_ = false;
-        // };
-        // auto on_open_project = [&](const std::string& p) {
-        //     auto& rend = core::get_subsystem<runtime::renderer>();
-        //     auto  path = fs::path(p).make_preferred();
-        //     pm.open_project(path);
-        //     window.maximize();
-        //     rend.show_all_secondary_windows();
-        //     show_start_page_ = false;
-        // };
-
-        // gui::PushFont("standard_big");
-        // ImGuiWindowFlags flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize |
-        //                          ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoSavedSettings;
-
-        // gui::AlignTextToFramePadding();
-        // gui::TextUnformatted("RECENT PROJECTS");
-        // gui::Separator();
-        // gui::BeginGroup();
-        //{
-        //     if (gui::BeginChild("projects_content", ImVec2(gui::GetContentRegionAvail().x * 0.7f, gui::GetContentRegionAvail().y), false, flags))
-        //     {
-
-        //        const auto& rencent_projects = pm.get_options().recent_project_paths;
-        //        for (const auto& path : rencent_projects)
-        //        {
-        //            if (gui::Selectable(path.c_str()))
-        //            {
-        //                on_open_project(path);
-        //            }
-        //        }
-        //    }
-        //    gui::EndChild();
-        //}
-        // gui::EndGroup();
-
-        // gui::SameLine();
-
-        // gui::BeginGroup();
-        //{
-        //     if (gui::Button("NEW PROJECT", ImVec2(gui::GetContentRegionAvail().x, 0.0f)))
-        //     {
-        //         std::string path;
-        //         if (native::pick_folder_dialog("", path))
-        //         {
-        //             on_create_project(path);
-        //         }
-        //     }
-
-        //    if (gui::Button("OPEN OTHER", ImVec2(gui::GetContentRegionAvail().x, 0.0f)))
-        //    {
-        //        std::string path;
-        //        if (native::pick_folder_dialog("", path))
-        //        {
-        //            on_open_project(path);
-        //        }
-        //    }
-        //}
-        // gui::EndGroup();
-        // gui::PopFont();
+        gui::EndGroup();
+        gui::PopFont();
+        gui::End();
     }
 
     void app::handle_drag_and_drop()

@@ -7,7 +7,7 @@
 
 namespace runtime
 {
-    void camera_system::frame_update(delta_t)
+    void camera_system::frame_update(float)
     {
         auto& ecs = core::get_subsystem<entity_component_system>();
 

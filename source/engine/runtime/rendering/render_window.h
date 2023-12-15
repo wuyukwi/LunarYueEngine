@@ -18,14 +18,6 @@ public:
     /// Constructor
     /// </summary>
     //-----------------------------------------------------------------------------
-    render_window();
-
-    //-----------------------------------------------------------------------------
-    //  Name : render_window ()
-    /// <summary>
-    /// Constructor
-    /// </summary>
-    //-----------------------------------------------------------------------------
     render_window(const char* title, int32_t w, int32_t h, int32_t x = -1, int32_t y = -1, std::uint32_t flags = 0);
 
     //-----------------------------------------------------------------------------
@@ -51,6 +43,8 @@ public:
     /// </summary>
     //-----------------------------------------------------------------------------
     gfx::view_id begin_present_pass();
+
+    gfx::view_id get_view_id();
 
     void set_size(const std::array<std::uint32_t, 2>& size) override;
 
@@ -82,4 +76,5 @@ protected:
 
     /// Render surface for this window.
     std::shared_ptr<gfx::frame_buffer> surface_;
+    gfx::view_id                       view_id_;
 };

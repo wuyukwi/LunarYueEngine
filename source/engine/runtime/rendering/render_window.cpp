@@ -40,12 +40,16 @@ void render_window::destroy_surface()
 
 gfx::view_id render_window::begin_present_pass()
 {
-    const gfx::render_pass pass("present_to_window_pass");
+    const gfx::render_pass pass(get_title());
     pass.bind(surface_.get());
     pass.clear();
 
-    return pass.id;
+    view_id_ = pass.id;
+
+    return view_id_;
 }
+
+gfx::view_id render_window::get_view_id() { return view_id_; }
 
 void render_window::prepare_surface()
 {

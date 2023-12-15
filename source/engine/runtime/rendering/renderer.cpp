@@ -221,7 +221,7 @@ namespace runtime
         return true;
     }
 
-    void renderer::frame_end(delta_t /*unused*/)
+    void renderer::frame_end(float /*unused*/)
     {
         gfx::render_pass pass("init_bb_update");
         pass.bind();

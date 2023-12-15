@@ -49,7 +49,8 @@ void sdl_window::minimize() { SDL_MinimizeWindow(window_); }
 
 void sdl_window::restore() { SDL_RestoreWindow(window_); }
 
-void sdl_window::set_title(const char* title) { SDL_SetWindowTitle(window_, title); }
+void        sdl_window::set_title(const char* title) { SDL_SetWindowTitle(window_, title); }
+const char* sdl_window::get_title() { return SDL_GetWindowTitle(window_); }
 
 void sdl_window::set_mouse_cursor(SDL_Cursor* cursor) { SDL_SetCursor(cursor); }
 void sdl_window::show_cursor(bool visible)

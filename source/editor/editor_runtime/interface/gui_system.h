@@ -22,29 +22,32 @@ class render_window;
 //-----------------------------------------------------------------------------
 struct gui_system
 {
-    // window id, is_focused
-    using window_info = std::pair<std::uint32_t, bool>;
-
     gui_system();
     ~gui_system();
 
-    void frame_begin(delta_t);
+    void frame_begin(float);
 
     std::uint32_t get_draw_calls() const;
-    ImGuiContext* get_context(std::uint32_t id);
 
-    void push_context(std::uint32_t id);
-    void draw_begin(delta_t dt);
+    void draw_begin(float dt);
 
     void draw_end();
-    void pop_context();
+
+    void save_layout(const std::string& filename = "default_filename");
+
+    /// <summary>
+    /// Load a layout from the specified file.
+    /// </summary>
+    /// <param name="filename">The name of the file to load. If not provided, the default filename is used ("default_filename").</param>
+    /// <returns>True if the layout was successfully loaded; otherwise, false.</returns>
+    bool load_layout(const std::string& filename = "default_filename");
 
 private:
     void platform_events(const std::vector<SDL_Event>&);
 
-    std::map<uint32_t, ImGuiContext*> contexts_;
-    ImFontAtlas                       atlas_;
-    ImGuiContext*                     initial_context_ = nullptr;
+    ImFontAtlas   atlas_;
+    ImGuiContext* initial_context_ = nullptr;
+    std::string   default_setting_file_ {"imgui.ini"};
 };
 
 namespace gui

@@ -226,7 +226,7 @@ namespace runtime
         return result;
     }
 
-    void deferred_rendering::frame_render(delta_t dt)
+    void deferred_rendering::frame_render(float dt)
     {
         auto& ecs = core::get_subsystem<entity_component_system>();
 
@@ -235,7 +235,7 @@ namespace runtime
         camera_pass(ecs, dt);
     }
 
-    void deferred_rendering::build_reflections_pass(entity_component_system& ecs, delta_t dt)
+    void deferred_rendering::build_reflections_pass(entity_component_system& ecs, float dt)
     {
         auto dirty_models = gather_visible_models(ecs, nullptr, true, true, true);
         ecs.for_each<transform_component, reflection_probe_component>(
@@ -286,7 +286,7 @@ namespace runtime
             });
     }
 
-    void deferred_rendering::build_shadows_pass(entity_component_system& ecs, delta_t dt)
+    void deferred_rendering::build_shadows_pass(entity_component_system& ecs, float dt)
     {
         auto dirty_models = gather_visible_models(ecs, nullptr, true, true, true);
         ecs.for_each<transform_component, light_component>(
@@ -307,7 +307,7 @@ namespace runtime
             });
     }
 
-    void deferred_rendering::camera_pass(entity_component_system& ecs, delta_t dt)
+    void deferred_rendering::camera_pass(entity_component_system& ecs, float dt)
     {
         ecs.for_each<camera_component>([this, &ecs, dt](entity ce, camera_component& camera_comp) {
             auto& camera_lods = lod_data_[ce];
@@ -322,7 +322,7 @@ namespace runtime
                                                                                 gfx::render_view&                     render_view,
                                                                                 entity_component_system&              ecs,
                                                                                 std::unordered_map<entity, lod_data>& camera_lods,
-                                                                                delta_t                               dt)
+                                                                                float                                 dt)
     {
         std::shared_ptr<gfx::frame_buffer> output = nullptr;
 
@@ -346,7 +346,7 @@ namespace runtime
                                                                          gfx::render_view&                     render_view,
                                                                          visibility_set_models_t&              visibility_set,
                                                                          std::unordered_map<entity, lod_data>& camera_lods,
-                                                                         delta_t                               dt)
+                                                                         float                                 dt)
     {
         const auto&      view          = camera.get_view();
         const auto&      proj          = camera.get_projection();
@@ -389,7 +389,7 @@ namespace runtime
             if (!current_mesh)
                 continue;
 
-            if (false == update_lod_data(lod_data, lod_limits, lod_count, transition_time, dt.count(), current_mesh, world_transform, camera))
+            if (false == update_lod_data(lod_data, lod_limits, lod_count, transition_time, dt, current_mesh, world_transform, camera))
                 continue;
             const auto params = math::vec3 {0.0f, -1.0f, (transition_time - current_time) / transition_time};
 
@@ -428,7 +428,7 @@ namespace runtime
                                                                          camera&                            camera,
                                                                          gfx::render_view&                  render_view,
                                                                          entity_component_system&           ecs,
-                                                                         delta_t                            dt)
+                                                                         float                              dt)
     {
         const auto& view = camera.get_view();
         const auto& proj = camera.get_projection();
@@ -526,7 +526,7 @@ namespace runtime
                                                                                  camera&                            camera,
                                                                                  gfx::render_view&                  render_view,
                                                                                  entity_component_system&           ecs,
-                                                                                 delta_t                            dt)
+                                                                                 float                              dt)
     {
         const auto& view = camera.get_view();
         const auto& proj = camera.get_projection();
@@ -622,7 +622,7 @@ namespace runtime
                                                                              camera&                            camera,
                                                                              gfx::render_view&                  render_view,
                                                                              entity_component_system&           ecs,
-                                                                             delta_t                            dt)
+                                                                             float                              dt)
     {
         auto far_clip_cache = camera.get_far_clip();
         camera.set_far_clip(10000.0f);

@@ -67,7 +67,7 @@ namespace runtime
         return result;
     }
 
-    void bone_system::frame_update(delta_t)
+    void bone_system::frame_update(float)
     {
         auto& ecs = core::get_subsystem<runtime::entity_component_system>();
         ecs.for_each<model_component>([&ecs](runtime::entity e, model_component& model_comp) {

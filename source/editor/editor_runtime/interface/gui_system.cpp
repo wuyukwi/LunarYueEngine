@@ -17,12 +17,11 @@
 #include <runtime/rendering/render_window.h>
 #include <runtime/rendering/renderer.h>
 
+#include <SDL.h>
 #include <editor_core/gui/embedded/IconsFontAwesome6.h>
 #include <editor_core/gui/embedded/fs_ocornut_imgui.bin.h>
 #include <editor_core/gui/embedded/vs_ocornut_imgui.bin.h>
 #include <editor_core/gui/gui.h>
-
-#include <SDL.h>
 
 //////////////////////////////////////////////////////////////////////////
 #include "../meta/interface/gui_system.hpp"
@@ -699,17 +698,17 @@ namespace
         gui::SetCurrentContext(context);
     }
 
-    void imgui_frame_update(delta_t dt)
+    void imgui_frame_update(float dt)
     {
-        auto& renderer    = core::get_subsystem<runtime::renderer>();
-        auto& window      = renderer.get_main_window();
-        auto& io          = gui::GetIO();
-        auto  view_size   = window->get_surface()->get_size();
-        auto  window_size = window->get_size();
+        ImGuiPlatformIO& platform_io = gui::GetPlatformIO();
+        auto             main_window = (render_window*)platform_io.Viewports[0]->PlatformHandle;
+        auto&            io          = gui::GetIO();
+        auto             view_size   = main_window->get_surface()->get_size();
+        auto             window_size = main_window->get_size();
 
         auto display_w = view_size.width;
         auto display_h = view_size.height;
-        if (window->window_is_minimized())
+        if (main_window->window_is_minimized())
             window_size = {0, 0};
         auto w = window_size[0];
         auto h = window_size[1];
@@ -718,7 +717,7 @@ namespace
         //  Setup display size (every frame to accommodate for window resizing)
         io.DisplaySize = ImVec2(float(w), float(h));
         // Setup time step
-        io.DeltaTime = dt.count();
+        io.DeltaTime = dt;
 
         static ImGuiMouseCursor last_cursor_type = ImGui::GetMouseCursor();
         if (io.MouseDrawCursor || last_cursor_type == ImGuiMouseCursor_None)
@@ -732,9 +731,9 @@ namespace
             auto cursor = map_cursor(gui::GetMouseCursor());
             if ((cursor != nullptr) && last_cursor_type != gui::GetMouseCursor())
             {
-                window->set_mouse_cursor(cursor);
+                main_window->set_mouse_cursor(cursor);
             }
-            window->show_cursor(true);
+            main_window->show_cursor(true);
 
             last_cursor_type = gui::GetMouseCursor();
         }
@@ -763,8 +762,8 @@ namespace
         // ImGui::GetCurrentContext()->DragDropActive = old;
 
         ImGuiPlatformIO& platform_io = gui::GetPlatformIO();
-        // if (platform_io.Viewports.Size == 1)
-        render_func(gui::GetDrawData(), 0);
+        auto             main_window = (render_window*)platform_io.Viewports[0]->PlatformHandle;
+        render_func(gui::GetDrawData(), main_window->begin_present_pass());
 
         // Update and Render additional Platform Windows
         if (gui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
@@ -773,7 +772,10 @@ namespace
 
             for (int i = 1; i < platform_io.Viewports.Size; i++)
                 if ((platform_io.Viewports[i]->Flags & ImGuiViewportFlags_IsMinimized) == 0)
-                    render_func(platform_io.Viewports[i]->DrawData, i);
+                {
+                    auto window = (render_window*)platform_io.Viewports[i]->PlatformHandle;
+                    render_func(platform_io.Viewports[i]->DrawData, window->begin_present_pass());
+                }
         }
     }
 
@@ -817,9 +819,6 @@ namespace
 #if defined(_WIN32)
             HWND hwnd = (HWND)vp->PlatformHandleRaw;
 
-            // SDL hack: Hide icon from task bar
-            // Note: SDL 2.0.6+ has a SDL_WINDOW_SKIP_TASKBAR flag which is supported under Windows but the way it create the window breaks our
-            // seamless transition.
             if (vp->Flags & ImGuiViewportFlags_NoTaskBarIcon)
             {
                 LONG ex_style = ::GetWindowLong(hwnd, GWL_EXSTYLE);
@@ -964,8 +963,8 @@ namespace
         const auto font_path = fs::resolve_protocol("editor:/data/font");
 
         ImFontConfig config;
-        config.FontDataOwnedByAtlas = false;
-        config.MergeMode            = false;
+        // config.FontDataOwnedByAtlas = false;
+        config.MergeMode = false;
 
         gui::AddFont("default", io.Fonts->AddFontDefault(&config));
 
@@ -986,25 +985,24 @@ namespace
             "heavy",
             io.Fonts->AddFontFromFileTTF((font_path / "ResourceHanRoundedCN-Heavy.ttf").generic_string().c_str(), 20, &config, combinedRanges.Data));
 
-        static const ImWchar icons_ranges[] = {ICON_MIN_FA, ICON_MAX_FA, 0};
-        config.MergeMode                    = true;
-        config.PixelSnapH                   = true;
+        const ImWchar icons_ranges[] = {ICON_MIN_FA, ICON_MAX_FA, 0};
+        config.MergeMode             = true;
+        config.PixelSnapH            = true;
         gui::AddFont(FONT_ICON_FILE_NAME_FAR,
                      io.Fonts->AddFontFromFileTTF((font_path / FONT_ICON_FILE_NAME_FAR).generic_string().c_str(), 20, &config, icons_ranges));
         gui::AddFont(FONT_ICON_FILE_NAME_FAS,
                      io.Fonts->AddFontFromFileTTF((font_path / FONT_ICON_FILE_NAME_FAS).generic_string().c_str(), 20, &config, icons_ranges));
 
-        // config.MergeMode  = false;
-        // config.PixelSnapH = false;
-        // gui::AddFont("standard_big",
-        //              io.Fonts->AddFontFromMemoryTTF(reinterpret_cast<void*>(std::intptr_t(s_font_default)), sizeof(s_font_default), 50, &config));
+        config.MergeMode  = false;
+        config.PixelSnapH = false;
+        gui::AddFont("heavy_big", io.Fonts->AddFontFromFileTTF((font_path / "ResourceHanRoundedCN-Heavy.ttf").generic_string().c_str(), 50, &config));
 
-        // config.MergeMode  = true;
-        // config.PixelSnapH = true;
-        // gui::AddFont(
-        //     "icons_big",
-        //     io.Fonts->AddFontFromMemoryTTF(
-        //         reinterpret_cast<void*>(std::intptr_t(fontawesome_webfont_ttf)), sizeof(fontawesome_webfont_ttf), 50, &config, icons_ranges));
+        config.MergeMode  = true;
+        config.PixelSnapH = true;
+        gui::AddFont(FONT_ICON_FILE_NAME_FAR "_big",
+                     io.Fonts->AddFontFromFileTTF((font_path / FONT_ICON_FILE_NAME_FAR).generic_string().c_str(), 50, &config, icons_ranges));
+        gui::AddFont(FONT_ICON_FILE_NAME_FAS "_big",
+                     io.Fonts->AddFontFromFileTTF((font_path / FONT_ICON_FILE_NAME_FAS).generic_string().c_str(), 50, &config, icons_ranges));
 
         io.Fonts->GetTexDataAsRGBA32(&data, &width, &height);
 
@@ -1037,6 +1035,7 @@ gui_system::gui_system()
 
     initial_context_ = imgui_create_context(atlas_);
     imgui_init();
+    load_layout();
 }
 
 gui_system::~gui_system()
@@ -1046,38 +1045,52 @@ gui_system::~gui_system()
 
     cleanup_cursors();
 
+    save_layout();
     imgui_dispose();
     imgui_destroy_context(initial_context_);
 }
 
-void gui_system::frame_begin(delta_t /*unused*/) { imgui_frame_begin(); }
+void gui_system::frame_begin(float /*unused*/) { imgui_frame_begin(); }
 
 uint32_t gui_system::get_draw_calls() const { return s_draw_calls; }
 
-ImGuiContext* gui_system::get_context(uint32_t id)
-{
-    auto it = contexts_.find(id);
-    if (it != contexts_.end())
-    {
-        return it->second;
-    }
-
-    auto ins = contexts_.emplace(id, imgui_create_context(atlas_));
-    return ins.first->second;
-}
-
-void gui_system::push_context(uint32_t id)
-{
-    auto context = get_context(id);
-
-    imgui_set_context(context);
-}
-
-void gui_system::draw_begin(delta_t dt) { imgui_frame_update(dt); }
+void gui_system::draw_begin(float dt) { imgui_frame_update(dt); }
 
 void gui_system::draw_end() { imgui_frame_end(); }
 
-void gui_system::pop_context() { imgui_set_context(initial_context_); }
+void gui_system::save_layout(const std::string& filename)
+{
+    const auto config_path = fs::resolve_protocol("editor:/config");
+    if (filename == "default_filename")
+    {
+        gui::SaveIniSettingsToDisk((config_path / default_setting_file_).generic_string().c_str());
+    }
+    else
+    {
+        gui::SaveIniSettingsToDisk((config_path / filename).generic_string().c_str());
+    }
+}
+
+bool gui_system::load_layout(const std::string& filename)
+{
+    const auto config_path = fs::resolve_protocol("editor:/config");
+    if (filename == "default_filename")
+    {
+        if (!fs::exists(config_path / default_setting_file_))
+            return false;
+
+        gui::LoadIniSettingsFromDisk((config_path / default_setting_file_).generic_string().c_str());
+        return true;
+    }
+    else
+    {
+        if (!fs::exists(config_path / filename))
+            return false;
+
+        gui::LoadIniSettingsFromDisk((config_path / filename).generic_string().c_str());
+        return true;
+    }
+}
 
 void gui_system::platform_events(const std::vector<SDL_Event>& events)
 {

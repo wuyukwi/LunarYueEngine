@@ -19,7 +19,7 @@
 
 namespace editor
 {
-    void debugdraw_system::frame_render(delta_t)
+    void debugdraw_system::frame_render(float)
     {
         auto& es            = core::get_subsystem<editing_system>();
         auto& editor_camera = es.camera;

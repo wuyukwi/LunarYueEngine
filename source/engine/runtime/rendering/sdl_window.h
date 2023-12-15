@@ -20,9 +20,10 @@ public:
     void minimize();
     void restore();
 
-    void set_title(const char* title);
-    void set_mouse_cursor(SDL_Cursor* cursor);
-    void show_cursor(bool visible);
+    void        set_title(const char* title);
+    const char* get_title();
+    void        set_mouse_cursor(SDL_Cursor* cursor);
+    void        show_cursor(bool visible);
 
     void raise_window();
     bool has_focus();

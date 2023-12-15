@@ -27,10 +27,10 @@ namespace editor
     private:
         void create_docks();
         void register_console_commands();
-        void draw_docks(delta_t dt);
+        void draw_docks(float dt);
         void draw_header(render_window& window);
-        void draw_dockspace(bool is_main, render_window& window, imguidock::dockspace& dockspace);
-        void draw_footer(render_window& window, imguidock::dockspace& dockspace);
+        void draw_dockspace(render_window& window);
+        void draw_footer(render_window& window);
         void draw_start_page(render_window& window);
         void draw_menubar(render_window& window);
         void draw_toolbar();

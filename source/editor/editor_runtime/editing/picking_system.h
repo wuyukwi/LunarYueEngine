@@ -27,7 +27,7 @@ namespace editor
         ///
         /// </summary>
         //-----------------------------------------------------------------------------
-        void frame_render(delta_t dt);
+        void frame_render(float dt);
 
     private:
         /// surface used to render into

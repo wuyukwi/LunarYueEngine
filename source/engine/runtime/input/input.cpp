@@ -21,7 +21,7 @@ namespace runtime
         on_frame_end.disconnect(this, &input::reset_state);
     }
 
-    void input::reset_state(delta_t /*unused*/)
+    void input::reset_state(float /*unused*/)
     {
         key_reset();
 

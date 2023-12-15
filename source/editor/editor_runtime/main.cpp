@@ -7,11 +7,21 @@ int main(int argc, char* argv[])
 {
     const fs::path binary_path = fs::executable_path(argv[0]).parent_path();
 
-    // fs::path engine_path         = fs::absolute(fs::path(ENGINE_DIRECTORY));
-    // fs::path shader_include_path = fs::absolute(fs::path(SHADER_INCLUDE_DIRECTORY));
+    fs::path engine_path = fs::path(ENGINE_DIRECTORY);
+    if (fs::exists(engine_path))
+    {
+        engine_path = fs::absolute(fs::path(ENGINE_DIRECTORY));
+    }
+    else
+        engine_path = binary_path;
 
-    fs::path engine_path         = binary_path;
-    fs::path shader_include_path = binary_path / "data/src";
+    fs::path shader_include_path = fs::path(SHADER_INCLUDE_DIRECTORY);
+    if (fs::exists(shader_include_path))
+    {
+        shader_include_path = fs::absolute(fs::path(SHADER_INCLUDE_DIRECTORY));
+    }
+    else
+        shader_include_path = binary_path / "data/src";
 
     const fs::path engine = engine_path / "data/engine_data";
     const fs::path editor = engine_path / "data/editor_data";

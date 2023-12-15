@@ -17,6 +17,6 @@ namespace runtime
         ///
         /// </summary>
         //-----------------------------------------------------------------------------
-        void frame_update(delta_t dt);
+        void frame_update(float dt);
     };
 } // namespace runtime

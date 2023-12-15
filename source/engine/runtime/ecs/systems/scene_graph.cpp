@@ -7,7 +7,7 @@
 namespace runtime
 {
 
-    void scene_graph::frame_update(delta_t dt)
+    void scene_graph::frame_update(float dt)
     {
         auto& ecs = core::get_subsystem<runtime::entity_component_system>();
         roots_.clear();

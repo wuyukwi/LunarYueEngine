@@ -1,7 +1,6 @@
 #pragma once
 
 #include <array>
-#include <chrono>
 #include <cstdint>
 #include <type_traits>
 
@@ -262,5 +261,3 @@ using urect32_t = rect<std::uint32_t>;
 using urect64_t = rect<std::uint64_t>;
 using frect_t   = rect<float>;
 using drect_t   = rect<double>;
-
-using delta_t = std::chrono::duration<float>;

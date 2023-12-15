@@ -58,7 +58,7 @@ namespace runtime
         ///
         /// </summary>
         //-----------------------------------------------------------------------------
-        void frame_render(delta_t dt);
+        void frame_render(float dt);
 
         //-----------------------------------------------------------------------------
         //  Name : receive ()
@@ -78,7 +78,7 @@ namespace runtime
         ///
         /// </summary>
         //-----------------------------------------------------------------------------
-        void build_reflections_pass(entity_component_system& ecs, delta_t dt);
+        void build_reflections_pass(entity_component_system& ecs, float dt);
 
         //-----------------------------------------------------------------------------
         //  Name : build_shadows ()
@@ -88,7 +88,7 @@ namespace runtime
         ///
         /// </summary>
         //-----------------------------------------------------------------------------
-        void build_shadows_pass(entity_component_system& ecs, delta_t dt);
+        void build_shadows_pass(entity_component_system& ecs, float dt);
 
         //-----------------------------------------------------------------------------
         //  Name : camera_pass ()
@@ -98,7 +98,7 @@ namespace runtime
         ///
         /// </summary>
         //-----------------------------------------------------------------------------
-        void camera_pass(entity_component_system& ecs, delta_t dt);
+        void camera_pass(entity_component_system& ecs, float dt);
 
         //-----------------------------------------------------------------------------
         //  Name : scene_pass ()
@@ -112,7 +112,7 @@ namespace runtime
                                                                 gfx::render_view&                     render_view,
                                                                 entity_component_system&              ecs,
                                                                 std::unordered_map<entity, lod_data>& camera_lods,
-                                                                delta_t                               dt);
+                                                                float                                 dt);
 
         //-----------------------------------------------------------------------------
         //  Name : g_buffer_pass ()
@@ -127,7 +127,7 @@ namespace runtime
                                                          gfx::render_view&                     render_view,
                                                          visibility_set_models_t&              visibility_set,
                                                          std::unordered_map<entity, lod_data>& camera_lods,
-                                                         delta_t                               dt);
+                                                         float                                 dt);
 
         //-----------------------------------------------------------------------------
         //  Name : lighting_pass ()
@@ -141,7 +141,7 @@ namespace runtime
                                                          camera&                            camera,
                                                          gfx::render_view&                  render_view,
                                                          entity_component_system&           ecs,
-                                                         delta_t                            dt);
+                                                         float                              dt);
 
         //-----------------------------------------------------------------------------
         //  Name : reflection_probe ()
@@ -155,7 +155,7 @@ namespace runtime
                                                                  camera&                            camera,
                                                                  gfx::render_view&                  render_view,
                                                                  entity_component_system&           ecs,
-                                                                 delta_t                            dt);
+                                                                 float                              dt);
 
         //-----------------------------------------------------------------------------
         //  Name : atmospherics_pass ()
@@ -169,7 +169,7 @@ namespace runtime
                                                              camera&                            camera,
                                                              gfx::render_view&                  render_view,
                                                              entity_component_system&           ecs,
-                                                             delta_t                            dt);
+                                                             float                              dt);
 
         //-----------------------------------------------------------------------------
         //  Name : tonemapping_pass ()

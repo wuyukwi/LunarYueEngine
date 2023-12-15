@@ -464,7 +464,7 @@ void handle_camera_movement()
     }
 
     auto& editor_camera = es.camera;
-    auto  dt            = sim.get_delta_time().count();
+    auto  dt            = sim.get_delta_time();
 
     auto  transform      = editor_camera.get_component<transform_component>().lock();
     float movement_speed = 10.0f;

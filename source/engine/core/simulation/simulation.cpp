@@ -1,123 +1,62 @@
 #include "simulation.h"
-#include <algorithm>
+#include <chrono>
+#include <numeric>
 #include <thread>
 
 namespace core
 {
-    using namespace std::chrono_literals;
 
     simulation::simulation()
     {
-        if (max_inactive_fps_ == 0)
-        {
-            max_inactive_fps_ = std::max(max_inactive_fps_, max_fps_);
-        }
+        // Your constructor implementation
     }
 
     void simulation::run_one_frame(bool is_active)
     {
-        // perform waiting loop if maximum fps set
-        auto max_fps = max_fps_;
-        if (!is_active && max_fps > 0)
+        auto current_time     = duration_t(std::chrono::steady_clock::now().time_since_epoch().count());
+        auto elapsed_time     = current_time - last_frame_timepoint_;
+        last_frame_timepoint_ = current_time;
+
+        frame_++;
+
+        auto elapsed_seconds = static_cast<float>(elapsed_time) / 1e9; // Convert nanoseconds to seconds
+        auto fps             = static_cast<std::uint32_t>(1.0f / elapsed_seconds);
+
+        previous_timesteps_.push_back(elapsed_time);
+        if (previous_timesteps_.size() > smoothing_step_)
         {
-            max_fps = std::min(max_inactive_fps_, max_fps);
+            previous_timesteps_.erase(previous_timesteps_.begin());
         }
 
-        duration_t elapsed = clock_t::now() - last_frame_timepoint_;
-        if (max_fps > 0)
+        timestep_ = std::accumulate(previous_timesteps_.begin(), previous_timesteps_.end(), duration_t(0)) / smoothing_step_;
+
+        // Calculate time to sleep for achieving desired FPS
+        if (!is_active && max_inactive_fps_ > 0 && fps > max_inactive_fps_)
         {
-            duration_t target_duration = 1000ms / max_fps;
+            auto sleep_duration = std::chrono::milliseconds(0);
+            sleep_duration      = std::chrono::milliseconds(static_cast<long long>((1.0f / max_inactive_fps_ - elapsed_seconds) * 1e3) + 1);
 
-            for (;;)
+            if (sleep_duration.count() > 0)
             {
-                elapsed = clock_t::now() - last_frame_timepoint_;
-                if (elapsed >= target_duration)
-                {
-                    break;
-                }
-
-                if (elapsed < duration_t(0))
-                {
-                    break;
-                }
-                duration_t sleep_time = (target_duration - elapsed);
-                auto       ms         = std::chrono::duration_cast<std::chrono::milliseconds>(sleep_time);
-
-                if (sleep_time > std::chrono::microseconds(1000))
-                {
-                    if (ms.count() > 0)
-                    {
-                        sleep_time /= ms.count();
-                    }
-
-                    std::this_thread::sleep_for(sleep_time);
-                }
+                std::this_thread::sleep_for(sleep_duration);
             }
         }
-
-        if (elapsed < duration_t(0))
-        {
-            elapsed = duration_t(0);
-        }
-        last_frame_timepoint_ = clock_t::now();
-
-        // if fps lower than minimum, clamp eplased time
-        if (min_fps_ > 0)
-        {
-            duration_t target_duration = 1000ms / min_fps_;
-            if (elapsed > target_duration)
-            {
-                elapsed = target_duration;
-            }
-        }
-
-        // perform time step smoothing
-        if (smoothing_step_ > 0)
-        {
-            timestep_ = duration_t::zero();
-            previous_timesteps_.push_back(elapsed);
-            if (previous_timesteps_.size() > smoothing_step_)
-            {
-                auto begin = previous_timesteps_.begin();
-                previous_timesteps_.erase(begin, begin + int(previous_timesteps_.size() - smoothing_step_));
-                for (auto step : previous_timesteps_)
-                {
-                    timestep_ += step;
-                }
-                timestep_ /= static_cast<duration_t::rep>(previous_timesteps_.size());
-            }
-            else
-            {
-                timestep_ = previous_timesteps_.back();
-            }
-        }
-        else
-        {
-            timestep_ = elapsed;
-        }
-
-        ++frame_;
     }
 
-    void simulation::set_min_fps(std::uint32_t fps) { min_fps_ = std::max<std::uint32_t>(fps, 0); }
+    void simulation::set_min_fps(std::uint32_t fps) { min_fps_ = fps; }
 
-    void simulation::set_max_fps(std::uint32_t fps) { max_fps_ = std::max<std::uint32_t>(fps, 0); }
+    void simulation::set_max_fps(std::uint32_t fps) { max_fps_ = fps; }
 
-    void simulation::set_max_inactive_fps(std::uint32_t fps) { max_inactive_fps_ = std::max<std::uint32_t>(fps, 0); }
+    void simulation::set_max_inactive_fps(std::uint32_t fps) { max_inactive_fps_ = fps; }
 
     void simulation::set_time_smoothing_step(std::uint32_t step) { smoothing_step_ = step; }
 
-    simulation::duration_t simulation::get_time_since_launch() const { return clock_t::now() - launch_timepoint_; }
-
-    std::uint32_t simulation::get_fps() const
+    simulation::duration_t simulation::get_time_since_launch() const
     {
-        auto dt = std::chrono::duration_cast<std::chrono::duration<float, std::milli>>(timestep_).count();
-        return static_cast<std::uint32_t>(dt == 0.0f ? 0 : 1000.0f / dt);
+        return duration_t(std::chrono::steady_clock::now().time_since_epoch().count()) - launch_timepoint_;
     }
 
-    std::chrono::duration<float> simulation::get_delta_time() const
-    {
-        auto dt = std::chrono::duration_cast<std::chrono::duration<float>>(timestep_);
-        return dt;
-    }
+    std::uint32_t simulation::get_fps() const { return static_cast<std::uint32_t>(1.0f / (static_cast<float>(timestep_) / 1e9)); }
+
+    float simulation::get_delta_time() const { return static_cast<float>(timestep_) / 1e9; }
 } // namespace core
