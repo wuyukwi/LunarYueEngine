@@ -1,10 +1,9 @@
 #pragma once
 
-#include "imguidock.h"
-
-struct inspector_dock : public imguidock::dock
+#include <string>
+struct inspector_dock
 {
-    inspector_dock(const std::string& dtitle, bool close_button, const ImVec2& min_size);
+    inspector_dock(const std::string& dtitle);
 
-    void render(const ImVec2& area);
+    void render();
 };

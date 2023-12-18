@@ -29,6 +29,7 @@ elseif(MSVC)
 
 endif()
 
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
 set(POST_BUILD_COMMANDS
 #  COMMAND ${CMAKE_COMMAND} -E make_directory "${BINARY_ROOT_DIR}"
 #  COMMAND ${CMAKE_COMMAND} -E copy_directory "$<TARGET_FILE_DIR:${EDITOR_NAME}>/" "${BINARY_ROOT_DIR}"
@@ -39,6 +40,7 @@ set(POST_BUILD_COMMANDS
   COMMAND ${CMAKE_COMMAND} -E copy_directory "${BGFX_DIR}/src" "$<TARGET_FILE_DIR:${EDITOR_NAME}>/${ASSET_DIR}/src")
 
 add_custom_command(TARGET ${EDITOR_NAME} ${POST_BUILD_COMMANDS})
+endif()
 
 
 set_target_properties(${EDITOR_NAME} PROPERTIES FOLDER ${EDITOR_RUNTIME_FOLDER})

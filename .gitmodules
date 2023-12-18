@@ -23,6 +23,3 @@
 [submodule "source/3rdparty/spdlog/spdlog"]
 	path = source/3rdparty/spdlog/spdlog
 	url = https://github.com/gabime/spdlog.git
-[submodule "source/3rdparty/sdl3/sdl3"]
-	path = source/3rdparty/sdl3/sdl3
-	url = https://github.com/libsdl-org/SDL.git

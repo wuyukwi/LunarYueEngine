@@ -42,17 +42,17 @@ namespace editor
         template<typename T>
         void create_window_with_dock(const std::string& dock_name)
         {
-            auto& rend    = core::get_subsystem<runtime::renderer>();
-            auto& docking = core::get_subsystem<docking_system>();
-            auto  window  = std::make_unique<render_window>(dock_name.c_str(), 1280, 720);
-            window->raise_window();
+            // auto& rend    = core::get_subsystem<runtime::renderer>();
+            // auto& docking = core::get_subsystem<docking_space>();
+            // auto  window  = std::make_unique<render_window>(dock_name.c_str(), 1280, 720);
+            // window->raise_window();
 
-            auto dock = std::make_unique<T>(dock_name, true, ImVec2(200.0f, 200.0f));
+            // auto dock = std::make_unique<T>(dock_name, true, ImVec2(200.0f, 200.0f));
 
-            auto& dockspace = docking.get_dockspace(window->get_sdl_window_id());
-            dockspace.dock_to(dock.get(), imguidock::slot::tab, 200, true);
-            rend.register_window(std::move(window));
-            docking.register_dock(std::move(dock));
+            // auto& dockspace = docking.get_dockspace(window->get_sdl_window_id());
+            // dockspace.dock_to(dock.get(), imguidock::slot::tab, 200, true);
+            // rend.register_window(std::move(window));
+            // docking.register_dock(std::move(dock));
         }
         std::vector<runtime::entity> gather_scene_data()
         {
@@ -443,10 +443,9 @@ namespace editor
         runtime::app::start(parser);
 
         core::add_subsystem<gui_system>();
-        core::add_subsystem<docking_system>();
-        core::add_subsystem<editing_system>();
-        core::add_subsystem<picking_system>();
-        core::add_subsystem<debugdraw_system>();
+          core::add_subsystem<editing_system>();
+          core::add_subsystem<picking_system>();
+          core::add_subsystem<debugdraw_system>();
         core::add_subsystem<project_manager>();
 
         create_docks();
@@ -461,13 +460,14 @@ namespace editor
         main_window->set_title("LunarYue Editor");
 
         console_dock_name_ = "CONSOLE";
-        auto scene         = std::make_unique<scene_dock>("SCENE", true, ImVec2(200.0f, 200.0f));
-        auto game          = std::make_unique<game_dock>("GAME", true, ImVec2(300.0f, 200.0f));
-        auto hierarchy     = std::make_unique<hierarchy_dock>("HIERARCHY", true, ImVec2(300.0f, 200.0f));
-        auto inspector     = std::make_unique<inspector_dock>("INSPECTOR", true, ImVec2(300.0f, 200.0f));
-        auto project       = std::make_unique<project_dock>("PROJECT", true, ImVec2(200.0f, 200.0f));
-        auto console       = std::make_unique<console_dock>("CONSOLE", true, ImVec2(200.0f, 200.0f), console_log_);
-        auto style         = std::make_unique<style_dock>("STYLE", true, ImVec2(300.0f, 200.0f));
+        // auto dock_space    = std::make_unique<docking_space>("SCENE");
+        // auto scene         = std::make_unique<scene_dock>("SCENE");
+        // auto game          = std::make_unique<game_dock>("GAME");
+        // auto hierarchy     = std::make_unique<hierarchy_dock>("HIERARCHY");
+        // auto inspector     = std::make_unique<inspector_dock>("INSPECTOR");
+        // auto project       = std::make_unique<project_dock>("PROJECT");
+        // auto console       = std::make_unique<console_dock>("CONSOLE", console_log_);
+        // auto style         = std::make_unique<style_dock>("STYLE");
 
         // auto& docking   = core::get_subsystem<docking_system>();
         // auto& dockspace = docking.get_dockspace(main_window->get_id());
@@ -503,7 +503,7 @@ namespace editor
     void app::draw_docks(float dt)
     {
         auto& gui = core::get_subsystem<gui_system>();
-        //    auto&       docking  = core::get_subsystem<docking_system>();
+        //     auto&       docking  = core::get_subsystem<docking_system>();
         auto& renderer = core::get_subsystem<runtime::renderer>();
         auto& window   = renderer.get_main_window();
 
@@ -517,14 +517,14 @@ namespace editor
         }
         else
         {
-            draw_dockspace(*window);
+            // draw_dockspace(*window);
         }
 
-        handle_drag_and_drop();
+        // handle_drag_and_drop();
 
         gui::PopFont();
         gui.draw_end();
-        //            gui.pop_context();
+        //             gui.pop_context();
     }
 
     void app::draw_header(render_window& window)
@@ -609,44 +609,44 @@ namespace editor
         if (show_demo_window)
             ImGui::ShowDemoWindow(&show_demo_window);
 
-        gui::SetNextWindowPos(gui::GetMainViewport()->Pos);
-        gui::SetNextWindowSize(io.DisplaySize);
-        ImGuiWindowFlags flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse |
-                                 ImGuiWindowFlags_NoDocking;
+         gui::SetNextWindowPos(gui::GetMainViewport()->Pos);
+         gui::SetNextWindowSize(io.DisplaySize);
+         ImGuiWindowFlags flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse |
+                                  ImGuiWindowFlags_NoDocking;
 
-        gui::Begin("###workspace", nullptr, flags | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoFocusOnAppearing);
+         gui::Begin("###workspace", nullptr, flags | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoFocusOnAppearing);
 
-        auto& pm = core::get_subsystem<editor::project_manager>();
+         auto& pm = core::get_subsystem<editor::project_manager>();
 
-        auto on_create_project = [&](const std::string& p) {
-            auto& rend = core::get_subsystem<runtime::renderer>();
-            auto  path = fs::path(p).make_preferred();
-            pm.create_project(path);
-            window.maximize();
-            rend.show_all_secondary_windows();
-            show_start_page_ = false;
-        };
-        auto on_open_project = [&](const std::string& p) {
-            auto& rend = core::get_subsystem<runtime::renderer>();
-            auto  path = fs::path(p).make_preferred();
-            pm.open_project(path);
-            window.maximize();
-            rend.show_all_secondary_windows();
-            show_start_page_ = false;
-        };
+         auto on_create_project = [&](const std::string& p) {
+             auto& rend = core::get_subsystem<runtime::renderer>();
+             auto  path = fs::path(p).make_preferred();
+             pm.create_project(path);
+             window.maximize();
+             rend.show_all_secondary_windows();
+             show_start_page_ = false;
+         };
+         auto on_open_project = [&](const std::string& p) {
+             auto& rend = core::get_subsystem<runtime::renderer>();
+             auto  path = fs::path(p).make_preferred();
+             pm.open_project(path);
+             window.maximize();
+             rend.show_all_secondary_windows();
+             show_start_page_ = false;
+         };
 
-        gui::PushFont("heavy_big");
+         gui::PushFont("heavy_big");
 
-        gui::AlignTextToFramePadding();
-        gui::TextUnformatted("RECENT PROJECTS");
-        gui::Separator();
-        gui::BeginGroup();
+         gui::AlignTextToFramePadding();
+         gui::TextUnformatted("RECENT PROJECTS");
+         gui::Separator();
+         gui::BeginGroup();
         {
-            if (gui::BeginChild("projects_content",
-                                ImVec2(gui::GetContentRegionAvail().x * 0.7f, gui::GetContentRegionAvail().y),
-                                false,
-                                flags | ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoSavedSettings))
-            {
+             if (gui::BeginChild("projects_content",
+                                 ImVec2(gui::GetContentRegionAvail().x * 0.7f, gui::GetContentRegionAvail().y),
+                                 false,
+                                 flags | ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoSavedSettings))
+             {
 
                 const auto& rencent_projects = pm.get_options().recent_project_paths;
                 for (const auto& path : rencent_projects)
@@ -659,20 +659,20 @@ namespace editor
             }
             gui::EndChild();
         }
-        gui::EndGroup();
+         gui::EndGroup();
 
-        gui::SameLine();
+         gui::SameLine();
 
-        gui::BeginGroup();
+         gui::BeginGroup();
         {
-            if (gui::Button("NEW PROJECT", ImVec2(gui::GetContentRegionAvail().x, 0.0f)))
-            {
-                std::string path;
-                if (native::pick_folder_dialog("", path))
-                {
-                    on_create_project(path);
-                }
-            }
+             if (gui::Button("NEW PROJECT", ImVec2(gui::GetContentRegionAvail().x, 0.0f)))
+             {
+                 std::string path;
+                 if (native::pick_folder_dialog("", path))
+                 {
+                     on_create_project(path);
+                 }
+             }
 
             if (gui::Button("OPEN OTHER", ImVec2(gui::GetContentRegionAvail().x, 0.0f)))
             {
@@ -683,9 +683,9 @@ namespace editor
                 }
             }
         }
-        gui::EndGroup();
-        gui::PopFont();
-        gui::End();
+         gui::EndGroup();
+         gui::PopFont();
+         gui::End();
     }
 
     void app::handle_drag_and_drop()

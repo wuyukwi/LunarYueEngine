@@ -1,8 +1,7 @@
 #pragma once
-#include "../interface/docks/imguidock.h"
-
 #include <core/math/math_includes.h>
 
+#include "editor_runtime/interface/gui_system.h"
 #include <runtime/assets/asset_handle.h>
 #include <runtime/ecs/ecs.h>
 

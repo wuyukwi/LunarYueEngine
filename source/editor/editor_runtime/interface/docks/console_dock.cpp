@@ -1,14 +1,10 @@
 #include "console_dock.h"
-#include "../../console/console_log.h"
+#include "editor_runtime/console/console_log.h"
+#include <editor_core/gui/gui.h>
 
-console_dock::console_dock(const std::string& dtitle, bool close_button, const ImVec2& min_size, const std::shared_ptr<console_log>& log) :
-    console_log_(log)
+console_dock::console_dock(const std::string& title, const std::shared_ptr<console_log>& log) : console_log_(log) {}
 
-{
-    initialize(dtitle, close_button, min_size, std::bind(&console_dock::render, this, std::placeholders::_1));
-}
-
-void console_dock::render(const ImVec2&)
+void console_dock::render()
 {
     if (!console_log_)
         return;

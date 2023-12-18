@@ -1,16 +1,8 @@
 #pragma once
+#include <string>
 
-#include <runtime/system/events.h>
-
-#include <map>
-#include <memory>
-#include <vector>
-
-struct docking_system
+struct docking_space
 {
-    docking_system();
-    ~docking_system();
-
-private:
-    void platform_events(const std::vector<SDL_Event>& events);
+    docking_space(const std::string& title);
+    ~docking_space();
 };

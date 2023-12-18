@@ -1,18 +1,16 @@
 #pragma once
-
-#include "imguidock.h"
-
 #include <runtime/ecs/ecs.h>
 
-struct hierarchy_dock : public imguidock::dock
+#include <string>
+struct hierarchy_dock
 {
-    hierarchy_dock(const std::string& dtitle, bool close_button, const ImVec2& min_size);
+    hierarchy_dock(const std::string& dtitle);
 
-    void render(const ImVec2& area);
+    void render();
 
     void draw_entity(runtime::entity entity);
 
 private:
-    bool    edit_label_ = false;
-    ImGuiID id_         = 0;
+    bool     edit_label_ = false;
+    uint32_t id_         = 0;
 };

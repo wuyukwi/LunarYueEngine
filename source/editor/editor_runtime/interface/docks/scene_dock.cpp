@@ -1,7 +1,8 @@
 #include "scene_dock.h"
-#include "../../assets/asset_extensions.h"
-#include "../../editing/editing_system.h"
-#include "../../system/project_manager.h"
+#include "editor_runtime/assets/asset_extensions.h"
+#include "editor_runtime/editing/editing_system.h"
+#include "editor_runtime/interface/gui_system.h"
+#include "editor_runtime/system/project_manager.h"
 
 #include <core/graphics/render_pass.h>
 #include <core/logging/logging.h>
@@ -76,193 +77,193 @@ static void resource_bar(const char* _name, const char* _tooltip, uint32_t _num,
     }
 }
 
-void scene_dock::show_statistics(const ImVec2& area, unsigned int fps, bool& show_gbuffer)
-{
-    auto stat_pos = gui::GetCurrentWindow()->Pos + gui::GetCursorPos();
-    gui::SetNextWindowPos(stat_pos);
-    gui::SetNextWindowSizeConstraints(ImVec2(0, 0), area - gui::GetStyle().WindowPadding);
-
-    if (gui::Begin( //(ICON_FA_BAR_CHART "\tSTATISTICS##" + title).c_str(),
-            "\tSTATISTICS##",
-            nullptr,
-            ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize))
-    {
-
-        auto stats = gfx::get_stats();
-        gui::Text("Frame %0.3f [ms], %u FPS", 1000.0 / double(fps), fps);
-
-        const double to_cpu_ms = 1000.0 / double(stats->cpuTimerFreq);
-        const double to_gpu_ms = 1000.0 / double(stats->gpuTimerFreq);
-
-        if (gui::CollapsingHeader( // ICON_FA_INFO_CIRCLE +
-                "\tRender Info"))
-        {
-            gui::PushFont("default");
-
-            gui::Text("Submit CPU %0.3f, GPU %0.3f (L: %d)",
-                      double(stats->cpuTimeEnd - stats->cpuTimeBegin) * to_cpu_ms,
-                      double(stats->gpuTimeEnd - stats->gpuTimeBegin) * to_gpu_ms,
-                      stats->maxGpuLatency);
-            if (-std::numeric_limits<std::int64_t>::max() != stats->gpuMemoryUsed)
-            {
-                char tmp0[64];
-                bx::prettify(tmp0, 64, uint64_t(stats->gpuMemoryUsed));
-                char tmp1[64];
-                bx::prettify(tmp1, 64, uint64_t(stats->gpuMemoryMax));
-                gui::Text("GPU mem: %s / %s", tmp0, tmp1);
-                char tmp2[64];
-                bx::prettify(tmp2, 64, uint64_t(stats->rtMemoryUsed));
-                gui::Text("Render Target mem: %s / %s", tmp2, tmp0);
-                char tmp3[64];
-                bx::prettify(tmp3, 64, uint64_t(stats->textureMemoryUsed));
-                gui::Text("Texture mem: %s / %s", tmp3, tmp0);
-            }
-
-            gui::Separator();
-
-            const auto&   gui_sys          = core::get_subsystem<gui_system>();
-            std::uint32_t ui_draw_calls    = gui_sys.get_draw_calls();
-            std::uint32_t total_primitives = std::accumulate(std::begin(stats->numPrims), std::end(stats->numPrims), 0u);
-
-            gui::Text("Primitives %u", total_primitives);
-            gui::Text("Total Draw Calls: %u", stats->numDraw);
-            gui::Text("UI Draw Calls: %u", ui_draw_calls);
-            gui::Text("Scene Draw Calls: %u", math::abs<std::uint32_t>(stats->numDraw - ui_draw_calls));
-            gui::PopFont();
-        }
-
-        if (gui::CollapsingHeader( // ICON_FA_PUZZLE_PIECE
-                "\tResources"))
-        {
-            const auto caps = gfx::get_caps();
-
-            const float itemHeight = gui::GetTextLineHeightWithSpacing();
-            const float maxWidth   = 90.0f;
-
-            gui::PushFont("default");
-            gui::AlignTextToFramePadding();
-            gui::Text("Res: Num  / Max");
-            resource_bar("DIB", "Dynamic index buffers", stats->numDynamicIndexBuffers, caps->limits.maxDynamicIndexBuffers, maxWidth, itemHeight);
-            resource_bar("DVB", "Dynamic vertex buffers", stats->numDynamicVertexBuffers, caps->limits.maxDynamicVertexBuffers, maxWidth, itemHeight);
-            resource_bar(" FB", "Frame buffers", stats->numFrameBuffers, caps->limits.maxFrameBuffers, maxWidth, itemHeight);
-            resource_bar(" IB", "Index buffers", stats->numIndexBuffers, caps->limits.maxIndexBuffers, maxWidth, itemHeight);
-            resource_bar(" OQ", "Occlusion queries", stats->numOcclusionQueries, caps->limits.maxOcclusionQueries, maxWidth, itemHeight);
-            resource_bar("  P", "Programs", stats->numPrograms, caps->limits.maxPrograms, maxWidth, itemHeight);
-            resource_bar("  S", "Shaders", stats->numShaders, caps->limits.maxShaders, maxWidth, itemHeight);
-            resource_bar("  T", "Textures", stats->numTextures, caps->limits.maxTextures, maxWidth, itemHeight);
-            resource_bar("  U", "Uniforms", stats->numUniforms, caps->limits.maxUniforms, maxWidth, itemHeight);
-            resource_bar(" VB", "Vertex buffers", stats->numVertexBuffers, caps->limits.maxVertexBuffers, maxWidth, itemHeight);
-            resource_bar(" VD", "Vertex layouts", stats->numVertexLayouts, caps->limits.maxVertexLayouts, maxWidth, itemHeight);
-            gui::PopFont();
-        }
-
-        if (gui::CollapsingHeader( // ICON_FA_CLOCK_O
-                "\tProfiler"))
-        {
-            if (gui::Checkbox("Enable profiler", &enable_profiler))
-            {
-                if (enable_profiler)
-                {
-                    gfx::set_debug(BGFX_DEBUG_PROFILER);
-                }
-                else
-                {
-                    gfx::set_debug(BGFX_DEBUG_NONE);
-                }
-            }
-
-            gui::PushFont("default");
-
-            if (0 == stats->numViews)
-            {
-                gui::Text("Profiler is not enabled.");
-            }
-            else
-            {
-                ImVec4 cpuColor(0.5f, 1.0f, 0.5f, 1.0f);
-                ImVec4 gpuColor(0.5f, 0.5f, 1.0f, 1.0f);
-
-                const float  itemHeight            = ImGui::GetTextLineHeightWithSpacing();
-                const float  itemHeightWithSpacing = ImGui::GetFrameHeightWithSpacing();
-                const double toCpuMs               = 1000.0 / double(stats->cpuTimerFreq);
-                const double toGpuMs               = 1000.0 / double(stats->gpuTimerFreq);
-                const float  scale                 = 3.0f;
-
-                if (ImGui::BeginListBox("Encoders", ImVec2(ImGui::GetWindowWidth(), stats->numEncoders * itemHeightWithSpacing)))
-                {
-                    ImGuiListClipper clipper;
-                    clipper.Begin(stats->numEncoders, itemHeight);
-
-                    while (clipper.Step())
-                    {
-                        for (int32_t pos = clipper.DisplayStart; pos < clipper.DisplayEnd; ++pos)
-                        {
-                            const bgfx::EncoderStats& encoderStats = stats->encoderStats[pos];
-
-                            ImGui::Text("%3d", pos);
-                            ImGui::SameLine(64.0f);
-
-                            const float maxWidth = 30.0f * scale;
-                            const float cpuMs    = float((encoderStats.cpuTimeEnd - encoderStats.cpuTimeBegin) * toCpuMs);
-                            const float cpuWidth = bx::clamp(cpuMs * scale, 1.0f, maxWidth);
-
-                            if (bar(cpuWidth, maxWidth, itemHeight, cpuColor))
-                            {
-                                ImGui::SetTooltip("Encoder %d, CPU: %f [ms]", pos, cpuMs);
-                            }
-                        }
-                    }
-
-                    ImGui::EndListBox();
-                }
-
-                ImGui::Separator();
-
-                if (ImGui::BeginListBox("Views", ImVec2(ImGui::GetWindowWidth(), stats->numViews * itemHeightWithSpacing)))
-                {
-                    ImGuiListClipper clipper;
-                    clipper.Begin(stats->numViews, itemHeight);
-
-                    while (clipper.Step())
-                    {
-                        for (int32_t pos = clipper.DisplayStart; pos < clipper.DisplayEnd; ++pos)
-                        {
-                            const bgfx::ViewStats& viewStats = stats->viewStats[pos];
-
-                            ImGui::Text("%3d %3d %s", pos, viewStats.view, viewStats.name);
-
-                            const float maxWidth       = 30.0f * scale;
-                            const float cpuTimeElapsed = float((viewStats.cpuTimeEnd - viewStats.cpuTimeBegin) * toCpuMs);
-                            const float gpuTimeElapsed = float((viewStats.gpuTimeEnd - viewStats.gpuTimeBegin) * toGpuMs);
-                            const float cpuWidth       = bx::clamp(cpuTimeElapsed * scale, 1.0f, maxWidth);
-                            const float gpuWidth       = bx::clamp(gpuTimeElapsed * scale, 1.0f, maxWidth);
-
-                            ImGui::SameLine(64.0f);
-
-                            if (bar(cpuWidth, maxWidth, itemHeight, cpuColor))
-                            {
-                                ImGui::SetTooltip("View %d \"%s\", CPU: %f [ms]", pos, viewStats.name, cpuTimeElapsed);
-                            }
-
-                            ImGui::SameLine();
-                            if (bar(gpuWidth, maxWidth, itemHeight, gpuColor))
-                            {
-                                ImGui::SetTooltip("View: %d \"%s\", GPU: %f [ms]", pos, viewStats.name, gpuTimeElapsed);
-                            }
-                        }
-                    }
-
-                    ImGui::EndListBox();
-                }
-            }
-            gui::PopFont();
-        }
-
-        gui::Separator();
-        gui::Checkbox("SHOW G-BUFFER", &show_gbuffer);
-    }
-    gui::End();
-}
+// void scene_dock::show_statistics(const ImVec2& area, unsigned int fps, bool& show_gbuffer)
+//{
+//     auto stat_pos = gui::GetCurrentWindow()->Pos + gui::GetCursorPos();
+//     gui::SetNextWindowPos(stat_pos);
+//     gui::SetNextWindowSizeConstraints(ImVec2(0, 0), area - gui::GetStyle().WindowPadding);
+//
+//     if (gui::Begin( //(ICON_FA_BAR_CHART "\tSTATISTICS##" + title).c_str(),
+//             "\tSTATISTICS##",
+//             nullptr,
+//             ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize))
+//     {
+//
+//         auto stats = gfx::get_stats();
+//         gui::Text("Frame %0.3f [ms], %u FPS", 1000.0 / double(fps), fps);
+//
+//         const double to_cpu_ms = 1000.0 / double(stats->cpuTimerFreq);
+//         const double to_gpu_ms = 1000.0 / double(stats->gpuTimerFreq);
+//
+//         if (gui::CollapsingHeader( // ICON_FA_INFO_CIRCLE +
+//                 "\tRender Info"))
+//         {
+//             gui::PushFont("default");
+//
+//             gui::Text("Submit CPU %0.3f, GPU %0.3f (L: %d)",
+//                       double(stats->cpuTimeEnd - stats->cpuTimeBegin) * to_cpu_ms,
+//                       double(stats->gpuTimeEnd - stats->gpuTimeBegin) * to_gpu_ms,
+//                       stats->maxGpuLatency);
+//             if (-std::numeric_limits<std::int64_t>::max() != stats->gpuMemoryUsed)
+//             {
+//                 char tmp0[64];
+//                 bx::prettify(tmp0, 64, uint64_t(stats->gpuMemoryUsed));
+//                 char tmp1[64];
+//                 bx::prettify(tmp1, 64, uint64_t(stats->gpuMemoryMax));
+//                 gui::Text("GPU mem: %s / %s", tmp0, tmp1);
+//                 char tmp2[64];
+//                 bx::prettify(tmp2, 64, uint64_t(stats->rtMemoryUsed));
+//                 gui::Text("Render Target mem: %s / %s", tmp2, tmp0);
+//                 char tmp3[64];
+//                 bx::prettify(tmp3, 64, uint64_t(stats->textureMemoryUsed));
+//                 gui::Text("Texture mem: %s / %s", tmp3, tmp0);
+//             }
+//
+//             gui::Separator();
+//
+//             const auto&   gui_sys          = core::get_subsystem<gui_system>();
+//             std::uint32_t ui_draw_calls    = gui_sys.get_draw_calls();
+//             std::uint32_t total_primitives = std::accumulate(std::begin(stats->numPrims), std::end(stats->numPrims), 0u);
+//
+//             gui::Text("Primitives %u", total_primitives);
+//             gui::Text("Total Draw Calls: %u", stats->numDraw);
+//             gui::Text("UI Draw Calls: %u", ui_draw_calls);
+//             gui::Text("Scene Draw Calls: %u", math::abs<std::uint32_t>(stats->numDraw - ui_draw_calls));
+//             gui::PopFont();
+//         }
+//
+//         if (gui::CollapsingHeader( // ICON_FA_PUZZLE_PIECE
+//                 "\tResources"))
+//         {
+//             const auto caps = gfx::get_caps();
+//
+//             const float itemHeight = gui::GetTextLineHeightWithSpacing();
+//             const float maxWidth   = 90.0f;
+//
+//             gui::PushFont("default");
+//             gui::AlignTextToFramePadding();
+//             gui::Text("Res: Num  / Max");
+//             resource_bar("DIB", "Dynamic index buffers", stats->numDynamicIndexBuffers, caps->limits.maxDynamicIndexBuffers, maxWidth, itemHeight);
+//             resource_bar("DVB", "Dynamic vertex buffers", stats->numDynamicVertexBuffers, caps->limits.maxDynamicVertexBuffers, maxWidth,
+//             itemHeight); resource_bar(" FB", "Frame buffers", stats->numFrameBuffers, caps->limits.maxFrameBuffers, maxWidth, itemHeight);
+//             resource_bar(" IB", "Index buffers", stats->numIndexBuffers, caps->limits.maxIndexBuffers, maxWidth, itemHeight);
+//             resource_bar(" OQ", "Occlusion queries", stats->numOcclusionQueries, caps->limits.maxOcclusionQueries, maxWidth, itemHeight);
+//             resource_bar("  P", "Programs", stats->numPrograms, caps->limits.maxPrograms, maxWidth, itemHeight);
+//             resource_bar("  S", "Shaders", stats->numShaders, caps->limits.maxShaders, maxWidth, itemHeight);
+//             resource_bar("  T", "Textures", stats->numTextures, caps->limits.maxTextures, maxWidth, itemHeight);
+//             resource_bar("  U", "Uniforms", stats->numUniforms, caps->limits.maxUniforms, maxWidth, itemHeight);
+//             resource_bar(" VB", "Vertex buffers", stats->numVertexBuffers, caps->limits.maxVertexBuffers, maxWidth, itemHeight);
+//             resource_bar(" VD", "Vertex layouts", stats->numVertexLayouts, caps->limits.maxVertexLayouts, maxWidth, itemHeight);
+//             gui::PopFont();
+//         }
+//
+//         if (gui::CollapsingHeader( // ICON_FA_CLOCK_O
+//                 "\tProfiler"))
+//         {
+//             if (gui::Checkbox("Enable profiler", &enable_profiler))
+//             {
+//                 if (enable_profiler)
+//                 {
+//                     gfx::set_debug(BGFX_DEBUG_PROFILER);
+//                 }
+//                 else
+//                 {
+//                     gfx::set_debug(BGFX_DEBUG_NONE);
+//                 }
+//             }
+//
+//             gui::PushFont("default");
+//
+//             if (0 == stats->numViews)
+//             {
+//                 gui::Text("Profiler is not enabled.");
+//             }
+//             else
+//             {
+//                 ImVec4 cpuColor(0.5f, 1.0f, 0.5f, 1.0f);
+//                 ImVec4 gpuColor(0.5f, 0.5f, 1.0f, 1.0f);
+//
+//                 const float  itemHeight            = ImGui::GetTextLineHeightWithSpacing();
+//                 const float  itemHeightWithSpacing = ImGui::GetFrameHeightWithSpacing();
+//                 const double toCpuMs               = 1000.0 / double(stats->cpuTimerFreq);
+//                 const double toGpuMs               = 1000.0 / double(stats->gpuTimerFreq);
+//                 const float  scale                 = 3.0f;
+//
+//                 if (ImGui::BeginListBox("Encoders", ImVec2(ImGui::GetWindowWidth(), stats->numEncoders * itemHeightWithSpacing)))
+//                 {
+//                     ImGuiListClipper clipper;
+//                     clipper.Begin(stats->numEncoders, itemHeight);
+//
+//                     while (clipper.Step())
+//                     {
+//                         for (int32_t pos = clipper.DisplayStart; pos < clipper.DisplayEnd; ++pos)
+//                         {
+//                             const bgfx::EncoderStats& encoderStats = stats->encoderStats[pos];
+//
+//                             ImGui::Text("%3d", pos);
+//                             ImGui::SameLine(64.0f);
+//
+//                             const float maxWidth = 30.0f * scale;
+//                             const float cpuMs    = float((encoderStats.cpuTimeEnd - encoderStats.cpuTimeBegin) * toCpuMs);
+//                             const float cpuWidth = bx::clamp(cpuMs * scale, 1.0f, maxWidth);
+//
+//                             if (bar(cpuWidth, maxWidth, itemHeight, cpuColor))
+//                             {
+//                                 ImGui::SetTooltip("Encoder %d, CPU: %f [ms]", pos, cpuMs);
+//                             }
+//                         }
+//                     }
+//
+//                     ImGui::EndListBox();
+//                 }
+//
+//                 ImGui::Separator();
+//
+//                 if (ImGui::BeginListBox("Views", ImVec2(ImGui::GetWindowWidth(), stats->numViews * itemHeightWithSpacing)))
+//                 {
+//                     ImGuiListClipper clipper;
+//                     clipper.Begin(stats->numViews, itemHeight);
+//
+//                     while (clipper.Step())
+//                     {
+//                         for (int32_t pos = clipper.DisplayStart; pos < clipper.DisplayEnd; ++pos)
+//                         {
+//                             const bgfx::ViewStats& viewStats = stats->viewStats[pos];
+//
+//                             ImGui::Text("%3d %3d %s", pos, viewStats.view, viewStats.name);
+//
+//                             const float maxWidth       = 30.0f * scale;
+//                             const float cpuTimeElapsed = float((viewStats.cpuTimeEnd - viewStats.cpuTimeBegin) * toCpuMs);
+//                             const float gpuTimeElapsed = float((viewStats.gpuTimeEnd - viewStats.gpuTimeBegin) * toGpuMs);
+//                             const float cpuWidth       = bx::clamp(cpuTimeElapsed * scale, 1.0f, maxWidth);
+//                             const float gpuWidth       = bx::clamp(gpuTimeElapsed * scale, 1.0f, maxWidth);
+//
+//                             ImGui::SameLine(64.0f);
+//
+//                             if (bar(cpuWidth, maxWidth, itemHeight, cpuColor))
+//                             {
+//                                 ImGui::SetTooltip("View %d \"%s\", CPU: %f [ms]", pos, viewStats.name, cpuTimeElapsed);
+//                             }
+//
+//                             ImGui::SameLine();
+//                             if (bar(gpuWidth, maxWidth, itemHeight, gpuColor))
+//                             {
+//                                 ImGui::SetTooltip("View: %d \"%s\", GPU: %f [ms]", pos, viewStats.name, gpuTimeElapsed);
+//                             }
+//                         }
+//                     }
+//
+//                     ImGui::EndListBox();
+//                 }
+//             }
+//             gui::PopFont();
+//         }
+//
+//         gui::Separator();
+//         gui::Checkbox("SHOW G-BUFFER", &show_gbuffer);
+//     }
+//     gui::End();
+// }
 
 void draw_selected_camera(const ImVec2& size)
 {
@@ -654,7 +655,7 @@ static void process_drag_drop_target(const std::shared_ptr<camera_component>& ca
     }
 }
 
-void scene_dock::render(const ImVec2& area)
+void scene_dock::render()
 {
     auto& es       = core::get_subsystem<editor::editing_system>();
     auto& renderer = core::get_subsystem<runtime::renderer>();
@@ -667,7 +668,7 @@ void scene_dock::render(const ImVec2& area)
 
     bool has_edit_camera = editor_camera && editor_camera.has_component<camera_component>() && editor_camera.has_component<transform_component>();
 
-    show_statistics(area, sim.get_fps(), show_gbuffer);
+    // show_statistics(area, sim.get_fps(), show_gbuffer);
 
     if (!has_edit_camera)
     {
@@ -772,7 +773,4 @@ void scene_dock::render(const ImVec2& area)
     process_drag_drop_target(camera_comp);
 }
 
-scene_dock::scene_dock(const std::string& dtitle, bool close_button, const ImVec2& min_size)
-{
-    initialize(dtitle, close_button, min_size, std::bind(&scene_dock::render, this, std::placeholders::_1));
-}
+scene_dock::scene_dock(const std::string& dtitle) {}

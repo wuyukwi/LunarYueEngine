@@ -166,7 +166,7 @@ namespace runtime
         ////	gfx::set_platform_data(pd);
 
         // auto detect
-        auto preferred_renderer_type = gfx::renderer_type::Count;
+        auto preferred_renderer_type = gfx::renderer_type::Vulkan;
 
         std::string preferred_renderer;
         if (parser.try_get("renderer", preferred_renderer))

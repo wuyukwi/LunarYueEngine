@@ -1,11 +1,9 @@
 #pragma once
-
-#include "imguidock.h"
-
+#include <string>
 class console_log;
-struct game_dock : public imguidock::dock
+struct game_dock
 {
-    game_dock(const std::string& dtitle, bool close_button, const ImVec2& min_size);
+    game_dock(const std::string& dtitle);
 
-    void render(const ImVec2& area);
+    void render();
 };

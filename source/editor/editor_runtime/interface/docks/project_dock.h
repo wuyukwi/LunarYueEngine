@@ -1,13 +1,13 @@
 #pragma once
-#include "imguidock.h"
 
 #include <core/filesystem/filesystem_cache.hpp>
+#include <string>
 
-class project_dock : public imguidock::dock
+class project_dock
 {
 public:
-    project_dock(const std::string& dtitle, bool close_button, const ImVec2& min_size);
-    void render(const ImVec2& area);
+    project_dock(const std::string& dtitle);
+    void render();
 
 private:
     void context_menu();

@@ -1,6 +1,7 @@
 #include "project_dock.h"
-#include "../../assets/asset_extensions.h"
-#include "../../editing/editing_system.h"
+#include "editor_runtime/assets/asset_extensions.h"
+#include "editor_runtime/editing/editing_system.h"
+#include "editor_runtime/interface/gui_system.h"
 
 #include <core/audio/sound.h>
 #include <core/graphics/shader.h>
@@ -373,7 +374,7 @@ fs::path get_new_file(const fs::path& path, const std::string& name, const std::
     return path / (string_utils::format("%s (%d)", name.c_str(), i) + ext);
 }
 
-void project_dock::render(const ImVec2& /*area*/)
+void project_dock::render()
 {
     const auto root_path = fs::resolve_protocol("app:/data");
 
@@ -874,7 +875,4 @@ void project_dock::import()
     }
 }
 
-project_dock::project_dock(const std::string& dtitle, bool close_button, const ImVec2& min_size)
-{
-    initialize(dtitle, close_button, min_size, std::bind(&project_dock::render, this, std::placeholders::_1));
-}
+project_dock::project_dock(const std::string& dtitle) {}

@@ -1,15 +1,15 @@
 #include "style_dock.h"
+#include "editor_runtime/interface/gui_system.h"
 
-style_dock::style_dock(const std::string& dtitle, bool close_button, const ImVec2& min_size)
+style_dock::style_dock(const std::string& dtitle)
 {
-    initialize(dtitle, close_button, min_size, std::bind(&style_dock::render, this, std::placeholders::_1));
     auto& style = get_gui_style();
     style.load_style();
     auto& setup = style.setup;
     style.set_style_colors(setup);
 }
 
-void style_dock::render(const ImVec2& /*unused*/)
+void style_dock::render()
 {
     auto&  style = get_gui_style();
     auto&  setup = style.setup;

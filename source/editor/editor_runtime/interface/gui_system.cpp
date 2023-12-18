@@ -1014,7 +1014,7 @@ namespace
                                                         0,
                                                         gfx::copy(data, static_cast<std::uint32_t>(width * height * 4)));
 
-        // Store our identifier
+        //// Store our identifier
         io.Fonts->SetTexID(s_font_texture.get());
         get_gui_style().load_style();
     }

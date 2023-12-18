@@ -1,7 +1,8 @@
 #include "hierarchy_dock.h"
-#include "../../assets/asset_extensions.h"
-#include "../../editing/editing_system.h"
-#include "../../system/project_manager.h"
+#include "editor_runtime/assets/asset_extensions.h"
+#include "editor_runtime/editing/editing_system.h"
+#include "editor_runtime/interface/gui_system.h"
+#include "editor_runtime/system/project_manager.h"
 
 #include <core/filesystem/filesystem.h>
 #include <core/logging/logging.h>
@@ -552,7 +553,7 @@ void hierarchy_dock::draw_entity(runtime::entity entity)
     gui::PopID();
 }
 
-void hierarchy_dock::render(const ImVec2& /*unused*/)
+void hierarchy_dock::render()
 {
     auto& es    = core::get_subsystem<editor::editing_system>();
     auto& sg    = core::get_subsystem<runtime::scene_graph>();
@@ -640,8 +641,4 @@ void hierarchy_dock::render(const ImVec2& /*unused*/)
     process_drag_drop_target({});
 }
 
-hierarchy_dock::hierarchy_dock(const std::string& dtitle, bool close_button, const ImVec2& min_size)
-{
-
-    initialize(dtitle, close_button, min_size, std::bind(&hierarchy_dock::render, this, std::placeholders::_1));
-}
+hierarchy_dock::hierarchy_dock(const std::string& dtitle) {}

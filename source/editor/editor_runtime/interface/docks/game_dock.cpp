@@ -1,5 +1,6 @@
 #include "game_dock.h"
-#include "../../editing/editing_system.h"
+#include "editor_runtime/editing/editing_system.h"
+#include "editor_runtime/interface/gui_system.h"
 
 #include <core/system/subsystem.h>
 
@@ -7,7 +8,7 @@
 #include <runtime/ecs/ecs.h>
 #include <runtime/rendering/camera.h>
 
-void game_dock::render(const ImVec2&)
+void game_dock::render()
 {
     auto& es            = core::get_subsystem<editor::editing_system>();
     auto& editor_camera = es.camera;
@@ -31,7 +32,4 @@ void game_dock::render(const ImVec2&)
     });
 }
 
-game_dock::game_dock(const std::string& dtitle, bool close_button, const ImVec2& min_size)
-{
-    initialize(dtitle, close_button, min_size, std::bind(&game_dock::render, this, std::placeholders::_1));
-}
+game_dock::game_dock(const std::string& dtitle) {}
