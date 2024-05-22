@@ -52,6 +52,10 @@ Gitからクローンします。パスには英語以外の文字を使用し�
 ```
 git clone https://github.com/wuyukwi/LunarYueEngine
 ```
+サブモジュールを初期化します
+```
+git submodule update --init --recursive
+```
 フォルダ内に移動します。
 ```
 cd LunarYueEngine
