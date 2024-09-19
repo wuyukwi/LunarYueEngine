@@ -165,6 +165,9 @@ if(WIN32)
     set_target_properties(UpdateAssimpLibsDebugSymbolsAndDLLs PROPERTIES FOLDER ${THIRD_PARTY_FOLDER}/assimp)
 endif()
 
+if(MSVC)
+    target_compile_options(assimp PRIVATE /wd4819)
+endif()
 
 #target_include_directories (assimp PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/assimp/include)
 #target_include_directories (assimp PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/assimp/include)
