@@ -429,7 +429,7 @@ void project_dock::render()
     auto&            am    = core::get_subsystem<runtime::asset_manager>();
     ImGuiWindowFlags flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings;
     fs::path         current_path = cache_.get_path();
-    if (gui::BeginChild("assets_content", gui::GetContentRegionAvail(), ImGuiChildFlags_Border, flags))
+    if (gui::BeginChild("assets_content", gui::GetContentRegionAvail(), flags))
     {
         const auto is_selected = [&](const auto& entry) {
             using entry_t  = std::decay_t<decltype(entry)>;

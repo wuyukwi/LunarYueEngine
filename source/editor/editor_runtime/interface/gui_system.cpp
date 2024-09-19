@@ -894,19 +894,19 @@ namespace
         main_viewport->PlatformHandle = main_window.get();
     }
 
-    void imgui_init_clipboard(ImGuiIO& io)
+    void imgui_init_clipboard(ImGuiPlatformIO& io)
     {
         static char* text_data;
 
-        io.SetClipboardTextFn = [](void*, const char* text) { SDL_SetClipboardText(text); };
-        io.GetClipboardTextFn = [](void*) {
+        io.Platform_SetClipboardTextFn = [](ImGuiContext*, const char* text) { SDL_SetClipboardText(text); };
+        io.Platform_GetClipboardTextFn = [](ImGuiContext*) {
             if (text_data)
                 SDL_free(text_data);
             text_data = SDL_GetClipboardText();
             return const_cast<const char*>(text_data);
         };
-        io.ClipboardUserData    = nullptr;
-        io.SetPlatformImeDataFn = [](ImGuiViewport* viewport, ImGuiPlatformImeData* data) {
+        io.Platform_ClipboardUserData = nullptr;
+        io.Platform_SetImeDataFn      = [](ImGuiContext*, ImGuiViewport* viewport, ImGuiPlatformImeData* data) {
             if (data->WantVisible)
             {
                 SDL_Rect r;
@@ -942,8 +942,8 @@ namespace
         io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable; // Enable Multi-Viewport / Platform Windows
 
         imgui_init_platform_interface();
-        imgui_init_clipboard(io);
         ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
+        imgui_init_clipboard(platform_io);
 
         const char* sdl_backend              = SDL_GetCurrentVideoDriver();
         const char* global_mouse_whitelist[] = {"windows", "cocoa", "x11", "DIVE", "VMAN"};
@@ -1153,9 +1153,6 @@ void gui_style::set_style_colors(const hsv_setup& _setup)
     style.Colors[ImGuiCol_SeparatorActive]      = ImVec4(col_main.x, col_main.y, col_main.z, 1.00f);
     style.Colors[ImGuiCol_Tab]                  = style.Colors[ImGuiCol_Header];
     style.Colors[ImGuiCol_TabHovered]           = style.Colors[ImGuiCol_HeaderHovered];
-    style.Colors[ImGuiCol_TabActive]            = style.Colors[ImGuiCol_HeaderActive];
-    style.Colors[ImGuiCol_TabUnfocused]         = style.Colors[ImGuiCol_Tab];
-    style.Colors[ImGuiCol_TabUnfocusedActive]   = style.Colors[ImGuiCol_TabActive];
     style.Colors[ImGuiCol_ResizeGrip]           = ImVec4(col_main.x, col_main.y, col_main.z, 0.20f);
     style.Colors[ImGuiCol_ResizeGripHovered]    = ImVec4(col_main.x, col_main.y, col_main.z, 0.78f);
     style.Colors[ImGuiCol_ResizeGripActive]     = ImVec4(col_main.x, col_main.y, col_main.z, 1.00f);

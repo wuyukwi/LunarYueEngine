@@ -68,7 +68,7 @@ namespace asset_compiler
 #endif
         if (!error.isOk())
         {
-            err = std::string(error.getMessage().getPtr());
+            err = std::string(error.getMessage().getCPtr());
             return false;
         }
         else
@@ -97,7 +97,7 @@ namespace asset_compiler
 
             if (0 != result)
             {
-                err = std::string(error.getMessage().getPtr());
+                err = std::string(error.getMessage().getCPtr());
                 if (!total_output.empty())
                 {
                     err += " " + total_output;

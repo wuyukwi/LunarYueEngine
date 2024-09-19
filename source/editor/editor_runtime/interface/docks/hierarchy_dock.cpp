@@ -565,7 +565,7 @@ void hierarchy_dock::render()
 
     ImGuiWindowFlags flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings;
 
-    if (gui::BeginChild("hierarchy_content", gui::GetContentRegionAvail(), ImGuiChildFlags_Border, flags))
+    if (gui::BeginChild("hierarchy_content", gui::GetContentRegionAvail(), flags))
     {
 
         check_context_menu(runtime::entity());

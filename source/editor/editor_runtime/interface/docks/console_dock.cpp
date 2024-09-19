@@ -27,10 +27,8 @@ void console_dock::render()
     // only the lines that are visible - CalcListClipping() is a helper to compute this information.
     // If your items are of variable size you may want to implement code similar to what CalcListClipping()
     // does. Or split your data into fixed height items to allow random-seeking into your list.
-    gui::BeginChild("ScrollingRegion",
-                    ImVec2(0, -ImGui::GetStyle().ItemSpacing.y - gui::GetFrameHeightWithSpacing()),
-                    ImGuiChildFlags_Border,
-                    ImGuiWindowFlags_HorizontalScrollbar);
+    gui::BeginChild(
+        "ScrollingRegion", ImVec2(0, -ImGui::GetStyle().ItemSpacing.y - gui::GetFrameHeightWithSpacing()), ImGuiWindowFlags_HorizontalScrollbar);
     if (gui::BeginPopupContextWindow())
     {
         if (gui::Selectable("Clear"))
