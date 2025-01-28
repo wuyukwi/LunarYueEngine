@@ -10,6 +10,8 @@
 #include <algorithm>
 #include <cstdarg>
 
+#include <SDL3/SDL_init.h>
+
 namespace runtime
 {
     renderer::renderer(cmd_line::parser& parser)
@@ -29,6 +31,19 @@ namespace runtime
         window->request_focus();
         register_window(std::move(window));
         process_pending_windows();
+
+        SDL_SetAppMetadata("LunarYue", "0.0.5", "com.wuyukwi.lunaryue");
+        Uint32 init_flags = SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_GAMEPAD;
+        if (!SDL_InitSubSystem(init_flags))
+        {
+            APPLOG_WARNING("Couldn't initialize SDL: {}", SDL_GetError());
+        }
+
+        SDL_Window* sdlWindow;
+        if (!(sdlWindow = SDL_CreateWindow("LunarYue", 1280, 720, SDL_WINDOW_RESIZABLE)))
+        {
+            APPLOG_WARNING("Couldn't create window/renderer: %s", SDL_GetError());
+        }
     }
 
     renderer::~renderer()
@@ -38,6 +53,7 @@ namespace runtime
         windows_.clear();
         windows_pending_addition_.clear();
         gfx::shutdown();
+        SDL_Quit();
     }
 
     render_window* renderer::get_focused_window() const
@@ -137,7 +153,7 @@ namespace runtime
         ////	gfx::set_platform_data(pd);
 
         // auto detect
-        auto preferred_renderer_type = gfx::renderer_type::Count;
+        auto preferred_renderer_type = gfx::renderer_type::OpenGL;
 
         std::string preferred_renderer;
         if (parser.try_get("renderer", preferred_renderer))
