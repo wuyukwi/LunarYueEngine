@@ -39,8 +39,7 @@ namespace runtime
             APPLOG_WARNING("Couldn't initialize SDL: {}", SDL_GetError());
         }
 
-        SDL_Window* sdlWindow;
-        if (!(sdlWindow = SDL_CreateWindow("LunarYue", 1280, 720, SDL_WINDOW_RESIZABLE)))
+        if (!(window_ = SDL_CreateWindow("LunarYue", 1280, 720, SDL_WINDOW_RESIZABLE)))
         {
             APPLOG_WARNING("Couldn't create window/renderer: %s", SDL_GetError());
         }
@@ -153,7 +152,7 @@ namespace runtime
         ////	gfx::set_platform_data(pd);
 
         // auto detect
-        auto preferred_renderer_type = gfx::renderer_type::OpenGL;
+        auto preferred_renderer_type = gfx::renderer_type::Count;
 
         std::string preferred_renderer;
         if (parser.try_get("renderer", preferred_renderer))
@@ -181,9 +180,9 @@ namespace runtime
         init_data.resolution.width  = sz[0];
         init_data.resolution.height = sz[1];
         init_data.resolution.reset  = BGFX_RESET_VSYNC;
-        init_data.platformData.ndt  = init_window_->native_display_handle();
-        ;
-        init_data.platformData.nwh = reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(init_window_->native_handle()));
+        // init_data.platformData.ndt  = init_window_->native_display_handle();
+        // init_data.platformData.nwh = reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(init_window_->native_handle()));
+        // init_data.platformData.nwh = reinterpret_cast<void*>(window_);
 
         bool novsync = false;
         parser.try_get("novsync", novsync);

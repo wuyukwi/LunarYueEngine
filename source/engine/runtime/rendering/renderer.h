@@ -7,6 +7,8 @@
 #include <memory>
 #include <vector>
 
+struct SDL_Window;
+
 namespace runtime
 {
     struct renderer
@@ -87,5 +89,7 @@ namespace runtime
         std::unique_ptr<mml::window>                init_window_;
         std::vector<std::unique_ptr<render_window>> windows_;
         std::vector<std::unique_ptr<render_window>> windows_pending_addition_;
+
+        SDL_Window* window_ = nullptr;
     };
 } // namespace runtime
