@@ -98,7 +98,7 @@ namespace editor
                         return;
 
                     auto          entity_index = e.id().index();
-                    std::uint32_t rr           = (entity_index)&0xff;
+                    std::uint32_t rr           = (entity_index) & 0xff;
                     std::uint32_t gg           = (entity_index >> 8) & 0xff;
                     std::uint32_t bb           = (entity_index >> 16) & 0xff;
                     math::vec4    color_id     = {rr / 255.0f, gg / 255.0f, bb / 255.0f, 1.0f};
@@ -143,11 +143,6 @@ namespace editor
                 std::uint8_t bb = *x++;
                 std::uint8_t aa = *x++;
                 (void)aa;
-                if (gfx::renderer_type::Direct3D9 == gfx::get_renderer_type())
-                {
-                    // Comes back as BGRA
-                    std::swap(rr, bb);
-                }
 
                 // Skip background
                 if (0 == (rr | gg | bb))
