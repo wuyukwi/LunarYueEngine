@@ -1,6 +1,6 @@
 set(EDITOR_RUNTIME_FOLDER ${EDITOR_FOLDER}/editor_runtime)
 
-file(GLOB_RECURSE libsrc "*.h" "*.cpp" "*.hpp" "*.c" "*.cc")
+file(GLOB_RECURSE libsrc CONFIGURE_DEPENDS "*.h" "*.cpp" "*.hpp" "*.c" "*.cc")
 file(GLOB EDITOR_RESOURCE ${CMAKE_CURRENT_SOURCE_DIR}/resource/LunarYueEditor.rc)
 
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}" FILES ${libsrc} ${EDITOR_RESOURCE})

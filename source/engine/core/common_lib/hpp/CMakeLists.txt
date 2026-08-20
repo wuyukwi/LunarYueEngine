@@ -7,9 +7,9 @@ target_include_directories(${target_name} INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/
 
 set (target_for_ide "${target_name}_ide")
 if (NOT TARGET ${target_for_ide})
-    file(GLOB_RECURSE SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/*.h" "${CMAKE_CURRENT_SOURCE_DIR}/*.hpp")
+    file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/*.h" "${CMAKE_CURRENT_SOURCE_DIR}/*.hpp")
     set(TESTS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/tests")
-    file(GLOB_RECURSE TESTS_SOURCES "${TESTS_DIR}/*.c"
+    file(GLOB_RECURSE TESTS_SOURCES CONFIGURE_DEPENDS "${TESTS_DIR}/*.c"
                                     "${TESTS_DIR}/*.cpp"
                                     "${TESTS_DIR}/*.h"
                                     "${TESTS_DIR}/*.hpp")

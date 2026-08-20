@@ -1,6 +1,6 @@
 set(ENGINE_RUNTIME_FOLDER ${ENGINE_FOLDER}/runtime)
 
-file(GLOB_RECURSE libsrc *.h *.cpp *.hpp *.c *.cc)
+file(GLOB_RECURSE libsrc CONFIGURE_DEPENDS *.h *.cpp *.hpp *.c *.cc)
 
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}" FILES ${libsrc})
 

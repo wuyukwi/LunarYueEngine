@@ -1,75 +1,86 @@
-﻿![LunarYue Logo](source/editor/editor_runtime/resource/LunarYueEngine.png)
+![LunarYue Logo](source/editor/editor_runtime/resource/LunarYueEngine.png)
 
-This README file is available in multiple languages:
+# LunarYueEngine
+
+A 3D game engine written in C++17 with a dock-based visual editor, built on [bgfx](https://github.com/bkaradzic/bgfx). Build and runtime are verified on Windows.
 
 - [日本語](README.md)
-- [中文](README-zh.md)
 
-## Prerequisites
+## Features
 
-To build LunarYue, you need to first install the following tools:
+- **Deferred rendering pipeline** (PBR, reflection probes, LOD)
+- **ECS architecture** (transform / camera / light / model / audio components)
+- **Runtime reflection + serialization** (rttr + cereal — editor UI is generated from reflected types)
+- **Asset pipeline** (models / textures / shaders compiled inside the editor)
+- **Dock-based editor** (scene / hierarchy / inspector / console / project)
+- **3D audio** (OpenAL Soft)
+- **Animation** (skeletal animation, bone system)
 
-### Windows 10/11
-- Visual Studio 2019 (or later versions)
-- CMake 3.19 (or later versions)
-- Git 2.1 (or later versions)
+## Build requirements
 
-<details>
-  <summary><b>CMake Installation Guide</b></summary>
-  <br>
- <b>Windows:</b>
-
-1. Visit the CMake official website (https://cmake.org/download/) and download the installer for Windows.
-
-2. Run the downloaded installer and install CMake. During the installation, select the "Add CMake to the system PATH for all users" option to add CMake to the system PATH.
-
-3. After the installation is complete, open the command prompt and run the 'cmake --version' command to check if CMake has been correctly installed. After running this command, the version information of CMake will be displayed.
-
-  <br>
-<b>Linux:</b>
-
-1. Open the terminal and run the following command to install CMake:
-
-   ```
-   sudo apt-get update
-   sudo apt-get install cmake
-   ```
-
-2. After the installation is complete, run the 'cmake --version' command to check if CMake has been correctly installed. After running this command, the version information of CMake will be displayed.
-
-  <br>
-</details>
+- Windows 10/11
+- Visual Studio 2019 or newer
+- CMake 3.19 or newer
+- Git
 
 ## Build
 
-### Windows
-You can run the build_windows.bat. This batch file will automatically generate the project and build the Release configuration of LunarYue Engine. Upon successful build, the build/bin directory will contain the executable LunarYueEditor.
-
-Alternatively, you can use the following command in the root directory of the project to generate the project in the build folder:
-```
+```bat
+git clone https://github.com/wuyukwi/LunarYueEngine
+cd LunarYueEngine
 cmake -B build
-```
-Compile the project with Release. If you want to debug the project, use Debug:
-```
-cmake --build build --config Release
+cmake --build build --config Debug
 ```
 
-### Ubuntu
+The executable is generated at `build/bin/Debug/LunarYueEditor.exe`.
 
+> Previously, CMake 4.x required `-DCMAKE_POLICY_VERSION_MINIMUM=3.5` to configure; this is no longer needed (the root CMakeLists.txt handles it automatically).
 
-## Libraries
-[bgfx](https://github.com/bkaradzic/bgfx) (Rendering)
+## Editor controls
 
-[cereal](https://github.com/USCiLab/cereal) (Serialization)
+| Action | Key |
+|--------|-----|
+| Translate / Rotate / Scale modes | `W` / `E` / `R` |
+| Local / World coordinate system | `T` / `Y` |
+| Manipulate object | Select, then drag the gizmo with the mouse |
+| Snap (incremental movement) | Hold `LControl` while manipulating |
+| Camera orbit / pan / zoom | Right mouse / middle mouse / wheel |
+| Camera move (while holding right mouse) | `W` `S` `A` `D` `Space` `LControl`; hold `LShift` to speed up |
+| Delete / Duplicate / Focus entity | `Delete` / `Ctrl+D` / `Shift+F` |
 
-[rttr](https://github.com/rttrorg/rttr) (Runtime Type Reflection)
+## Supported asset formats
 
-[spdlog](https://github.com/gabime/spdlog) (Logging)
+- Textures: `png` `tga` `dds` `ktx` `pvr`
+- Meshes: `obj` `fbx` `dae` `3ds`
+- Audio: `ogg` `wav`
 
-[imgui](https://github.com/ocornut/imgui) (Gui)
+## Third-party libraries
 
-[assimp](https://github.com/assimp/assimp) (3D Model Import)
+[bgfx](https://github.com/bkaradzic/bgfx) (rendering) / [cereal](https://github.com/USCiLab/cereal) (serialization) / [rttr](https://github.com/rttrorg/rttr) (reflection) / [spdlog](https://github.com/gabime/spdlog) (logging) / [imgui](https://github.com/ocornut/imgui) (GUI) / [assimp](https://github.com/assimp/assimp) (model import) / [glm](https://github.com/g-truc/glm) (math) / [openal-soft](https://github.com/kcat/openal-soft) (audio) / [nativefiledialog](https://github.com/mlabbe/nativefiledialog) (native dialogs) / [stb](https://github.com/nothings/stb)
 
-[glm](https://github.com/g-truc/glm) (Math Library)
+All dependencies are vendored under `source/3rdparty`.
 
-[openal-soft](https://github.com/kcat/openal-soft) (3D Audio)
+## Project layout
+
+```
+source/
+├── engine/
+│   ├── core/      # Foundation libraries (graphics / math / logging / serialization / tasks — 18 modules)
+│   └── runtime/   # Game runtime (ECS / assets / rendering / animation / input)
+├── editor/
+│   ├── editor_core/     # GUI / mesh import / native file dialogs
+│   └── editor_runtime/  # Editor application (docks / asset pipeline / main.cpp)
+└── 3rdparty/      # Vendored dependencies
+```
+
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for details.
+
+## Known limitations
+
+- **Ubuntu builds are untested** (only Windows + VS2019/VS2022 have been verified)
+- Recompiling shaders on the OpenGL backend may be affected by a platform-detection issue (no impact on the default Direct3D 11 backend)
+- Running multiple editor instances is unsupported (a second instance may hit a runtime error)
+
+## License
+
+[MIT](LICENSE)
